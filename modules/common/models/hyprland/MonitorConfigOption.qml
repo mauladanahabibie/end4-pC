@@ -12,6 +12,10 @@ NestableObject {
 
     Component.onCompleted: fetchProc.running = true
 
+    function reload() {
+        fetchProc.running = true
+    }
+
     function updateMonitor(index, changes) {
         let m = root.monitors.slice()
         m[index] = Object.assign({}, m[index], changes)

@@ -12,6 +12,9 @@ ContentPage {
     id: page
     forceWidth: true
 
+    // Shared gap value for Quick Layout presets
+    property int quickLayoutGap: 0
+
     function goTo(term) {
         const t = term.toLowerCase().trim()
 
@@ -136,7 +139,7 @@ ContentPage {
                             { displayName: "270°",                   icon: "rotate_90_degrees_ccw", value: 3 },
                         ]
                     }
-    
+
                     ConfigSpinBox {
                         icon: "zoom_in"
                         text: Translation.tr("Scale")
@@ -173,7 +176,106 @@ ContentPage {
                             monitorConfig.applyAndSave(monitorCanvas.selectedIndex)
                         }
                     }
-                }        
+                }
+            }
+        }
+
+        // Quick Layout
+        ContentSection {
+            icon: "view_quilt"
+            shape: MaterialShape.Shape.Cookie6Sided
+            title: Translation.tr("Quick Layout")
+
+            GroupedList {
+                // Gap
+                ConfigSpinBox {
+                    icon: "space_bar"
+                    text: Translation.tr("Gap (px)")
+                    value: page.quickLayoutGap
+                    from: 0; to: 500; stepSize: 10
+                    onValueChanged: page.quickLayoutGap = value
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Position")
+                tooltip: Translation.tr("Move the selected monitor relative to the reference monitor.")
+
+                GroupedList {
+                    ConfigSelectionArray {
+                        text: ""
+                        currentValue: null
+                        onSelected: newValue => {
+                            const gap = page.quickLayoutGap
+                            if (newValue === "above")  monitorCanvas.moveMonitorAbove(gap)
+                            if (newValue === "below")  monitorCanvas.moveMonitorBelow(gap)
+                            if (newValue === "left")   monitorCanvas.moveMonitorLeft(gap)
+                            if (newValue === "right")  monitorCanvas.moveMonitorRight(gap)
+                        }
+                        options: [
+                            { displayName: Translation.tr("Above"), icon: "vertical_align_top",    value: "above"  },
+                            { displayName: Translation.tr("Below"), icon: "vertical_align_bottom", value: "below"  },
+                            { displayName: Translation.tr("Left"),  icon: "horizontal_align_left",  value: "left"   },
+                            { displayName: Translation.tr("Right"), icon: "horizontal_align_right", value: "right"  },
+                        ]
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Alignment")
+                tooltip: Translation.tr("Align the selected monitor to the reference monitor on one axis.")
+
+                GroupedList {
+                    ConfigSelectionArray {
+                        text: Translation.tr("Horizontal")
+                        icon: "swap_horiz"
+                        currentValue: null
+                        onSelected: newValue => {
+                            monitorCanvas.alignHorizontal(newValue)
+                        }
+                        options: [
+                            { displayName: Translation.tr("Left"),   icon: "align_horizontal_left",   value: "left"   },
+                            { displayName: Translation.tr("Center"), icon: "align_horizontal_center", value: "center" },
+                            { displayName: Translation.tr("Right"),  icon: "align_horizontal_right",  value: "right"  },
+                        ]
+                    }
+
+                    ConfigSelectionArray {
+                        text: Translation.tr("Vertical")
+                        icon: "swap_vert"
+                        currentValue: null
+                        onSelected: newValue => {
+                            monitorCanvas.alignVertical(newValue)
+                        }
+                        options: [
+                            { displayName: Translation.tr("Top"),    icon: "align_vertical_top",    value: "top"    },
+                            { displayName: Translation.tr("Middle"), icon: "align_vertical_center", value: "middle" },
+                            { displayName: Translation.tr("Bottom"), icon: "align_vertical_bottom", value: "bottom" },
+                        ]
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Utilities")
+
+                GroupedList {
+                    ConfigSelectionArray {
+                        text: ""
+                        currentValue: null
+                        onSelected: newValue => {
+                            if (newValue === "swap")   monitorCanvas.swapMonitors()
+                            if (newValue === "center") monitorCanvas.centerLayout()
+                            if (newValue === "reset")  monitorCanvas.resetLayout()
+                        }
+                        options: [
+                            { displayName: Translation.tr("Swap"),          icon: "swap_horiz",            value: "swap"   },
+                            { displayName: Translation.tr("Center Layout"), icon: "center_focus_strong",  value: "center" },
+                            { displayName: Translation.tr("Reset Layout"),  icon: "restart_alt",          value: "reset"  },
+                        ]
+                    }
+                }
             }
         }
 
