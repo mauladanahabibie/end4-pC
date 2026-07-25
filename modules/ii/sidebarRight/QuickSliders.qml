@@ -53,9 +53,10 @@ Rectangle {
                             Hyprsunset.setGamma(100);
                         }
                     } else {
-                        // 0 - 0.3 gamma
-                        if (root.brightnessMonitor.brightness !== 0) {
-                            root.brightnessMonitor.setBrightness(0);
+                        // 0 - 0.3 gamma (night light)
+                        // Keep brightness at minimum visible level instead of 0
+                        if (root.brightnessMonitor.brightness < 0.1) {
+                            root.brightnessMonitor.setBrightness(0.1);
                         }
                         Hyprsunset.setGamma((value / 0.3 * (100 - Hyprsunset.gammaLowerLimit) + Hyprsunset.gammaLowerLimit));
                     }
