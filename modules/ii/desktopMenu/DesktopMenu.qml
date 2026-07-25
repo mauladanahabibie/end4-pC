@@ -49,6 +49,25 @@ Scope {
         nameFilters: ["*.jpg", "*.jpeg", "*.png", "*.webp"]
     }
 
+    // File picker for adding custom images from desktop menu
+    Process {
+        id: desktopMenuPickerProc
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.trim().length > 0) {
+                    let list = []
+                    const imgs = Config.options.background.widgets.customImage.images
+                    for (let i = 0; i < imgs.length; i++) {
+                        let o = imgs[i]
+                        list.push({ path: o.path ?? "", shape: o.shape ?? "Cookie4Sided", size: o.size ?? 200, x: o.x ?? 400, y: o.y ?? 100 })
+                    }
+                    list.push({ path: data.trim(), shape: "Cookie4Sided", size: 200, x: 400, y: 100 })
+                    Config.options.background.widgets.customImage.images = list
+                }
+            }
+        }
+    }
+
     property int carouselExtraCount: 5
     property bool useDarkMode: Appearance.m3colors.darkmode
     property var randomWallpapers: {
@@ -258,6 +277,27 @@ Scope {
                                 GlobalStates.dropShelfX = GlobalStates.desktopMenuX
                                 GlobalStates.dropShelfY = GlobalStates.desktopMenuY
                                 GlobalStates.dropShelfOpen = true
+                            }
+                        }
+
+                        RippleButton {
+                            implicitHeight: 40
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.colors.colLayer2
+                            contentItem: RowLayout {
+                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                                spacing: 12
+                                MaterialSymbol { text: "add_photo_alternate"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
+                                StyledText { Layout.fillWidth: true; text: "Add Custom Image"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                            }
+                            onClicked: {
+                                GlobalStates.desktopMenuOpen = false
+                                // Enable custom image if not already
+                                if (!Config.options.background.widgets.customImage.enable)
+                                    Config.options.background.widgets.customImage.enable = true
+                                // Launch file picker, add to images array
+                                desktopMenuPickerProc.command = ["python3", Quickshell.shellPath("scripts/images/pick-image.py")]
+                                desktopMenuPickerProc.running = true
                             }
                         }
 

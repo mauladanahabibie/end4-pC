@@ -21,7 +21,7 @@ AbstractBackgroundWidget {
     property int imageIndex: -1
 
     // Resolve the image config: if imageIndex >= 0, use images array; else legacy single
-    property var imageConfig: {
+    readonly property var imageConfig: {
         if (imageIndex >= 0 && Config.options.background.widgets.customImage.images.length > imageIndex) {
             return Config.options.background.widgets.customImage.images[imageIndex]
         }
@@ -38,6 +38,24 @@ AbstractBackgroundWidget {
     property string imagePath: imageConfig.path ?? ""
     property bool dropHover: false
     property real widgetSize: imageConfig.size ?? 200
+    property bool resizing: false
+
+    // Animate size changes EXCEPT during active resize drag
+    Behavior on widgetSize {
+        enabled: !root.resizing
+        animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+    }
+
+    // Override position bindings from AbstractBackgroundWidget to use
+    // per-image x/y instead of the shared configEntry.x/y
+    targetX: {
+        const ix = imageConfig.x ?? 400
+        return Math.max(0, Math.min(ix, scaledScreenWidth - width))
+    }
+    targetY: {
+        const iy = imageConfig.y ?? 100
+        return Math.max(0, Math.min(iy, scaledScreenHeight - height))
+    }
 
     implicitWidth: contentItem.implicitWidth
     implicitHeight: contentItem.implicitHeight
@@ -52,7 +70,7 @@ AbstractBackgroundWidget {
             case "Arrow":         return MaterialShape.Shape.Arrow
             case "SemiCircle":    return MaterialShape.Shape.SemiCircle
             case "Oval":          return MaterialShape.Shape.Oval
-            case "Pill":          return MaterialShape.Shape.Pill
+            case "Pill":           return MaterialShape.Shape.Pill
             case "Triangle":     return MaterialShape.Shape.Triangle
             case "Diamond":      return MaterialShape.Shape.Diamond
             case "ClamShell":     return MaterialShape.Shape.ClamShell
@@ -88,10 +106,13 @@ AbstractBackgroundWidget {
         implicitWidth: root.widgetSize
         implicitHeight: root.widgetSize
 
+        // Disable resize animation during active resize drag — real-time follow
         Behavior on implicitWidth {
+            enabled: !root.resizing
             animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
         }
         Behavior on implicitHeight {
+            enabled: !root.resizing
             animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
         }
 
@@ -172,6 +193,7 @@ AbstractBackgroundWidget {
             }
         }
 
+        // Resize handle (bottom-right corner)
         Rectangle {
             id: resizeHandle
             width: 16
@@ -185,7 +207,7 @@ AbstractBackgroundWidget {
             }
             opacity: (root.containsMouse || resizeArea.containsMouse || resizeArea.pressed) ? 0.5 : 0
             visible: opacity > 0 && !Config.options.background.widgetsLocked
-            z: 1
+            z: 2
 
             Behavior on opacity {
                 NumberAnimation { duration: 150 }
@@ -196,13 +218,14 @@ AbstractBackgroundWidget {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.SizeFDiagCursor
-                preventStealing: true
 
                 property real startSize: 0
                 property real startX: 0
                 property real startY: 0
 
                 onPressed: (mouse) => {
+                    root.resizing = true
+                    root.draggable = false
                     startSize = root.widgetSize
                     var globalPos = mapToItem(null, mouse.x, mouse.y)
                     startX = globalPos.x
@@ -215,13 +238,54 @@ AbstractBackgroundWidget {
                     root.widgetSize = Math.max(80, startSize + delta)
                 }
                 onReleased: {
+                    root.resizing = false
+                    root.draggable = root.placementStrategy === "free" && !Config.options.background.widgetsLocked
                     root.setImageSize(root.widgetSize)
                 }
             }
         }
+
+        // Delete button (top-right corner) — only for array images
+        Rectangle {
+            id: deleteHandle
+            width: 22
+            height: 22
+            radius: width / 2
+            color: Appearance.m3colors.m3error
+            anchors {
+                top: imageShape.top
+                right: imageShape.right
+                margins: 6
+            }
+            opacity: (root.containsMouse || deleteArea.containsMouse) ? 0.9 : 0
+            visible: opacity > 0 && !Config.options.background.widgetsLocked && root.imageIndex >= 0
+            z: 2
+
+            Behavior on opacity {
+                NumberAnimation { duration: 150 }
+            }
+
+            MouseArea {
+                id: deleteArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+
+                onClicked: {
+                    root.deleteThisImage()
+                }
+            }
+
+            MaterialSymbol {
+                anchors.centerIn: parent
+                text: "close"
+                iconSize: 14
+                color: Appearance.colors.colOnError
+            }
+        }
     }
 
-    // ── Helper: update image path in config ──
+    // ── Helpers: update config ──
     function setImagePath(path) {
         if (root.imageIndex >= 0) {
             root.updateArrayImage(root.imageIndex, "path", path)
@@ -230,7 +294,6 @@ AbstractBackgroundWidget {
         }
     }
 
-    // ── Helper: update image size in config ──
     function setImageSize(size) {
         if (root.imageIndex >= 0) {
             root.updateArrayImage(root.imageIndex, "size", size)
@@ -239,7 +302,24 @@ AbstractBackgroundWidget {
         }
     }
 
-    // ── Helper: update a field in the images array ──
+    function deleteThisImage() {
+        if (root.imageIndex < 0) return
+        let list = []
+        const imgs = Config.options.background.widgets.customImage.images
+        for (let i = 0; i < imgs.length; i++) {
+            if (i === root.imageIndex) continue
+            let o = imgs[i]
+            list.push({
+                path: o.path ?? "",
+                shape: o.shape ?? "Cookie4Sided",
+                size: o.size ?? 200,
+                x: o.x ?? 400,
+                y: o.y ?? 100,
+            })
+        }
+        Config.options.background.widgets.customImage.images = list
+    }
+
     function updateArrayImage(idx, key, value) {
         let list = []
         const imgs = Config.options.background.widgets.customImage.images
@@ -259,8 +339,20 @@ AbstractBackgroundWidget {
         Config.options.background.widgets.customImage.images = list
     }
 
-    // Override AbstractBackgroundWidget's onReleased to save position to array
     onReleased: {
+        // Hide grid FIRST, before any config writes that might
+        // recreate this widget via Repeater (which would destroy
+        // this instance before onDraggingChanged can fire).
+        var p = root.parent
+        while (p) {
+            if (p.isWidgetCanvas === true) {
+                p.setDragging(false)
+                break
+            }
+            p = p.parent
+        }
+
+        // Now save position — this may recreate widgets via Repeater
         if (root.imageIndex >= 0) {
             root.updateArrayImage(root.imageIndex, "x", root.x)
             root.updateArrayImage(root.imageIndex, "y", root.y)
@@ -268,8 +360,6 @@ AbstractBackgroundWidget {
             configEntry.x = root.x
             configEntry.y = root.y
         }
-        root.targetX = Qt.binding(() => Math.max(0, Math.min(root.x, scaledScreenWidth - width)))
-        root.targetY = Qt.binding(() => Math.max(0, Math.min(root.y, scaledScreenHeight - height)))
         root.restoreXYBinding()
     }
 }

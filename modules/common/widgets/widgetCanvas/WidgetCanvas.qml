@@ -24,6 +24,11 @@ MouseArea {
         root.centerYActive = yActive
     }
 
+    // Click on empty canvas area → exit edit mode (hide grid)
+    onClicked: (mouse) => {
+        if (root.showGrid) root.setDragging(false)
+    }
+
     Repeater {
         model: root.gridVisible ? Math.ceil(root.width / root.gridSize) : 0
         delegate: Rectangle {
