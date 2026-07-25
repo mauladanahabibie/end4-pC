@@ -25,6 +25,7 @@ import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.desktopMenu
 import qs.modules.ii.dropover
 import qs.modules.ii.cheatsheet
+import qs.modules.ii.displayProjection
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -50,4 +51,5 @@ Scope {
     PanelLoader { component: DesktopMenu {} }
     PanelLoader { component: DropShelfPanel {} }
     PanelLoader { component: Cheatsheet {} }
+    PanelLoader { component: DisplayProjectionOsd {} }
 }

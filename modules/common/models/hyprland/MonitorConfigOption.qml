@@ -24,7 +24,11 @@ NestableObject {
 
     function _buildLuaLine(m) {
         if (m.disabled)
-            return `hl.monitor({ output = "${m.name}", mode = "disabled" })`
+            return `hl.monitor({ output = "${m.name}", disabled = true })`
+
+        // Mirror mode: monitor mirrors another
+        if (m.mirrorOf && m.mirrorOf.length > 0)
+            return `hl.monitor({ output = "${m.name}", mode = "${m.currentMode}", position = "${m.x}x${m.y}", scale = ${m.scale}, mirror = "${m.mirrorOf}" })`
 
         const pos = `${m.x}x${m.y}`
         let line = `hl.monitor({ output = "${m.name}", mode = "${m.currentMode}", position = "${pos}", scale = ${m.scale}`
@@ -56,15 +60,27 @@ NestableObject {
 
     function applyMonitor(m) {
         if (!m.name) return
-
         const base = `${m.name},${m.currentMode},${m.x}x${m.y},${m.scale}`
-        applyProc.command = ["hyprctl", "keyword", "monitor",
-            m.disabled
-                ? `${m.name},disable`
-                : (m.transform && m.transform !== 0)
-                    ? `${base},transform,${m.transform}`
-                    : base]
+        // Mirror mode: append mirror,<target>
+        if (m.mirrorOf && m.mirrorOf.length > 0) {
+            applyProc.command = ["hyprctl", "keyword", "monitor", `${base},mirror,${m.mirrorOf}`]
+        } else if (m.disabled) {
+            applyProc.command = ["hyprctl", "keyword", "monitor", `${m.name},disable`]
+        } else if (m.transform && m.transform !== 0) {
+            applyProc.command = ["hyprctl", "keyword", "monitor", `${base},transform,${m.transform}`]
+        } else {
+            applyProc.command = ["hyprctl", "keyword", "monitor", base]
+        }
         applyProc.running = true
+    }
+
+    // Apply ALL monitors at once via a single bash command.
+    // This avoids the race condition where applyProc overwrites itself.
+    function applyAllMonitors(monitors) {
+        // With illogical-impulse's lua parser, hyprctl keyword doesn't work.
+        // Instead, write to monitors.lua (save()) and reload Hyprland.
+        // This function is a no-op — save() already handles everything via saveProc → reloadProc.
+        // Kept for API compatibility but does nothing.
     }
 
     function applyAndSave(index) {
@@ -97,6 +113,7 @@ NestableObject {
                         scale:         m.scale,
                         transform:     m.transform ?? 0,
                         disabled:      m.disabled,
+                        mirrorOf:      m.mirrorOf ?? "",
                         availableModes: m.availableModes,
                         currentMode:   `${m.width}x${m.height}@${m.refreshRate.toFixed(2)}Hz`
                     }))
@@ -108,6 +125,8 @@ NestableObject {
     }
 
     Process { id: applyProc }
+
+    Process { id: applyAllProc }
 
     Process {
         id: saveProc
