@@ -49,8 +49,9 @@ BarWidgetSwitcherArea {
             Resource {
                 iconName: "wifi"
                 shown: Config.options.bar.resources.alwaysShowNetwork
-                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (50 * 1024 * 1024))
                 Layout.leftMargin: shown ? 6 : 0
+                warningThreshold: 999
             }
         }
     }
@@ -93,8 +94,9 @@ BarWidgetSwitcherArea {
             Resource {
                 iconName: "wifi"
                 shown: Config.options.bar.resources.alwaysShowNetwork
-                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (50 * 1024 * 1024))
                 Layout.leftMargin: shown ? 6 : 0
+                warningThreshold: 999
             }
         }
     }
@@ -145,7 +147,8 @@ BarWidgetSwitcherArea {
                 iconName: "wifi"
                 vertical: true
                 visible: Config.options.bar.resources.alwaysShowNetwork
-                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (50 * 1024 * 1024))
+                warningThreshold: 999
             }
         }
     }
@@ -196,7 +199,8 @@ BarWidgetSwitcherArea {
                 iconName: "wifi"
                 vertical: true
                 visible: Config.options.bar.resources.alwaysShowNetwork
-                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (50 * 1024 * 1024))
+                warningThreshold: 999
             }
         }
     }
