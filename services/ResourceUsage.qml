@@ -40,12 +40,99 @@ Singleton {
     property list<real> diskUsageHistory: []
     property string maxAvailableDiskString: kbToGbString(diskTotal)
 
+    // ── Network ──
+    property string localIp: ""
+    property string tailscaleIp: ""
+    property string warpStatus: ""
+    property string publicIp: ""
+    property real networkDownloadSpeed: 0  // bytes/sec
+    property real networkUploadSpeed: 0   // bytes/sec
+    property var prevNetworkRx: 0
+    property var prevNetworkTx: 0
+    property var prevNetworkTime: 0
+    property string activeInterface: ""
+    property list<real> networkDownloadHistory: []
+    property list<real> networkUploadHistory: []
+
     Process {
         id: tempProc
         command: ["bash", "-c", "sensors 2>/dev/null | grep -E 'Package id 0|Tctl|Tdie' | grep -oP '\\+\\K[0-9.]+(?=°C)' | head -1"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.cpuTemp = parseFloat(text.trim())
+            }
+        }
+    }
+
+    // Network info processes (refreshed every 10s)
+    Process {
+        id: localIpProc
+        command: ["bash", "-c", "ip -4 addr show 2>/dev/null | grep -E 'inet ' | grep -v '127.0.0.1' | grep -v 'tailscale' | grep -v 'docker' | awk '{print $2}' | cut -d/ -f1 | head -1"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: { root.localIp = text.trim() }
+        }
+    }
+
+    Process {
+        id: tailscaleProc
+        command: ["bash", "-c", "tailscale ip -4 2>/dev/null | head -1"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: { root.tailscaleIp = text.trim() }
+        }
+    }
+
+    Process {
+        id: warpProc
+        command: ["bash", "-c", "warp-cli status 2>/dev/null | grep -i status | head -1 | sed 's/Status update: //'"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: { root.warpStatus = text.trim() }
+        }
+    }
+
+    Process {
+        id: publicIpProc
+        command: ["bash", "-c", "curl -s --max-time 3 ifconfig.me 2>/dev/null || echo ''"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: { root.publicIp = text.trim() }
+        }
+    }
+
+    Process {
+        id: ifaceProc
+        command: ["bash", "-c", "ip route show default 2>/dev/null | awk '{print $5}' | head -1"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: { root.activeInterface = text.trim() }
+        }
+    }
+
+    // Network speed (from /proc/net/dev delta)
+    Process {
+        id: netDevProc
+        command: ["bash", "-c", "cat /proc/net/dev | grep -E '" + (root.activeInterface || "enp") + "' | head -1 | awk '{print $2, $10}'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const parts = text.trim().split(/\s+/)
+                if (parts.length >= 2) {
+                    const rx = parseInt(parts[0]) || 0
+                    const tx = parseInt(parts[1]) || 0
+                    const now = Date.now()
+                    if (root.prevNetworkRx > 0 && root.prevNetworkTime > 0) {
+                        const dt = (now - root.prevNetworkTime) / 1000
+                        if (dt > 0) {
+                            root.networkDownloadSpeed = Math.max(0, (rx - root.prevNetworkRx) / dt)
+                            root.networkUploadSpeed = Math.max(0, (tx - root.prevNetworkTx) / dt)
+                        }
+                    }
+                    root.prevNetworkRx = rx
+                    root.prevNetworkTx = tx
+                    root.prevNetworkTime = now
+                    root.updateNetworkHistory()
+                }
             }
         }
     }
@@ -74,6 +161,22 @@ Singleton {
             tempProc.running = true
             diskProc.running = false
             diskProc.running = true
+            netDevProc.running = false
+            netDevProc.running = true
+        }
+    }
+
+    // Slow refresh for IP/network info (every 30s)
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        onTriggered: {
+            localIpProc.running = false; localIpProc.running = true
+            tailscaleProc.running = false; tailscaleProc.running = true
+            warpProc.running = false; warpProc.running = true
+            ifaceProc.running = false; ifaceProc.running = true
+            publicIpProc.running = false; publicIpProc.running = true
         }
     }
 
@@ -96,6 +199,12 @@ Singleton {
     function updateDiskUsageHistory() {
         diskUsageHistory = [...diskUsageHistory, diskUsedPercentage]
         if (diskUsageHistory.length > historyLength) diskUsageHistory.shift()
+    }
+    function updateNetworkHistory() {
+        networkDownloadHistory = [...networkDownloadHistory, networkDownloadSpeed]
+        networkUploadHistory = [...networkUploadHistory, networkUploadSpeed]
+        if (networkDownloadHistory.length > historyLength) networkDownloadHistory.shift()
+        if (networkUploadHistory.length > historyLength) networkUploadHistory.shift()
     }
     function updateHistories() {
         updateMemoryUsageHistory()
