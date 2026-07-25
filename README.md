@@ -53,6 +53,20 @@ git clone https://github.com/pctrade/end4-pC.git
 killall qs 2>/dev/null; qs -c end4-pC > /dev/null 2>&1 & disown
 ```
 
+### 🎨 Post-install: Enable Cheatsheet Keybinds
+
+After cloning, run this to install keybinds with full cheatsheet descriptions:
+
+```bash
+bash ~/.config/quickshell/end4-pC/scripts/hyprland/install-keybinds.sh
+hyprctl reload
+```
+
+This copies `defaults/hypr/hyprland/keybinds.lua` (with complete description fields) to `~/.config/hypr/hyprland/keybinds.lua`. Your existing file is backed up to `keybinds.lua.bak`.
+
+> [!TIP]
+> Open the cheatsheet with `Super + /` to see all available keybinds.
+
 ### 🔧 Set as your default shell (optional)
 
 If you like it and want it to load by default instead of `ii`, edit:
@@ -77,6 +91,30 @@ hl.env("qsConfig", "end4-pC")
 > After saving, restart Hyprland or run `hyprctl reload` to apply the change.
 
 ---
+
+## ✨ Features Added in This Fork
+
+### 🎹 Cheatsheet
+- Ported from upstream end-4, adapted to the tree-based `HyprlandKeybinds` API
+- Handles pseudo-binds (loop-generated keybinds like arrow keys)
+- Modifier icons (Super, Shift, Ctrl, Alt) with symbol map support
+- Custom keybinds from `~/.config/hypr/custom/keybinds.lua` are loaded automatically
+
+### 🖥️ Quick Layout (Display Settings)
+- One-click monitor positioning presets: Above / Below / Left / Right
+- Alignment controls: Horizontal (Left/Center/Right), Vertical (Top/Middle/Bottom)
+- Utilities: Swap monitors, Center layout, Reset layout
+- Adjustable gap control (default: 0px)
+- Windows-style magnetic drag docking — monitors snap flush on release
+- Viewport auto-centers after preset changes
+
+### 🖼️ Multi Custom Image
+- Add multiple custom images to the desktop background
+- Per-image shape (Circle, Heart, Cookie, etc.), size, and position
+- Drag-drop images onto desktop widgets, or use the file picker in Settings
+- Per-image delete button (red X on hover)
+- Smooth resize animation
+- Right-click desktop → "Add Custom Image" to pick a file
 
 ### ⚙️ Settings keybind
 
