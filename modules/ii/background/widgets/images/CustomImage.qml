@@ -5,8 +5,10 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Qt5Compat.GraphicalEffects
 import Quickshell
+import Quickshell.Io
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 import qs.modules.ii.background.widgets
 
 AbstractBackgroundWidget {
@@ -15,9 +17,27 @@ AbstractBackgroundWidget {
     configEntryName: "customImage"
     hoverEnabled: true
 
-    property string imagePath: Config.options.background.widgets.customImage.path ?? ""
+    // Which image index this widget renders (-1 = legacy single image)
+    property int imageIndex: -1
+
+    // Resolve the image config: if imageIndex >= 0, use images array; else legacy single
+    property var imageConfig: {
+        if (imageIndex >= 0 && Config.options.background.widgets.customImage.images.length > imageIndex) {
+            return Config.options.background.widgets.customImage.images[imageIndex]
+        }
+        // Legacy single image mode
+        return {
+            path: Config.options.background.widgets.customImage.path ?? "",
+            shape: Config.options.background.widgets.customImage.shape ?? "Cookie4Sided",
+            size: Config.options.background.widgets.customImage.size ?? 200,
+            x: Config.options.background.widgets.customImage.x ?? 400,
+            y: Config.options.background.widgets.customImage.y ?? 100,
+        }
+    }
+
+    property string imagePath: imageConfig.path ?? ""
     property bool dropHover: false
-    property real widgetSize: Config.options.background.widgets.customImage.size ?? 200
+    property real widgetSize: imageConfig.size ?? 200
 
     implicitWidth: contentItem.implicitWidth
     implicitHeight: contentItem.implicitHeight
@@ -33,8 +53,8 @@ AbstractBackgroundWidget {
             case "SemiCircle":    return MaterialShape.Shape.SemiCircle
             case "Oval":          return MaterialShape.Shape.Oval
             case "Pill":          return MaterialShape.Shape.Pill
-            case "Triangle":      return MaterialShape.Shape.Triangle
-            case "Diamond":       return MaterialShape.Shape.Diamond
+            case "Triangle":     return MaterialShape.Shape.Triangle
+            case "Diamond":      return MaterialShape.Shape.Diamond
             case "ClamShell":     return MaterialShape.Shape.ClamShell
             case "Pentagon":      return MaterialShape.Shape.Pentagon
             case "Gem":           return MaterialShape.Shape.Gem
@@ -79,7 +99,7 @@ AbstractBackgroundWidget {
             id: shadowShape
             anchors.fill: parent
             color: Appearance.colors.colPrimaryContainer
-            shape: getShape(Config.options.background.widgets.customImage.shape ?? "Cookie4Sided")
+            shape: root.getShape(root.imageConfig.shape ?? "Cookie4Sided")
             visible: false
         }
 
@@ -93,14 +113,14 @@ AbstractBackgroundWidget {
             anchors.fill: parent
             z: 0
             color: Appearance.colors.colPrimaryContainer
-            shape: getShape(Config.options.background.widgets.customImage.shape ?? "Cookie4Sided")
+            shape: root.getShape(root.imageConfig.shape ?? "Cookie4Sided")
 
             layer.enabled: true
             layer.effect: OpacityMask {
                 maskSource: MaterialShape {
                     width: imageShape.width
                     height: imageShape.height
-                    shape: getShape(Config.options.background.widgets.customImage.shape ?? "Cookie4Sided")
+                    shape: root.getShape(root.imageConfig.shape ?? "Cookie4Sided")
                 }
             }
 
@@ -144,7 +164,7 @@ AbstractBackgroundWidget {
                         var ext = cleanPath.split(".").pop().toLowerCase()
                         var accepted = ["png","jpg","jpeg","webp","avif","bmp","gif","tiff","tif"]
                         if (accepted.indexOf(ext) !== -1) {
-                            Config.options.background.widgets.customImage.path = cleanPath
+                            root.setImagePath(cleanPath)
                         }
                     }
                     root.dropHover = false
@@ -195,9 +215,61 @@ AbstractBackgroundWidget {
                     root.widgetSize = Math.max(80, startSize + delta)
                 }
                 onReleased: {
-                    Config.options.background.widgets.customImage.size = root.widgetSize
+                    root.setImageSize(root.widgetSize)
                 }
             }
         }
+    }
+
+    // ── Helper: update image path in config ──
+    function setImagePath(path) {
+        if (root.imageIndex >= 0) {
+            root.updateArrayImage(root.imageIndex, "path", path)
+        } else {
+            Config.options.background.widgets.customImage.path = path
+        }
+    }
+
+    // ── Helper: update image size in config ──
+    function setImageSize(size) {
+        if (root.imageIndex >= 0) {
+            root.updateArrayImage(root.imageIndex, "size", size)
+        } else {
+            Config.options.background.widgets.customImage.size = size
+        }
+    }
+
+    // ── Helper: update a field in the images array ──
+    function updateArrayImage(idx, key, value) {
+        let list = []
+        const imgs = Config.options.background.widgets.customImage.images
+        for (let i = 0; i < imgs.length; i++) {
+            let o = imgs[i]
+            list.push({
+                path: o.path ?? "",
+                shape: o.shape ?? "Cookie4Sided",
+                size: o.size ?? 200,
+                x: o.x ?? 400,
+                y: o.y ?? 100,
+            })
+        }
+        if (idx < list.length) {
+            list[idx][key] = value
+        }
+        Config.options.background.widgets.customImage.images = list
+    }
+
+    // Override AbstractBackgroundWidget's onReleased to save position to array
+    onReleased: {
+        if (root.imageIndex >= 0) {
+            root.updateArrayImage(root.imageIndex, "x", root.x)
+            root.updateArrayImage(root.imageIndex, "y", root.y)
+        } else {
+            configEntry.x = root.x
+            configEntry.y = root.y
+        }
+        root.targetX = Qt.binding(() => Math.max(0, Math.min(root.x, scaledScreenWidth - width)))
+        root.targetY = Qt.binding(() => Math.max(0, Math.min(root.y, scaledScreenHeight - height)))
+        root.restoreXYBinding()
     }
 }

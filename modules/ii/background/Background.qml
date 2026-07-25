@@ -479,16 +479,39 @@ Variants {
                         wallpaperScale: 1
                     }
                 }
+                // Legacy single image (shown if images array is empty)
                 FadeLoader {
                     shown: Config.options.background.widgets.customImage.enable
+                        && Config.options.background.widgets.customImage.images.length === 0
                         && (Config.options.background.screenList.length === 0
                             || Config.options.background.screenList.includes(bgRoot.screen.name))
                     sourceComponent: CustomImage {
+                        imageIndex: -1
                         screenWidth:        bgRoot.screen.width
                         screenHeight:       bgRoot.screen.height
                         scaledScreenWidth:  bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale:     1
+                    }
+                }
+                // Multi-image support: one FadeLoader per image in the array
+                Repeater {
+                    model: Config.options.background.widgets.customImage.enable
+                        && (Config.options.background.screenList.length === 0
+                            || Config.options.background.screenList.includes(bgRoot.screen.name))
+                        ? Config.options.background.widgets.customImage.images
+                        : []
+                    delegate: FadeLoader {
+                        required property int index
+                        shown: true
+                        sourceComponent: CustomImage {
+                            imageIndex: index
+                            screenWidth:        bgRoot.screen.width
+                            screenHeight:       bgRoot.screen.height
+                            scaledScreenWidth:  bgRoot.screen.width
+                            scaledScreenHeight: bgRoot.screen.height
+                            wallpaperScale:     1
+                        }
                     }
                 }
                 FadeLoader {

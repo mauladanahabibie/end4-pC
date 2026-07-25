@@ -799,8 +799,52 @@ ContentPage {
 
         ContentSection {
             icon: "panorama"
-            shape: MaterialShape.Shape.SoftBoom 
+            shape: MaterialShape.Shape.SoftBoom
             title: Translation.tr("Custom Image")
+
+            property var shapesList: [
+                "Circle", "Square", "Slanted", "Arch", "Arrow", "SemiCircle", "Oval", "Pill",
+                "Triangle", "Diamond", "ClamShell", "Pentagon", "Gem", "Sunny", "VerySunny",
+                "Cookie4Sided", "Cookie6Sided", "Cookie7Sided", "Cookie9Sided", "Cookie12Sided",
+                "Ghostish", "Clover4Leaf", "Clover8Leaf", "Burst", "SoftBurst", "Flower",
+                "Puffy", "PuffyDiamond", "PixelCircle", "Bun", "Heart"
+            ]
+
+            function addImage(path) {
+                let list = []
+                const imgs = Config.options.background.widgets.customImage.images
+                for (let i = 0; i < imgs.length; i++) {
+                    let o = imgs[i]
+                    list.push({ path: o.path ?? "", shape: o.shape ?? "Cookie4Sided", size: o.size ?? 200, x: o.x ?? 400, y: o.y ?? 100 })
+                }
+                list.push({ path: path ?? "", shape: "Cookie4Sided", size: 200, x: 400, y: 100 })
+                Config.options.background.widgets.customImage.images = list
+            }
+
+            function removeImage(index) {
+                let list = []
+                const imgs = Config.options.background.widgets.customImage.images
+                for (let i = 0; i < imgs.length; i++) {
+                    if (i === index) continue
+                    let o = imgs[i]
+                    list.push({ path: o.path ?? "", shape: o.shape ?? "Cookie4Sided", size: o.size ?? 200, x: o.x ?? 400, y: o.y ?? 100 })
+                }
+                Config.options.background.widgets.customImage.images = list
+            }
+
+            function updateImage(index, key, value) {
+                let list = []
+                const imgs = Config.options.background.widgets.customImage.images
+                for (let i = 0; i < imgs.length; i++) {
+                    let o = imgs[i]
+                    list.push({ path: o.path ?? "", shape: o.shape ?? "Cookie4Sided", size: o.size ?? 200, x: o.x ?? 400, y: o.y ?? 100 })
+                }
+                if (index < list.length) {
+                    list[index][key] = value
+                    Config.options.background.widgets.customImage.images = list
+                }
+            }
+
             GroupedList {
                 ConfigSwitch {
                     Layout.fillWidth: true
@@ -811,19 +855,201 @@ ContentPage {
                         Config.options.background.widgets.customImage.enable = checked;
                     }
                 }
-                ConfigSelectionShapeArray {
-                    currentValue: Config.options.background.widgets.customImage.shape
-                    shapeColor: Appearance.colors.colPrimary
-                    backgroundColor: Appearance.colors.colPrimaryContainer
-                    options: [
-                        "Circle", "Square", "Slanted", "Arch", "Arrow", "SemiCircle", "Oval", "Pill",
-                        "Triangle", "Diamond", "ClamShell", "Pentagon", "Gem", "Sunny", "VerySunny",
-                        "Cookie4Sided", "Cookie6Sided", "Cookie7Sided", "Cookie9Sided", "Cookie12Sided",
-                        "Ghostish", "Clover4Leaf", "Clover8Leaf", "Burst", "SoftBurst", "Flower",
-                        "Puffy", "PuffyDiamond", "PixelCircle", "Bun", "Heart"
-                    ]
-                    onSelected: newValue => {
-                        Config.options.background.widgets.customImage.shape = newValue
+            }
+
+            // Legacy single image shape (only shown if no multi-images)
+            ContentSubsection {
+                title: Translation.tr("Default Shape")
+                tooltip: Translation.tr("Used by the legacy single image widget when no images are added below.")
+                visible: Config.options.background.widgets.customImage.images.length === 0
+
+                GroupedList {
+                    ConfigSelectionShapeArray {
+                        currentValue: Config.options.background.widgets.customImage.shape
+                        shapeColor: Appearance.colors.colPrimary
+                        backgroundColor: Appearance.colors.colPrimaryContainer
+                        options: root.shapesList
+                        onSelected: newValue => {
+                            Config.options.background.widgets.customImage.shape = newValue
+                        }
+                    }
+                }
+            }
+
+            // Multi-image list
+            ContentSubsection {
+                title: Translation.tr("Images")
+                tooltip: Translation.tr("Drag images onto the desktop widget, or add them here and pick a file.")
+
+                GroupedList {
+                    // Empty state
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: 60
+                        visible: Config.options.background.widgets.customImage.images.length === 0
+                        StyledText {
+                            anchors.centerIn: parent
+                            text: Translation.tr("No images added. Drag-drop on desktop or use + below.")
+                            color: Appearance.colors.colSubtext
+                            font.pixelSize: Appearance.font.pixelSize.small
+                        }
+                    }
+
+                    Repeater {
+                        model: Config.options.background.widgets.customImage.images
+
+                        delegate: ColumnLayout {
+                            id: imgRow
+                            required property var modelData
+                            required property int index
+                            Layout.fillWidth: true
+                            spacing: 4
+
+                            // Row 1: thumbnail + path + remove button
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 10
+
+                                // Thumbnail preview
+                                Item {
+                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
+                                    visible: (imgRow.modelData.path ?? "").length > 0
+
+                                    Image {
+                                        anchors.fill: parent
+                                        source: imgRow.modelData.path ?? ""
+                                        fillMode: Image.PreserveAspectCrop
+                                        cache: false
+                                        layer.enabled: true
+                                        layer.effect: OpacityMask {
+                                            maskSource: Rectangle { width: 40; height: 40; radius: 8 }
+                                        }
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 8
+                                            color: "transparent"
+                                            border.width: 1
+                                            border.color: Appearance.colors.colLayer0Border
+                                        }
+                                    }
+                                }
+
+                                // Path display
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: {
+                                        const p = imgRow.modelData.path ?? ""
+                                        if (p.length === 0) return Translation.tr("(No image — drag-drop or pick)")
+                                        const fn = p.split("/").pop()
+                                        return fn
+                                    }
+                                    color: Appearance.colors.colOnSecondaryContainer
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    elide: Text.ElideRight
+                                }
+
+                                // Remove button
+                                RippleButton {
+                                    Layout.preferredWidth: 36
+                                    Layout.preferredHeight: 36
+                                    buttonRadius: width / 2
+                                    colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
+                                    colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
+                                    onClicked: root.removeImage(imgRow.index)
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: "delete"
+                                        iconSize: Appearance.font.pixelSize.normal
+                                        color: Appearance.colors.colError
+                                    }
+                                }
+                            }
+
+                            // Row 2: shape picker for this image
+                            ConfigSelectionShapeArray {
+                                Layout.fillWidth: true
+                                Layout.leftMargin: 0
+                                Layout.rightMargin: 0
+                                currentValue: imgRow.modelData.shape ?? "Cookie4Sided"
+                                shapeColor: Appearance.colors.colPrimary
+                                backgroundColor: Appearance.colors.colPrimaryContainer
+                                options: root.shapesList
+                                onSelected: newValue => {
+                                    root.updateImage(imgRow.index, "shape", newValue)
+                                }
+                            }
+
+                            // Row 3: size spinbox + file picker button
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+
+                                ConfigSpinBox {
+                                    icon: "zoom_in"
+                                    text: Translation.tr("Size")
+                                    value: imgRow.modelData.size ?? 200
+                                    from: 80; to: 600; stepSize: 10
+                                    onValueChanged: {
+                                        root.updateImage(imgRow.index, "size", value)
+                                    }
+                                }
+
+                                // File picker button
+                                RippleButton {
+                                    Layout.preferredWidth: 36
+                                    Layout.preferredHeight: 36
+                                    buttonRadius: width / 2
+                                    colBackground: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
+                                    colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                                    onClicked: {
+                                        filePickerProc.command = ["python3", Quickshell.shellPath("scripts/images/pick-image.py")]
+                                        filePickerProc.imageIndex = imgRow.index
+                                        filePickerProc.running = true
+                                    }
+                                    contentItem: MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        horizontalAlignment: Text.AlignHCenter
+                                        text: "folder_open"
+                                        iconSize: Appearance.font.pixelSize.normal
+                                        color: Appearance.colors.colPrimary
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Add button
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+
+                Item { Layout.fillWidth: true }
+
+                ToolbarPairedFab {
+                    iconText: "add"
+                    onClicked: root.addImage("")
+                }
+            }
+
+            // File picker process
+            Process {
+                id: filePickerProc
+                property int imageIndex: -1
+                stdout: SplitParser {
+                    onRead: data => {
+                        if (data.trim().length > 0) {
+                            if (filePickerProc.imageIndex >= 0) {
+                                root.updateImage(filePickerProc.imageIndex, "path", data.trim())
+                            } else {
+                                root.addImage(data.trim())
+                            }
+                        }
                     }
                 }
             }

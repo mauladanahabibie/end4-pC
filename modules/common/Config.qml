@@ -314,6 +314,8 @@ Singleton {
                         property string path: ""
                         property string shape: "Cookie4Sided"
                         property real size: 200
+                        // Multi-image support: array of {path, shape, size, x, y}
+                        property list<var> images: []
                     }
 
                     property JsonObject resources: JsonObject {
