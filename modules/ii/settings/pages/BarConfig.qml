@@ -499,6 +499,12 @@ ContentPage {
                         checked: Config.options.bar.resources.alwaysShowSwap
                         onCheckedChanged: { Config.options.bar.resources.alwaysShowSwap = checked }
                     }
+                    ConfigSwitch {
+                        buttonIcon: "wifi"
+                        text: Translation.tr("Network")
+                        checked: Config.options.bar.resources.alwaysShowNetwork
+                        onCheckedChanged: { Config.options.bar.resources.alwaysShowNetwork = checked }
+                    }
                 }
                 ConfigSelectionArray {
                     text: Translation.tr("Style")

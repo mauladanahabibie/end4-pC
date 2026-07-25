@@ -383,6 +383,7 @@ Singleton {
                     property bool alwaysShowCpuTemp: false
                     property bool alwaysShowDisk: false
                     property bool alwaysShowRam: true
+                    property bool alwaysShowNetwork: false
                     property int memoryWarningThreshold: 95
                     property int swapWarningThreshold: 85
                     property int cpuWarningThreshold: 90

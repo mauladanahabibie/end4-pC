@@ -46,6 +46,12 @@ BarWidgetSwitcherArea {
                 Layout.leftMargin: shown ? 6 : 0
                 warningThreshold: Config.options.bar.resources.swapWarningThreshold
             }
+            Resource {
+                iconName: "wifi"
+                shown: Config.options.bar.resources.alwaysShowNetwork
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                Layout.leftMargin: shown ? 6 : 0
+            }
         }
     }
 
@@ -83,6 +89,12 @@ BarWidgetSwitcherArea {
                 percentage: ResourceUsage.swapUsedPercentage
                 Layout.leftMargin: shown ? 6 : 0
                 warningThreshold: Config.options.bar.resources.swapWarningThreshold
+            }
+            Resource {
+                iconName: "wifi"
+                shown: Config.options.bar.resources.alwaysShowNetwork
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+                Layout.leftMargin: shown ? 6 : 0
             }
         }
     }
@@ -128,6 +140,13 @@ BarWidgetSwitcherArea {
                 percentage: ResourceUsage.swapUsedPercentage
                 warningThreshold: Config.options.bar.resources.swapWarningThreshold
             }
+            Resource {
+                Layout.alignment: Qt.AlignHCenter
+                iconName: "wifi"
+                vertical: true
+                visible: Config.options.bar.resources.alwaysShowNetwork
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
+            }
         }
     }
 
@@ -171,6 +190,13 @@ BarWidgetSwitcherArea {
                 visible: Config.options.bar.resources.alwaysShowSwap
                 percentage: ResourceUsage.swapUsedPercentage
                 warningThreshold: Config.options.bar.resources.swapWarningThreshold
+            }
+            Resource {
+                Layout.alignment: Qt.AlignHCenter
+                iconName: "wifi"
+                vertical: true
+                visible: Config.options.bar.resources.alwaysShowNetwork
+                percentage: Math.min(1, ResourceUsage.networkDownloadSpeed / (1024 * 1024))
             }
         }
     }
