@@ -31,6 +31,11 @@ AbstractBackgroundWidget {
     y: forceCenter ? ((root.screenHeight - root.height) / 2) : targetY
     visibleWhenLocked: true
 
+    function restoreXYBinding() {
+        root.x = Qt.binding(() => root.forceCenter ? ((root.screenWidth - root.width) / 2) : root.targetX);
+        root.y = Qt.binding(() => root.forceCenter ? ((root.screenHeight - root.height) / 2) : root.targetY);
+    }
+
     property var textHorizontalAlignment: {
         if (!Config.options.background.widgets.clock.digital.adaptiveAlignment || root.forceCenter || Config.options.background.widgets.clock.digital.vertical) 
             return Text.AlignHCenter;
