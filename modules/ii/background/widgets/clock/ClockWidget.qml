@@ -56,16 +56,8 @@ AbstractBackgroundWidget {
             anchors.horizontalCenter: parent.horizontalCenter
             shown: root.clockStyle === "cookie" && (root.shouldShow)
             fade: false
-            sourceComponent: Column {
-                spacing: 10
-                CookieClock {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
-                FadeLoader {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    shown: Config.options.background.widgets.clock.quote.enable && Config.options.background.widgets.clock.quote.text !== ""
-                    sourceComponent: CookieQuote {}
-                }
+            sourceComponent: CookieClock {
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
@@ -79,6 +71,22 @@ AbstractBackgroundWidget {
                 textHorizontalAlignment: root.textHorizontalAlignment
             }
         }
+
+        FadeLoader {
+            id: pixelClockLoader
+            anchors.horizontalCenter: parent.horizontalCenter
+            shown: root.clockStyle === "pixel" && (root.shouldShow)
+            fade: false
+            sourceComponent: PixelClock {}
+        }
+
+        FadeLoader {
+            id: quoteLoader
+            anchors.horizontalCenter: parent.horizontalCenter
+            shown: Config.options.background.widgets.clock.quote.enable && (root.clockStyle === "pixel" || root.clockStyle === "cookie") && Config.options.background.widgets.clock.quote.text !== "" && root.shouldShow
+            sourceComponent: CookieQuote {}
+        }
+
         StatusRow {
             anchors.horizontalCenter: parent.horizontalCenter
         }

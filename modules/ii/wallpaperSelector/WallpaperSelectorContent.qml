@@ -66,6 +66,11 @@ MouseArea {
                     GlobalStates.wallpaperSelectorOpen = false;
                 });
             } else {
+                // Stop preview FIRST so wallpaperPath reverts to the old wallpaper,
+                // then select() sets confirmedPath to the new one — this causes
+                // onWallpaperPathChanged to fire with the real transition animation.
+                if (Config.options.background.enableWallpaperPreview)
+                    Wallpapers.stopPreview();
                 Wallpapers.select(filePath, root.useDarkMode);
             }
         }
@@ -82,6 +87,7 @@ MouseArea {
 
     Keys.onPressed: event => {
         if (event.key === Qt.Key_Escape) {
+            Wallpapers.stopPreview();
             GlobalStates.wallpaperSelectorOpen = false;
             event.accepted = true;
         } else if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_V) {
@@ -145,6 +151,7 @@ MouseArea {
     StyledRectangularShadow {
         target: wallpaperGridBackground
     }
+
     Rectangle {
         id: wallpaperGridBackground
         anchors {
@@ -436,21 +443,35 @@ MouseArea {
                                         Config.options.wallpaperSelector.useSystemFileDialog = true;
                                     }
                                     text: "open_in_new"
+                                    StyledToolTip {
+                                        text: Translation.tr("Use the system file picker instead\nRight-click to make this the default behavior")
+                                    }
                                 }
                                 IconToolbarButton {
                                     implicitWidth: height
                                     onClicked: Wallpapers.randomFromCurrentFolder()
                                     text: "ifl"
+                                    StyledToolTip {
+                                        text: Translation.tr("Random wallpaper from current folder")
+                                    }
                                 }
                                 IconToolbarButton {
                                     implicitWidth: height
                                     onClicked: root.useDarkMode = !root.useDarkMode
                                     text: root.useDarkMode ? "dark_mode" : "light_mode"
+                                    StyledToolTip {
+                                        text: root.useDarkMode
+                                            ? Translation.tr("Switch to light mode")
+                                            : Translation.tr("Switch to dark mode")
+                                    }
                                 }
                                 IconToolbarButton {
                                     implicitWidth: height
                                     onClicked: root.updateThumbnails()
                                     text: "reset_image"
+                                    StyledToolTip {
+                                        text: Translation.tr("Update thumbnails")
+                                    }
                                 }
                                 ToolbarTextField {
                                     id: filterField
@@ -517,7 +538,10 @@ MouseArea {
 
                         ToolbarPairedFab {
                             iconText: "close"
-                            onClicked: GlobalStates.wallpaperSelectorOpen = false
+                            onClicked: {
+                                Wallpapers.stopPreview();
+                                GlobalStates.wallpaperSelectorOpen = false;
+                            }
                         }
                     }
                 }
@@ -533,6 +557,8 @@ MouseArea {
                     filterField.forceActiveFocus()
                 else
                     root.forceActiveFocus()
+            } else if (!GlobalStates.wallpaperSelectorOpen) {
+                Wallpapers.stopPreview();
             }
         }
     }

@@ -12,8 +12,10 @@ Item {
     property real padding: (root.isMaterial && !root.paintMaterialPill) ? 0 : 5
     property color bgColor: Appearance.colors.colPrimaryContainer
 
+    readonly property bool isSegmented: Config.options?.bar.borderless === "segmented"
+
     readonly property real fullRadius: height / 2
-    readonly property real midRadius: Config.options.bar.cornerStyle === 2 ? Appearance.rounding.unsharpenmore + 2 : Appearance.rounding.unsharpenmore
+    readonly property real midRadius: root.isSegmented ? 0 : (Config.options.bar.cornerStyle === 2 ? Appearance.rounding.unsharpenmore + 2 : Appearance.rounding.unsharpenmore)
     property real startRadius: {
         if (totalCount <= 1) return fullRadius;
         if (currentIndex === 0) return fullRadius;
@@ -45,9 +47,12 @@ Item {
                 ? root.bgColor
                 : (Config.options?.bar.borderless === "transparent"
                     ? "transparent"
-                    : Config.options.bar.cornerStyle === 2
+                    : Config.options.bar.cornerStyle === 2 || (Config.options?.bar.borderless === "segmented" && !Config.options.bar.showBackground)
                         ? Appearance.colors.colLayer0
                         : Appearance.colors.colLayer1)
+
+        border.width: root.isSegmented ? 1 : 0
+        border.color: Appearance.colors.colLayer0Border
 
         topLeftRadius: (root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.startRadius)
         bottomLeftRadius: (root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.endRadius : root.startRadius)

@@ -12,6 +12,7 @@ import qs.modules.common.functions
 ContentPage {
     forceWidth: true
     bottomContentPadding: 35
+    property bool isMinimal: Config.options.settings.style === "minimal"
 
     function runSystemUpdate() {
         Quickshell.execDetached([
@@ -34,9 +35,9 @@ ContentPage {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 156 
-        Layout.topMargin: 35
-        Layout.leftMargin: 16
-        Layout.rightMargin: 16
+        Layout.topMargin: !isMinimal ? 35 : 4
+        Layout.leftMargin: !isMinimal ? 16 : 0
+        Layout.rightMargin: !isMinimal ? 16 : 0
 
         radius: 24
         color: Appearance.colors.colLayer1
@@ -138,6 +139,7 @@ ContentPage {
 
     ColumnLayout {
         Layout.fillWidth: true
+        Layout.topMargin: !isMinimal ? 0 : -8
         spacing: 8
 
         RowLayout { //This is not in the grid because I was planning to do something else.
@@ -183,6 +185,7 @@ ContentPage {
             }
 
             AboutCard {
+                visible: !isMinimal
                 icon: "terminal"
                 label: "Shell"
                 iconShape: MaterialShape.Shape.Gem
@@ -210,6 +213,7 @@ ContentPage {
             }
 
             AboutCard {
+                visible: !isMinimal
                 icon: "timelapse"
                 label: "Uptime"
                 iconShape: MaterialShape.Shape.Cookie12Sided

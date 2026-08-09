@@ -17,6 +17,9 @@ import qs.modules.common.functions as CF
 Scope {
     id: root
 
+    readonly property real sizeScale: Config.options.settings.style === "minimal" ? 0.75 : 1.0
+    property bool isMinimal: Config.options.settings.style === "minimal"
+
     Component.onCompleted: {
         GlobalStates.settingsOpen = false;
     }
@@ -45,6 +48,7 @@ Scope {
         onVisibleChanged: {
             if (visible) {
                 GlobalFocusGrab.addDismissable(panelWindow);
+                settingsWindow.userMoved = false;
             } else {
                 GlobalFocusGrab.removeDismissable(panelWindow);
             }
@@ -74,14 +78,16 @@ Scope {
 
         Rectangle {
             id: settingsWindow
-            anchors.centerIn: parent
-            width: Math.min(parent.width - 80, 980)
-            height: Math.min(parent.height - 80, 665)
+            width: Config.options.settings.style === "minimal" ? Math.min(parent.width - 70, 980 * sizeScale) : Math.min(parent.width - 80, 980 * sizeScale)
+            height: Math.min(parent.height - 80, 665 * sizeScale)
             color: Appearance.colors.colLayer0
-            border.width: 1
-            border.color: Appearance.colors.colLayer0Border
-            radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 5
+            border.width: Config.options.settings.borderSize
+            border.color: Appearance.getColorFromName(Config.options.settings.borderColor)
+            radius: !isMinimal ? Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 5 : Appearance.rounding.screenRounding + 5
             z: 1
+
+            property bool userMoved: false
+            anchors.centerIn: userMoved ? undefined : parent
 
             opacity: GlobalStates.settingsOpen ? 1 : 0
             scale: GlobalStates.settingsOpen ? 1 : 0.95
@@ -93,13 +99,61 @@ Scope {
                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
             }
 
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
-                    panelWindow.hide();
+            Keys.onTabPressed: (event) => {
+            const count = settingsContent.pages.length;
+            settingsContent.currentPage = (settingsContent.currentPage + 1) % count;
+            settingsContent.showingProfile = false;
+            event.accepted = true;
+        }
+
+        Keys.onBacktabPressed: (event) => {
+            const count = settingsContent.pages.length;
+            settingsContent.currentPage = (settingsContent.currentPage - 1 + count) % count;
+            settingsContent.showingProfile = false;
+            event.accepted = true;
+        }
+
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                panelWindow.hide();
+                event.accepted = true;
+                return;
+            }
+
+            if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) {
+                const instance = GlobalStates.currentPageInstance;
+                if (instance && instance.contentY !== undefined) {
+                    const step = 60;
+                    const delta = event.key === Qt.Key_Down ? step : -step;
+                    const maxY = Math.max(0, (instance.contentHeight ?? 0) - instance.height);
+                    instance.contentY = Math.max(0, Math.min(maxY, instance.contentY + delta));
+                }
+                event.accepted = true;
+                return;
+            }
+        }
+
+            Rectangle {
+                id: dragHandle
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 32
+                color: "transparent"
+                z: 2
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.SizeAllCursor
+                    drag.target: settingsWindow
+                    drag.axis: Drag.XAndYAxis
+                    onPressed: settingsWindow.userMoved = true
+                    onDoubleClicked: settingsWindow.userMoved = false
                 }
             }
 
             SettingsContent {
+                id: settingsContent
                 anchors.fill: parent
             }
         }
@@ -112,7 +166,7 @@ Scope {
         function close(): void  { GlobalStates.settingsOpen = false; }
     }
 
-    GlobalShortcut {
+    CompositorGlobalShortcut {
         name: "settingsToggle"
         description: "Toggles settings panel"
         onPressed: GlobalStates.settingsOpen = !GlobalStates.settingsOpen;

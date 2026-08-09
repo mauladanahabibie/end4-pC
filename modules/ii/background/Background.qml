@@ -24,6 +24,7 @@ import qs.modules.ii.background.widgets.visualizer
 import qs.modules.ii.background.widgets.calendar
 import qs.modules.ii.background.widgets.worldclock
 import qs.modules.ii.background.widgets.usercard
+import qs.modules.ii.background.widgets.notes
 
 Variants {
     id: root
@@ -108,9 +109,11 @@ Variants {
 
         property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
 
-        property string effectiveWallpaperPath: (GlobalStates.screenLocked && Config.options.background.lockWall !== "")
-            ? Config.options.background.lockWall
-            : Config.options.background.wallpaperPath
+        property string effectiveWallpaperPath: {
+            if (GlobalStates.screenLocked && Config.options.background.lockWall !== "")
+                return Config.options.background.lockWall;
+            return Wallpapers.previewPath || Wallpapers.confirmedPath || Config.options.background.wallpaperPath;
+        }
 
         property bool wallpaperIsVideo: bgRoot.effectiveWallpaperPath.endsWith(".mp4") || bgRoot.effectiveWallpaperPath.endsWith(".webm") || bgRoot.effectiveWallpaperPath.endsWith(".mkv") || bgRoot.effectiveWallpaperPath.endsWith(".avi") || bgRoot.effectiveWallpaperPath.endsWith(".mov")
         property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : bgRoot.effectiveWallpaperPath
@@ -403,7 +406,7 @@ Variants {
 
                     if (drop.urls.length === 1) {
                         const path = CF.FileUtils.trimFileProtocol(decodeURIComponent(drop.urls[0].toString()))
-                        const validExt = /\.(png|jpe?g|webp|bmp|gif|mp4|webm|mkv|avi|mov)$/i.test(path)
+                        const validExt = /\.(png|jpe?g|webp|bmp|gif)$/i.test(path)
                         if (validExt) {
                             Wallpapers.select(path, Appearance.m3colors.darkmode)
                         } else {
@@ -425,7 +428,7 @@ Variants {
                     color: CF.ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
 
                     property bool isSingleImage: wallpaperDropArea.currentUrls.length === 1
-                        && /\.(png|jpe?g|webp|bmp|gif|mp4|webm|mkv|avi|mov)$/i.test(
+                        && /\.(png|jpe?g|webp|bmp|gif)$/i.test(
                             CF.FileUtils.trimFileProtocol(wallpaperDropArea.currentUrls[0].toString())
                         )
 
@@ -550,6 +553,18 @@ Variants {
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
                         wallpaperSafetyTriggered: bgRoot.wallpaperSafetyTriggered
+                    }
+                }
+                FadeLoader {
+                    shown: Config.options.background.widgets.notes.enable
+                        && (Config.options.background.screenList.length === 0
+                            || Config.options.background.screenList.includes(bgRoot.screen.name))
+                    sourceComponent: NotesWidget {
+                        screenWidth: bgRoot.screen.width
+                        screenHeight: bgRoot.screen.height
+                        scaledScreenWidth: bgRoot.screen.width
+                        scaledScreenHeight: bgRoot.screen.height
+                        wallpaperScale: 1
                     }
                 }
                 FadeLoader {

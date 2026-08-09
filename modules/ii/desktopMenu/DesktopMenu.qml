@@ -183,6 +183,7 @@ Scope {
 
                     GroupedList {
                         Layout.fillWidth: true
+                        itemVerticalPadding: 16
                         bgcolor: Appearance.colors.colLayer0
 
                         // Wallpapers

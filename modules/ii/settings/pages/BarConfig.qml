@@ -42,6 +42,7 @@ ContentPage {
         { id: "media",             name: Translation.tr("Media"),                icon: "music_note" },
         { id: "resources",         name: Translation.tr("Resources"),            icon: "empty_dashboard" },
         { id: "systemIcons",       name: Translation.tr("System Icons"),         icon: "info" },
+        { id: "networkSpeed",      name: Translation.tr("Network Speed"),        icon: "network_check" },
         { id: "clockWidget",       name: Translation.tr("Clock"),                icon: "schedule" },
         { id: "utilButtons",       name: Translation.tr("Util Buttons"),         icon: "toggle_on" },
         { id: "sysTray",           name: Translation.tr("Tray"),                 icon: "inbox" },
@@ -53,6 +54,7 @@ ContentPage {
         { id: "visualizer",        name: Translation.tr("Visualizer"),           icon: "graphic_eq" },
         { id: "hyprlandXkbIndicator",   name: Translation.tr("Keyboard Layout"), icon: "keyboard" },
         { id: "divisor",            name: Translation.tr("Divider"),             icon: "horizontal_distribute" },
+        { id: "launcherButton",     name: Translation.tr("Launcher Button"),     icon: "search" },
     ]
 
     function availableFor() {
@@ -237,7 +239,8 @@ ContentPage {
                     options: [
                         { displayName: Translation.tr(""),          icon: "block",          value: "transparent" },
                         { displayName: Translation.tr("Pills"),     icon: "pill",           value: "pills" },
-                        { displayName: Translation.tr("Separated"), icon: "view_column_2",  value: "separated" }
+                        { displayName: Translation.tr("Separated"), icon: "view_column_2",  value: "separated" },
+                        { displayName: Translation.tr("Segmented"), icon: "tablet",           value: "segmented" },
                     ]
                 }
                 ConfigRow{
@@ -269,6 +272,41 @@ ContentPage {
             title: Translation.tr("Notifications")
             
             GroupedList {
+                ConfigComboBox { // too much items for configselectionarray - I know it's not the best place to put this but I can change it later
+                    text: Translation.tr("Popup position")
+                    buttonIcon: "my_location" 
+                    currentValue: Config.options.notifications.position
+                    fieldWidth: 50
+                    onSelected: newValue => {
+                        Config.options.notifications.position = newValue;
+                    }
+                    model: [
+                        {
+                            displayName: Translation.tr("Top left"),
+                            value: "top_left"
+                        },
+                        {
+                            displayName: Translation.tr("Top center"),
+                            value: "top_center"
+                        },
+                        {
+                            displayName: Translation.tr("Top right"),
+                            value: "top_right"
+                        },
+                        {
+                            displayName: Translation.tr("Bottom left"),
+                            value: "bottom_left"
+                        },
+                        {
+                            displayName: Translation.tr("Bottom center"),
+                            value: "bottom_center"
+                        },
+                        {
+                            displayName: Translation.tr("Bottom right"),
+                            value: "bottom_right"
+                        }
+                    ]
+                }
                 ConfigSwitch {
                     buttonIcon: "counter_2"
                     text: Translation.tr("Unread indicator: show count")
@@ -326,10 +364,11 @@ ContentPage {
                 }
                 ConfigSpinBox {
                     icon: "width"
+                    enabled: Config.options.bar.divider.style === "space"
                     text: Translation.tr("Space width (px)")
                     value: Config.options.bar.divider.spacing
                     from: 4
-                    to: 100
+                    to: 400
                     stepSize: 2
                     onValueChanged: {
                         Config.options.bar.divider.spacing = value;

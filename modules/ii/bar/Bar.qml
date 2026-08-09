@@ -130,7 +130,7 @@ Scope {
 
                     RoundCorner {
                         id: leftPillCorner
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
+                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && (!Config.options.bar.autoHide.enable || barRoot.mustShow)
                         x: barContent.centerPillX - implicitSize
                         implicitSize: Appearance.rounding.screenRounding
                         color: Appearance.colors.colLayer0
@@ -198,7 +198,7 @@ Scope {
 
                     RoundCorner {
                         id: rightPillCorner
-                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0
+                        visible: barContent.centerOnly && showBarBackground && Config.options.bar.cornerStyle === 0 && (!Config.options.bar.autoHide.enable || barRoot.mustShow)
                         x: barContent.centerPillX + barContent.centerPillWidth
                         implicitSize: Appearance.rounding.screenRounding
                         color: Appearance.colors.colLayer0
@@ -314,7 +314,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    CompositorGlobalShortcut {
         name: "barToggle"
         description: "Toggles bar on press"
 
@@ -323,7 +323,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    CompositorGlobalShortcut {
         name: "barOpen"
         description: "Opens bar on press"
 
@@ -332,7 +332,7 @@ Scope {
         }
     }
 
-    GlobalShortcut {
+    CompositorGlobalShortcut {
         name: "barClose"
         description: "Closes bar on press"
 

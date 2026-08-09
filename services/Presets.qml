@@ -59,6 +59,8 @@ Singleton {
 
     function apply(name) {
         GlobalStates.settingsOpen = false
+        Wallpapers.confirmedPath = ""
+        Wallpapers.previewPath = ""
         Quickshell.execDetached(["bash", Directories.presetsScriptPath, "--apply", name])
     }
 

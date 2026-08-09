@@ -54,7 +54,7 @@ Singleton {
         }
     }
 
-    GlobalShortcut {
+    CompositorGlobalShortcut {
         name: "workspaceNumber"
         description: "Hold to show workspace numbers, release to show icons"
 
@@ -80,7 +80,7 @@ Singleton {
         }
     }
 
-    GlobalShortcut {
+     CompositorGlobalShortcut {
         name: "centeredWallpaperToggle"
         description: "Toggles centered wallpaper"
         onPressed: {

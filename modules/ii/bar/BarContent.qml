@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.UPower
-import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import qs
 import qs.services
@@ -162,7 +161,7 @@ Item {
                 id: leftRow
                 visible: !root.isMaterial
                 anchors.fill: parent
-                spacing: Config.options.bar.borderless === "transparent" ? -7 : 2
+                spacing: Config.options.bar.borderless === "transparent" ? -7 : Config.options?.bar.borderless === "segmented" ? -1 : 2
 
                 Repeater {
                     model: root.effectiveLeftLayout
@@ -255,7 +254,7 @@ Item {
                 id: middleRow
                 visible: !root.isMaterial
                 anchors.fill: parent
-                spacing: Config.options.bar.borderless === "transparent" ? -7 : 2
+                spacing: Config.options.bar.borderless === "transparent" ? -7 : Config.options?.bar.borderless === "segmented" ? -1 : 2
 
                 Repeater {
                     model: root.effectiveMiddleLayout
@@ -348,7 +347,7 @@ Item {
                 id: rightRow
                 visible: !root.isMaterial
                 anchors.fill: parent
-                spacing: Config.options.bar.borderless === "transparent" ? -7 : 2
+                spacing: Config.options.bar.borderless === "transparent" ? -7 : Config.options?.bar.borderless === "segmented" ? -1 : 2
 
                 Repeater {
                     model: root.effectiveRightLayout

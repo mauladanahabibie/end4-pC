@@ -52,4 +52,5 @@ Scope {
     PanelLoader { component: DropShelfPanel {} }
     PanelLoader { component: Cheatsheet {} }
     PanelLoader { component: DisplayProjectionOsd {} }
+    PanelLoader { component: NiriBackdrop {} }
 }

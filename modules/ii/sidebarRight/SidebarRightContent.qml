@@ -25,7 +25,6 @@ Item {
     id: root
     property int sidebarWidth: Appearance.sizes.sidebarWidth
     property int sidebarPadding: 10
-    property string settingsQmlPath: Quickshell.shellPath("settings.qml")
     property bool showAudioOutputDialog: false
     property bool showAudioInputDialog: false
     property bool showBluetoothDialog: false
@@ -33,6 +32,9 @@ Item {
     property bool showWifiDialog: false
     property bool editMode: false
     property bool showIconPickerDialog: false
+
+    readonly property bool animatedEntrance: WM.compositor !== "hyprland"
+    readonly property bool sidebarOpen: GlobalStates.sidebarRightOpen
 
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property var realPlayers: MprisController.players
@@ -503,11 +505,17 @@ Item {
                 toggled: false
                 buttonIcon: "restart_alt"
                 onClicked: {
-                    Quickshell.execDetached(["hyprctl", "reload"])
+                    if (WM.compositor === "niri") {
+                        Quickshell.execDetached(["niri", "msg", "action", "reload-config"]);
+                    } else {
+                        Quickshell.execDetached(["hyprctl", "reload"]);
+                    }
                     Quickshell.reload(true);
                 }
                 StyledToolTip {
-                    text: Translation.tr("Reload Hyprland & Quickshell")
+                    text: WM.compositor === "niri"
+                        ? Translation.tr("Reload Niri & Quickshell")
+                        : Translation.tr("Reload Hyprland & Quickshell")
                 }
             }
             QuickToggleButton {

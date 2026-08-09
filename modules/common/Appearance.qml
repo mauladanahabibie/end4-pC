@@ -15,6 +15,21 @@ Singleton {
     property QtObject sizes
     property string syntaxHighlightingTheme
 
+    function getColorFromName(name) {
+        switch (name) {
+            case "primary":            return colors.colPrimary
+            case "secondary":          return colors.colSecondary
+            case "tertiary":           return colors.colTertiary
+            case "primaryContainer":   return colors.colPrimaryContainer
+            case "secondaryContainer": return colors.colSecondaryContainer
+            case "tertiaryContainer":  return colors.colTertiaryContainer
+            case "layer0":             return colors.colLayer0
+            case "layer0Border":       return colors.colLayer0Border
+            case "layer1":             return colors.colLayer1
+            default:                   return colors.colPrimaryContainer
+        }
+    }
+
     // Transparency. The quadratic functions were derived from analysis of hand-picked transparency values.
     ColorQuantizer {
         id: wallColorQuant
@@ -382,7 +397,39 @@ Singleton {
             property int duration: 350
             property int type: Easing.OutExpo
         }
+
+        property QtObject sidebarSlideEnter: QtObject {
+            property int duration: 300
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.standardDecel
+            property int velocity: 650
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    alwaysRunToEnd: true
+                    duration: root.animation.sidebarSlideEnter.duration
+                    easing.type: root.animation.sidebarSlideEnter.type
+                    easing.bezierCurve: root.animation.sidebarSlideEnter.bezierCurve
+                }
+            }
+        }
+
+        property QtObject sidebarSlideExit: QtObject {
+            property int duration: 250
+            property int type: Easing.BezierSpline
+            property list<real> bezierCurve: animationCurves.standardAccel
+            property int velocity: 650
+            property Component numberAnimation: Component {
+                NumberAnimation {
+                    alwaysRunToEnd: true
+                    duration: root.animation.sidebarSlideExit.duration
+                    easing.type: root.animation.sidebarSlideExit.type
+                    easing.bezierCurve: root.animation.sidebarSlideExit.bezierCurve
+                }
+            }
+        }
     }
+
+    
 
     sizes: QtObject {
         property real baseBarHeight: 40
