@@ -58,6 +58,51 @@ ContentPage {
         }
     }
 
+    // ── Custom Video helpers (rebuild+reassign idiom; list<var> won't persist
+    //    in-place nested mutation — see modules/common/Config.qml) ──
+    function normalizeVideoEntry(o) {
+        return {
+            path: o.path ?? "",
+            shape: o.shape ?? "Cookie4Sided",
+            size: o.size ?? 200,
+            x: o.x ?? 400,
+            y: o.y ?? 100,
+            autoplay: o.autoplay ?? true,
+            loop: o.loop ?? true,
+            muted: o.muted ?? true,
+            playWhenCharging: o.playWhenCharging ?? true,
+            playWhenOnBattery: o.playWhenOnBattery ?? true
+        }
+    }
+
+    function addCustomVideo(path) {
+        let list = []
+        const vids = Config.options.background.widgets.customVideo.videos
+        for (let i = 0; i < vids.length; i++) list.push(normalizeVideoEntry(vids[i]))
+        list.push(normalizeVideoEntry({ path: path ?? "" }))
+        Config.options.background.widgets.customVideo.videos = list
+    }
+
+    function removeCustomVideo(index) {
+        let list = []
+        const vids = Config.options.background.widgets.customVideo.videos
+        for (let i = 0; i < vids.length; i++) {
+            if (i === index) continue
+            list.push(normalizeVideoEntry(vids[i]))
+        }
+        Config.options.background.widgets.customVideo.videos = list
+    }
+
+    function updateCustomVideo(index, key, value) {
+        let list = []
+        const vids = Config.options.background.widgets.customVideo.videos
+        for (let i = 0; i < vids.length; i++) list.push(normalizeVideoEntry(vids[i]))
+        if (index < list.length) {
+            list[index][key] = value
+            Config.options.background.widgets.customVideo.videos = list
+        }
+    }
+
     function goTo(term) {
         const t = term.toLowerCase().trim()
 
@@ -1211,6 +1256,413 @@ ContentPage {
                 ToolbarPairedFab {
                     iconText: "add"
                     onClicked: page.addCustomImage("")
+                }
+            }
+        }
+
+        ContentSection {
+            icon: "movie"
+            shape: MaterialShape.Shape.SoftBoom
+            title: Translation.tr("Custom Video")
+
+            GroupedList {
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    checked: Config.options.background.widgets.customVideo.enable
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.enable = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "autoplay"
+                    text: Translation.tr("Autoplay")
+                    checked: Config.options.background.widgets.customVideo.autoplay
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.autoplay = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "repeat"
+                    text: Translation.tr("Loop")
+                    checked: Config.options.background.widgets.customVideo.loop
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.loop = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "volume_off"
+                    text: Translation.tr("Muted")
+                    checked: Config.options.background.widgets.customVideo.muted
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.muted = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "battery_charging_full"
+                    text: Translation.tr("Play while charging")
+                    checked: Config.options.background.widgets.customVideo.playWhenCharging
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.playWhenCharging = checked;
+                    }
+                }
+                ConfigSwitch {
+                    Layout.fillWidth:true
+                    buttonIcon: "battery_alert"
+                    text: Translation.tr("Play while on battery")
+                    checked: Config.options.background.widgets.customVideo.playWhenOnBattery
+                    onCheckedChanged: {
+                        Config.options.background.widgets.customVideo.playWhenOnBattery = checked;
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Playback Defaults")
+                tooltip: Translation.tr("Applied to the legacy single-video widget and used as defaults for newly added videos. Each video row below has its own switches.")
+
+                GroupedList {
+                    ConfigSwitch {
+                        Layout.fillWidth:true
+                        buttonIcon: "autoplay"
+                        text: Translation.tr("Autoplay")
+                        checked: Config.options.background.widgets.customVideo.autoplay
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.autoplay = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth:true
+                        buttonIcon: "repeat"
+                        text: Translation.tr("Loop")
+                        checked: Config.options.background.widgets.customVideo.loop
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.loop = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth:true
+                        buttonIcon: "volume_off"
+                        text: Translation.tr("Muted")
+                        checked: Config.options.background.widgets.customVideo.muted
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.muted = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth:true
+                        buttonIcon: "battery_charging_full"
+                        text: Translation.tr("Play while charging")
+                        checked: Config.options.background.widgets.customVideo.playWhenCharging
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.playWhenCharging = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth:true
+                        buttonIcon: "battery_alert"
+                        text: Translation.tr("Play while on battery")
+                        checked: Config.options.background.widgets.customVideo.playWhenOnBattery
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.playWhenOnBattery = checked;
+                        }
+                    }
+                }
+            }
+
+            // Legacy single video shape (only shown if no multi-videos)
+            ContentSubsection {
+                title: Translation.tr("Default Shape")
+                tooltip: Translation.tr("Used by the legacy single video widget when no videos are added below.")
+                visible: Config.options.background.widgets.customVideo.videos.length === 0
+
+                GroupedList {
+                    ConfigSelectionShapeArray {
+                        currentValue: Config.options.background.widgets.customVideo.shape
+                        shapeColor: Appearance.colors.colPrimary
+                        backgroundColor: Appearance.colors.colPrimaryContainer
+                        options: page.customImageShapes
+                        onSelected: newValue => {
+                            Config.options.background.widgets.customVideo.shape = newValue
+                        }
+                    }
+                }
+            }
+
+            // Legacy single video row (only shown if no multi-videos)
+            ContentSubsection {
+                title: Translation.tr("Video")
+                tooltip: Translation.tr("Drag a video onto the desktop widget, or pick a file below.")
+                visible: Config.options.background.widgets.customVideo.videos.length === 0
+
+                GroupedList {
+                    RowLayout {
+                        Layout.fillWidth:true
+                        spacing: 10
+
+                        MaterialSymbol {
+                            text: "movie"
+                            iconSize: Appearance.font.pixelSize.larger
+                            color: Appearance.colors.colOnSecondaryContainer
+                        }
+
+                        StyledText {
+                            Layout.fillWidth:true
+                            text: {
+                                const p = Config.options.background.widgets.customVideo.path ?? ""
+                                if (p.length === 0) return Translation.tr("(No video — drag-drop or pick)")
+                                return p.split("/").pop()
+                            }
+                            color: Appearance.colors.colOnSecondaryContainer
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            elide: Text.ElideRight
+                        }
+
+                        RippleButton {
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                            buttonRadius: width / 2
+                            colBackground: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
+                            colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                            onClicked: {
+                                videoPickerProc.videoIndex = -1
+                                videoPickerProc.running =true
+                            }
+                            contentItem: MaterialSymbol {
+                                anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                text: "folder_open"
+                                iconSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colPrimary
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Multi-video list
+            ContentSubsection {
+                title: Translation.tr("Videos")
+                tooltip: Translation.tr("Drag videos onto the desktop widget, or add them here and pick a file. Each video has its own shape, size and playback switches.")
+
+                // Empty state
+                Item {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight:60
+                    visible: Config.options.background.widgets.customVideo.videos.length === 0
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: Translation.tr("No videos added. Drag-drop on desktop or use + below.")
+                        color: Appearance.colors.colSubtext
+                        font.pixelSize: Appearance.font.pixelSize.small
+                    }
+                }
+
+                // Video rows — OUTSIDE GroupedList because Repeater doesn't work inside it
+                Repeater {
+                    model: Config.options.background.widgets.customVideo.videos
+
+                    delegate: ColumnLayout {
+                        id: vidRow
+                        required property var modelData
+                        required property int index
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        // Background card for this video entry
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: vidContent.implicitHeight + 16
+                            radius: Appearance.rounding.normal
+                            color: Appearance.colors.colLayer1
+
+                            ColumnLayout {
+                                id: vidContent
+                                anchors { fill: parent; margins: 8 }
+                                spacing: 6
+
+                                // Row 1: icon + path + remove button
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing:10
+
+                                    Item {
+                                        Layout.preferredWidth: 40
+                                        Layout.preferredHeight: 40
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 8
+                                            color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+                                            MaterialSymbol {
+                                                anchors.centerIn: parent
+                                                text: "movie"
+                                                iconSize: Appearance.font.pixelSize.larger
+                                                color: Appearance.colors.colPrimary
+                                            }
+                                        }
+                                    }
+
+                                    // Path display
+                                    StyledText {
+                                        Layout.fillWidth: true
+                                        text: {
+                                            const p = vidRow.modelData.path ?? ""
+                                            if (p.length === 0) return Translation.tr("(No video — drag-drop or pick)")
+                                            return p.split("/").pop()
+                                        }
+                                        color: Appearance.colors.colOnSecondaryContainer
+                                        font.pixelSize: Appearance.font.pixelSize.small
+                                        elide: Text.ElideRight
+                                    }
+
+                                    // Remove button
+                                    RippleButton {
+                                        Layout.preferredWidth: 36
+                                        Layout.preferredHeight: 36
+                                        buttonRadius: width / 2
+                                        colBackground: ColorUtils.transparentize(Appearance.colors.colError,0.85)
+                                        colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError,0.6)
+                                        colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
+                                        onClicked: page.removeCustomVideo(vidRow.index)
+                                        contentItem: MaterialSymbol {
+                                            anchors.centerIn: parent
+                                            horizontalAlignment: Text.AlignHCenter
+                                            text: "delete"
+                                            iconSize: Appearance.font.pixelSize.normal
+                                            color: Appearance.colors.colError
+                                        }
+                                    }
+                                }
+
+                                // Row 2: shape picker for this video
+                                ConfigSelectionShapeArray {
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: 0
+                                    Layout.rightMargin: 0
+                                    currentValue: vidRow.modelData.shape ?? "Cookie4Sided"
+                                    shapeColor: Appearance.colors.colPrimary
+                                    backgroundColor: Appearance.colors.colPrimaryContainer
+                                    options: page.customImageShapes
+                                    onSelected: newValue => {
+                                        page.updateCustomVideo(vidRow.index, "shape", newValue)
+                                    }
+                                }
+
+                                // Row 3: size spinbox + file picker button
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    ConfigSpinBox {
+                                        icon: "zoom_in"
+                                        text: Translation.tr("Size")
+                                        value: vidRow.modelData.size ?? 200
+                                        from: 80; to: 600; stepSize: 10
+                                        onValueChanged: {
+                                            page.updateCustomVideo(vidRow.index, "size", value)
+                                        }
+                                    }
+
+                                    // File picker button
+                                    RippleButton {
+                                        Layout.preferredWidth: 36
+                                        Layout.preferredHeight:36
+                                        buttonRadius: width / 2
+                                        colBackground: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+                                        colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
+                                        colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                                        onClicked: {
+                                            videoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
+                                            videoPickerProc.videoIndex = vidRow.index
+                                            videoPickerProc.running = true
+                                        }
+                                        contentItem: MaterialSymbol {
+                                            anchors.centerIn: parent
+                                            horizontalAlignment: Text.AlignHCenter
+                                            text: "folder_open"
+                                            iconSize: Appearance.font.pixelSize.normal
+                                            color: Appearance.colors.colPrimary
+                                        }
+                                    }
+                                }
+
+                                // Row 4: per-video playback switches
+                                ConfigSwitch {
+                                    Layout.fillWidth: true
+                                    buttonIcon: "autoplay"
+                                    text: Translation.tr("Autoplay")
+                                    checked: vidRow.modelData.autoplay ?? true
+                                    onCheckedChanged: page.updateCustomVideo(vidRow.index, "autoplay", checked)
+                                }
+                                ConfigSwitch {
+                                    Layout.fillWidth: true
+                                    buttonIcon: "repeat"
+                                    text: Translation.tr("Loop")
+                                    checked: vidRow.modelData.loop ?? true
+                                    onCheckedChanged: page.updateCustomVideo(vidRow.index, "loop", checked)
+                                }
+                                ConfigSwitch {
+                                    Layout.fillWidth: true
+                                    buttonIcon: "volume_off"
+                                    text: Translation.tr("Muted")
+                                    checked: vidRow.modelData.muted ?? true
+                                    onCheckedChanged: page.updateCustomVideo(vidRow.index, "muted", checked)
+                                }
+                                ConfigSwitch {
+                                    Layout.fillWidth: true
+                                    buttonIcon: "battery_charging_full"
+                                    text: Translation.tr("Play while charging")
+                                    checked: vidRow.modelData.playWhenCharging ?? true
+                                    onCheckedChanged: page.updateCustomVideo(vidRow.index, "playWhenCharging", checked)
+                                }
+                                ConfigSwitch {
+                                    Layout.fillWidth: true
+                                    buttonIcon: "battery_alert"
+                                    text: Translation.tr("Play while on battery")
+                                    checked: vidRow.modelData.playWhenOnBattery ?? true
+                                    onCheckedChanged: page.updateCustomVideo(vidRow.index, "playWhenOnBattery", checked)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Add button
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+
+                Item { Layout.fillWidth: true }
+
+                ToolbarPairedFab {
+                    iconText: "add"
+                    onClicked: page.addCustomVideo("")
+                }
+            }
+        }
+
+        // Video file picker process (page level, outside ContentSection)
+        Process {
+            id: videoPickerProc
+            property int videoIndex: -1
+            command: ["python3", `${Directories.scriptPath}/images/pick-video.py`]
+            stdout: SplitParser {
+                onRead: data => {
+                    if (data.trim().length > 0) {
+                        if (videoPickerProc.videoIndex >= 0) {
+                            page.updateCustomVideo(videoPickerProc.videoIndex, "path", data.trim())
+                        } else {
+                            Config.options.background.widgets.customVideo.path = data.trim()
+                        }
+                    }
                 }
             }
         }

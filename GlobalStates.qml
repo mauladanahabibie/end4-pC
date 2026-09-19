@@ -48,6 +48,8 @@ Singleton {
     property bool displayProjectionOpen: false
     property int displayProjectionCycleIndex: 0
     property bool displayProjectionSuperDown: false
+    property bool customVideoFullscreenOpen: false
+    property int customVideoFullscreenIndex: -1
 
     property string osdIndicatorType: "volume"
     property bool barCenterOnly: false
@@ -137,6 +139,12 @@ Singleton {
         target: "background"
         function toggleCenteredWallpaper(): void {
             Config.options.background.centeredWallpaper = !Config.options.background.centeredWallpaper
+        }
+        function openFullVideo(): void {
+            GlobalStates.customVideoFullscreenOpen = true
+        }
+        function closeFullVideo(): void {
+            GlobalStates.customVideoFullscreenOpen = false
         }
     }
 

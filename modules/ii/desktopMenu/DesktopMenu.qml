@@ -68,6 +68,49 @@ Scope {
         }
     }
 
+    // File picker for adding a custom video from desktop menu.
+    // Mirrors the image picker: each pick APPENDS a new entry to the videos
+    // array so multiple video widgets can coexist (rebuild+reassign idiom).
+    Process {
+        id: desktopMenuVideoPickerProc
+        stdout: SplitParser {
+            onRead: data => {
+                if (data.trim().length > 0) {
+                    let list = []
+                    const vids = Config.options.background.widgets.customVideo.videos
+                    for (let i = 0; i < vids.length; i++) {
+                        let o = vids[i]
+                        list.push({
+                            path: o.path ?? "",
+                            shape: o.shape ?? "Cookie4Sided",
+                            size: o.size ?? 200,
+                            x: o.x ?? 400,
+                            y: o.y ??100,
+                            autoplay: o.autoplay ?? true,
+                            loop: o.loop ?? true,
+                            muted: o.muted ?? true,
+                            playWhenCharging: o.playWhenCharging ?? true,
+                            playWhenOnBattery: o.playWhenOnBattery ?? true,
+                        })
+                    }
+                    list.push({
+                        path: data.trim(),
+                        shape: "Cookie4Sided",
+                        size:200,
+                        x: 400,
+                        y:100,
+                        autoplay: Config.options.background.widgets.customVideo.autoplay,
+                        loop: Config.options.background.widgets.customVideo.loop,
+                        muted: Config.options.background.widgets.customVideo.muted,
+                        playWhenCharging: Config.options.background.widgets.customVideo.playWhenCharging,
+                        playWhenOnBattery: Config.options.background.widgets.customVideo.playWhenOnBattery,
+                    })
+                    Config.options.background.widgets.customVideo.videos = list
+                }
+            }
+        }
+    }
+
     property int carouselExtraCount: 5
     property bool useDarkMode: Appearance.m3colors.darkmode
     property var randomWallpapers: {
@@ -299,6 +342,27 @@ Scope {
                                 // Launch file picker, add to images array
                                 desktopMenuPickerProc.command = ["python3", Quickshell.shellPath("scripts/images/pick-image.py")]
                                 desktopMenuPickerProc.running = true
+                            }
+                        }
+
+                        RippleButton {
+                            implicitHeight: 40
+                            colBackground: "transparent"
+                            colBackgroundHover: Appearance.colors.colLayer2
+                            contentItem: RowLayout {
+                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                                spacing: 12
+                                MaterialSymbol { text: "add_circle"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
+                                StyledText { Layout.fillWidth: true; text: "Add Custom Video"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                            }
+                            onClicked: {
+                                GlobalStates.desktopMenuOpen = false
+                                // Enable custom video so the widget becomes visible for the new entry
+                                if (!Config.options.background.widgets.customVideo.enable)
+                                    Config.options.background.widgets.customVideo.enable = true
+                                // Launch video file picker; picker APPENDS to the videos array
+                                desktopMenuVideoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
+                                desktopMenuVideoPickerProc.running = true
                             }
                         }
 

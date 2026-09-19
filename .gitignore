@@ -1,0 +1,8 @@
+# Local harness/agent metadata
+.omc/
+
+# Local debug artifacts
+.persist-check
+
+# Dead/duplicate script (actual picker is scripts/images/pick-video.py)
+scripts/pick-video.py

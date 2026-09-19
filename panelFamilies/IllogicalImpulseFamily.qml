@@ -32,6 +32,7 @@ import qs.modules.ii.frame
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
     PanelLoader { component: Background {} }
+    PanelLoader { component: FullscreenVideoViewer {} }
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
     PanelLoader { component: EqualizerPopup {} }
     PanelLoader { component: Lock {} }

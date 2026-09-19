@@ -20,6 +20,7 @@ import qs.modules.ii.background.widgets.notes
 import qs.modules.ii.background.widgets.todo
 import qs.modules.ii.background.widgets.timers
 import qs.modules.ii.background.widgets.customtext
+import qs.modules.ii.background.widgets.videos
 
 Item {
     id: root
@@ -35,6 +36,7 @@ Item {
         model: [
             { key: "visualizer" },
             { key: "customImage" },
+            { key: "customVideo" },
             { key: "sticker" },
             { key: "calendar" },
             { key: "weather" },
@@ -66,6 +68,7 @@ Item {
                 switch (loaderDelegate.modelData.key) {
                     case "visualizer":  return visualizerComp
                     case "customImage": return customImageComp
+                    case "customVideo": return customVideoComp
                     case "sticker":     return stickerComp
                     case "calendar":    return calendarComp
                     case "weather":     return weatherComp
@@ -118,6 +121,23 @@ Item {
         }
     }
 
+    Repeater {
+        model: Config.options.background.widgets.customVideo.enable
+            && root.onThisScreen
+            && (Config.options.background.widgets.customVideo.videos && Config.options.background.widgets.customVideo.videos.length > 0)
+            ? Config.options.background.widgets.customVideo.videos.length
+            : 0
+
+        CustomVideo {
+            videoIndex: index
+            screenWidth: root.screen.width
+            screenHeight: root.screen.height
+            scaledScreenWidth: root.screen.width
+            scaledScreenHeight: root.screen.height
+            wallpaperScale: 1
+        }
+    }
+
     Component {
         id: visualizerComp
         VisualizerWidget {
@@ -140,6 +160,18 @@ Item {
             scaledScreenHeight: root.screen.height
             wallpaperScale: 1
             wallpaperItem: root.wallpaperItem
+        }
+    }
+    Component {
+        id: customVideoComp
+        CustomVideo {
+            visible: !Config.options.background.widgets.customVideo.videos || Config.options.background.widgets.customVideo.videos.length === 0
+            videoIndex: -1
+            screenWidth: root.screen.width
+            screenHeight: root.screen.height
+            scaledScreenWidth: root.screen.width
+            scaledScreenHeight: root.screen.height
+            wallpaperScale: 1
         }
     }
     Component {

@@ -381,6 +381,24 @@ Singleton {
                         property real outlineWidth: 8
                     }
 
+                    property JsonObject customVideo: JsonObject {
+                        property bool enable:false
+                        property string placementStrategy: "free"
+                        property real x:400
+                        property real y: 100
+                        property string path: ""
+                        property string shape: "Cookie4Sided"
+                        property real size: 200
+                        property bool autoplay:true
+                        property bool loop: true
+                        property bool muted: true
+                        property bool playWhenCharging: true
+                        property bool playWhenOnBattery: true
+                        // Multi-video support: array of {path, shape, size, x, y,
+                        // autoplay, loop, muted, playWhenCharging, playWhenOnBattery}
+                        property list<var> videos: []
+                    }
+
                     property JsonObject resources: JsonObject {
                         property bool enable: false
                         property string placementStrategy: "free"
