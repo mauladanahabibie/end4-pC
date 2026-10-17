@@ -29,6 +29,19 @@ Scope {
         GlobalStates.desktopMenuOpen = true
     }
 
+    IpcHandler {
+        target: "desktopMenu"
+        function toggle(): void {
+            root.openCentered(!GlobalStates.desktopMenuOpen)
+        }
+        function open(): void {
+            root.openCentered(true)
+        }
+        function close(): void {
+            GlobalStates.desktopMenuOpen = false
+        }
+    }
+
     function displayPathFor(path) {
         if (!path) return path
         return /\.(mp4|webm|mkv|avi|mov)$/i.test(path)
@@ -324,28 +337,9 @@ Scope {
                             }
                         }
 
+                        // Add Widget
                         RippleButton {
-                            implicitHeight: 40
-                            colBackground: "transparent"
-                            colBackgroundHover: Appearance.colors.colLayer2
-                            contentItem: RowLayout {
-                                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                                spacing: 12
-                                MaterialSymbol { text: "add_photo_alternate"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
-                                StyledText { Layout.fillWidth: true; text: "Add Custom Image"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
-                            }
-                            onClicked: {
-                                GlobalStates.desktopMenuOpen = false
-                                // Enable custom image if not already
-                                if (!Config.options.background.widgets.customImage.enable)
-                                    Config.options.background.widgets.customImage.enable = true
-                                // Launch file picker, add to images array
-                                desktopMenuPickerProc.command = ["python3", Quickshell.shellPath("scripts/images/pick-image.py")]
-                                desktopMenuPickerProc.running = true
-                            }
-                        }
-
-                        RippleButton {
+                            id: addWidgetRow
                             implicitHeight: 40
                             colBackground: "transparent"
                             colBackgroundHover: Appearance.colors.colLayer2
@@ -353,16 +347,46 @@ Scope {
                                 anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
                                 spacing: 12
                                 MaterialSymbol { text: "add_circle"; iconSize: Appearance.font.pixelSize.larger; color: Appearance.colors.colOnLayer1 }
-                                StyledText { Layout.fillWidth: true; text: "Add Custom Video"; font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                                StyledText { Layout.fillWidth: true; text: Translation.tr("Add Widget"); font.pixelSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1 }
+                                MaterialSymbol { text: "chevron_right"; iconSize: Appearance.font.pixelSize.normal; color: Appearance.colors.colOnLayer1; opacity: 0.4 }
                             }
+
+                            Component {
+                                id: addWidgetSubmenu
+                                AddWidgetSubmenu {
+                                    onAddImageClicked: {
+                                        GlobalStates.desktopMenuOpen = false
+                                        if (!Config.options.background.widgets.customImage.enable)
+                                            Config.options.background.widgets.customImage.enable = true
+                                        desktopMenuPickerProc.command = ["python3", Quickshell.shellPath("scripts/images/pick-image.py")]
+                                        desktopMenuPickerProc.running = true
+                                    }
+                                    onAddVideoClicked: {
+                                        GlobalStates.desktopMenuOpen = false
+                                        if (!Config.options.background.widgets.customVideo.enable)
+                                            Config.options.background.widgets.customVideo.enable = true
+                                        desktopMenuVideoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
+                                        desktopMenuVideoPickerProc.running = true
+                                    }
+                                }
+                            }
+
+                            HoverHandler {
+                                onHoveredChanged: {
+                                    if (hovered) {
+                                        submenuCloseTimer.stop()
+                                        menuWindow.submenuAnchorY = menuCard.y + addWidgetRow.mapToItem(menuCard, 0, 0).y
+                                        menuWindow.openSubmenuComponent = addWidgetSubmenu
+                                    } else {
+                                        submenuCloseTimer.restart()
+                                    }
+                                }
+                            }
+
                             onClicked: {
-                                GlobalStates.desktopMenuOpen = false
-                                // Enable custom video so the widget becomes visible for the new entry
-                                if (!Config.options.background.widgets.customVideo.enable)
-                                    Config.options.background.widgets.customVideo.enable = true
-                                // Launch video file picker; picker APPENDS to the videos array
-                                desktopMenuVideoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
-                                desktopMenuVideoPickerProc.running = true
+                                submenuCloseTimer.stop()
+                                menuWindow.submenuAnchorY = menuCard.y + addWidgetRow.mapToItem(menuCard, 0, 0).y
+                                menuWindow.openSubmenuComponent = addWidgetSubmenu
                             }
                         }
 

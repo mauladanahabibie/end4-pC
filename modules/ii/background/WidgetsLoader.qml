@@ -131,6 +131,7 @@ Item {
             : 0
 
         CustomVideo {
+            required property int index
             videoIndex: index
             screenWidth: root.screen.width
             screenHeight: root.screen.height
