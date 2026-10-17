@@ -274,6 +274,7 @@ AbstractBackgroundWidget {
         StyledDropShadow {
             target: shadowShape
             z: -1
+            visible: Config.options.background.widgets.shadow
         }
 
         MaterialShape {
@@ -582,7 +583,7 @@ AbstractBackgroundWidget {
                 x: o.x ?? 400,
                 y: o.y ?? 100,
                 autoplay: o.autoplay ?? true,
-                loop: o.loop ??true,
+                loop: o.loop ?? true,
                 muted: o.muted ?? true,
                 playWhenCharging: o.playWhenCharging ?? true,
                 playWhenOnBattery: o.playWhenOnBattery ?? true,
@@ -594,7 +595,32 @@ AbstractBackgroundWidget {
         Config.options.background.widgets.customVideo.videos = list
     }
 
-    onReleased: {
+    function updateArrayVideoPosition(idx, newX, newY) {
+        let list = []
+        const vids = Config.options.background.widgets.customVideo.videos
+        for (let i = 0; i < vids.length; i++) {
+            let o = vids[i]
+            list.push({
+                path: o.path ?? "",
+                shape: o.shape ?? "Cookie4Sided",
+                size: o.size ?? 200,
+                x: o.x ?? 400,
+                y: o.y ?? 100,
+                autoplay: o.autoplay ?? true,
+                loop: o.loop ?? true,
+                muted: o.muted ?? true,
+                playWhenCharging: o.playWhenCharging ?? true,
+                playWhenOnBattery: o.playWhenOnBattery ?? true,
+            })
+        }
+        if (idx >= 0 && idx < list.length) {
+            list[idx].x = newX
+            list[idx].y = newY
+        }
+        Config.options.background.widgets.customVideo.videos = list
+    }
+
+    function commitPosition() {
         var p = root.parent
         while (p) {
             if (p.isWidgetCanvas === true) {
@@ -603,13 +629,23 @@ AbstractBackgroundWidget {
             }
             p = p.parent
         }
-        if (root.videoIndex >=0) {
-            root.updateArrayVideo(root.videoIndex, "x", root.x)
-            root.updateArrayVideo(root.videoIndex, "y", root.y)
+
+        if (root.videoIndex >= 0) {
+            root.updateArrayVideoPosition(root.videoIndex, root.x, root.y)
         } else {
             configEntry.x = root.x
             configEntry.y = root.y
+            configEntry.z = root.z
         }
+        root.targetX = Qt.binding(() => {
+            const ix = root.videoConfig.x ?? 400
+            return Math.max(0, Math.min(ix, scaledScreenWidth - width))
+        })
+        root.targetY = Qt.binding(() => {
+            const iy = root.videoConfig.y ?? 100
+            return Math.max(0, Math.min(iy, scaledScreenHeight - height))
+        })
+        root.targetZ = Qt.binding(() => (root.videoIndex >= 0 ? 0 : configEntry.z))
         root.restoreXYBinding()
     }
 }
