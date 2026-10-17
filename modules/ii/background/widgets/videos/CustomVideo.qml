@@ -125,17 +125,26 @@ AbstractBackgroundWidget {
         }
     }
 
+    CustomVideoContextMenu {
+        id: contextMenu
+        targetWidget: root
+    }
+
+    function openPicker() {
+        videoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
+        videoPickerProc.running = true
+    }
+
     // Click handler. Left-click opens picker (empty) or fullscreen (loaded).
-    // Right-click toggles widgetsLocked (preserved from AbstractWidget).
+    // Right-click opens the context menu (Select/Change Video, Delete Video, Delete Widget, Lock).
     onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
-            Config.options.background.widgetsLocked = !Config.options.background.widgetsLocked
+            contextMenu.popup()
             return
         }
         if (mouse.button !== Qt.LeftButton) return
         if (root.videoPath === "" || !root.videoValid) {
-            videoPickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-video.py`]
-            videoPickerProc.running = true
+            root.openPicker()
         } else {
             GlobalStates.customVideoFullscreenIndex = root.videoIndex
             GlobalStates.customVideoFullscreenOpen = true
@@ -491,7 +500,7 @@ AbstractBackgroundWidget {
                 margins: 6
             }
             opacity: (root.containsMouse || deleteArea.containsMouse) ? 0.9 : 0
-            visible: opacity > 0 && (root.videoIndex >= 0 || root.videoPath !== "")
+            visible: opacity > 0 && !Config.options.background.widgetsLocked && (root.videoIndex >= 0 || root.videoPath !== "")
             z: 4
 
             Behavior on opacity {
@@ -501,22 +510,18 @@ AbstractBackgroundWidget {
             MouseArea {
                 id: deleteArea
                 anchors.fill: parent
-                hoverEnabled:true
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    if (root.videoIndex >= 0) {
-                        root.deleteThisVideo()
-                    } else {
-                        root.setVideoPath("")
-                    }
+                    root.requestDelete()
                 }
             }
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "close"
-                iconSize:14
+                iconSize: 14
                 color: Appearance.colors.colOnError
             }
         }
@@ -548,8 +553,24 @@ AbstractBackgroundWidget {
         }
     }
 
+    function deleteVideoMedia() {
+        player.stop()
+        root.videoError = false
+        root.setVideoPath("")
+    }
+
+    function requestDelete() {
+        player.stop()
+        if (root.videoIndex >= 0) {
+            root.deleteThisVideo()
+        } else {
+            Config.options.background.widgets.customVideo.enable = false
+        }
+    }
+
     function deleteThisVideo() {
         if (root.videoIndex < 0) return
+        player.stop()
         let list = []
         const vids = Config.options.background.widgets.customVideo.videos
         for (let i = 0; i < vids.length; i++) {
@@ -559,7 +580,7 @@ AbstractBackgroundWidget {
                 path: o.path ?? "",
                 shape: o.shape ?? "Cookie4Sided",
                 size: o.size ?? 200,
-                x: o.x ??400,
+                x: o.x ?? 400,
                 y: o.y ?? 100,
                 autoplay: o.autoplay ?? true,
                 loop: o.loop ?? true,
@@ -569,6 +590,9 @@ AbstractBackgroundWidget {
             })
         }
         Config.options.background.widgets.customVideo.videos = list
+        if (list.length === 0) {
+            Config.options.background.widgets.customVideo.enable = false
+        }
     }
 
     function updateArrayVideo(idx, key, value) {
