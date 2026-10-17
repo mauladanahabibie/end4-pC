@@ -165,7 +165,8 @@ Item {
     Component {
         id: customVideoComp
         CustomVideo {
-            visible: !Config.options.background.widgets.customVideo.videos || Config.options.background.widgets.customVideo.videos.length === 0
+            // Legacy instance visible whenever enable is true (via FadeLoader).
+            // Independent of array contents — coexists with array instances.
             videoIndex: -1
             screenWidth: root.screen.width
             screenHeight: root.screen.height

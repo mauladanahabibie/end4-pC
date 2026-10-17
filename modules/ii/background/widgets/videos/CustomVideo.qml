@@ -31,7 +31,8 @@ AbstractBackgroundWidget {
     }
 
     property string videoPath: videoConfig.path ?? ""
-    property bool videoValid: videoPath !== ""
+    property bool videoValid: videoPath !== "" && !videoError
+    property bool videoError: false
     property bool playIntent: videoConfig.autoplay ?? true
     property bool dropHover:false
     property real widgetSize: videoConfig.size ??200
@@ -128,7 +129,7 @@ AbstractBackgroundWidget {
         onErrorOccurred: (error, errorString) => {
             if (error !== MediaPlayer.NoError) {
                 console.warn("[CustomVideo] media error:", error, errorString)
-                root.videoValid = false
+                root.videoError =true
             }
         }
     }
@@ -151,7 +152,7 @@ AbstractBackgroundWidget {
     onEffectivePlayChanged: root.syncPlayback()
 
     onVideoPathChanged: {
-        root.videoValid = root.videoPath !== ""
+        root.videoError = false
         root.playIntent = root.videoConfig.autoplay ?? true
     }
 
@@ -238,7 +239,7 @@ AbstractBackgroundWidget {
                 }
                 onDropped: (drop) => {
                     if (drop.hasUrls && drop.urls.length > 0) {
-                        var cleanPath = drop.urls[0].toString().replace(/^file:\/\//, "")
+                        var cleanPath = decodeURIComponent(drop.urls[0].toString().replace(/^file:\/\//, ""))
                         var ext = cleanPath.split(".").pop().toLowerCase()
                         var accepted = ["mp4","webm","mkv","avi","mov","m4v","ogv"]
                         if (accepted.indexOf(ext) !== -1) {
@@ -415,9 +416,7 @@ AbstractBackgroundWidget {
     }
 
     function setVideoPath(path) {
-        if (path !== "") {
-            root.videoValid = true
-        }
+        root.videoError = false
 
         if (root.videoIndex >= 0) {
             root.updateArrayVideo(root.videoIndex, "path", path)
