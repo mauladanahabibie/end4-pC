@@ -37,6 +37,7 @@ Item {
             { key: "visualizer" },
             { key: "customImage" },
             { key: "customVideo" },
+            { key: "imageCard" },
             { key: "sticker" },
             { key: "calendar" },
             { key: "weather" },
@@ -69,6 +70,7 @@ Item {
                     case "visualizer":  return visualizerComp
                     case "customImage": return customImageComp
                     case "customVideo": return customVideoComp
+                    case "imageCard":   return imageCardComp
                     case "sticker":     return stickerComp
                     case "calendar":    return calendarComp
                     case "weather":     return weatherComp
@@ -148,6 +150,17 @@ Item {
             scaledScreenHeight: root.screen.height
             wallpaperScale: 1
             pinnedBottom: true
+        }
+    }
+    Component {
+        id: imageCardComp
+        ImageCardWidget {
+            screenWidth: root.screen.width
+            screenHeight: root.screen.height
+            scaledScreenWidth: root.screen.width
+            scaledScreenHeight: root.screen.height
+            wallpaperScale: 1
+            wallpaperItem: root.wallpaperItem
         }
     }
     Component {

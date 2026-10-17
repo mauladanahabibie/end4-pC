@@ -140,24 +140,12 @@ AbstractBackgroundWidget {
         converter.outputPath = valid[0].replace(/\.[^/.]+$/, "") + "_converted." + root.selectedFormat
         converter.running = true
     }
-
-    Rectangle {
+    
+    WidgetCard {
         id: contentItem
-        color: Appearance.colors.colPrimaryContainer
-        radius: Appearance.rounding?.verylarge ?? 30
+        widget: root
         implicitWidth: 276
         implicitHeight: 252
-
-        FastBlurred {
-            anchors.fill: parent
-            blurSource: root.wallpaperItem
-            cardRadius: contentItem.radius
-            tint: Appearance.colors.colLayer1
-            tintOpacity: 0.55
-            trackX: root.x  
-            trackY: root.y
-            visible: Config.options.background.widgets.blurWidgets 
-        }
 
         ColumnLayout {
             id: columnLayout

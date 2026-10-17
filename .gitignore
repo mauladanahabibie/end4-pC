@@ -6,3 +6,5 @@
 
 # Dead/duplicate script (actual picker is scripts/images/pick-video.py)
 scripts/pick-video.py
+
+translations/es_MX.json

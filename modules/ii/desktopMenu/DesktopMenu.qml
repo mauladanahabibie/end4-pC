@@ -210,7 +210,7 @@ Scope {
                         Layout.fillWidth: true
                         implicitHeight: 160
                         radius: Appearance.rounding.verylarge
-                        color: Appearance.colors.colLayer0
+                        color: Appearance.colors.colUiBackground
                         clip: true
 
                         Carousel {
@@ -227,7 +227,7 @@ Scope {
                     GroupedList {
                         Layout.fillWidth: true
                         itemVerticalPadding: 16
-                        bgcolor: Appearance.colors.colLayer0
+                        bgcolor: Appearance.colors.colUiBackground
 
                         // Wallpapers
                         RippleButton {

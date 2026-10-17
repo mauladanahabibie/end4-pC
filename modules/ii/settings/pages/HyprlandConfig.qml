@@ -40,8 +40,11 @@ ContentPage {
     }
 
     Component.onCompleted: {
+        HyprlandOptions.refresh()
         const h = Config.options.hyprland
-        HyprlandConfig.setMany({
+        // One setMany for everything: separate calls would be separate
+        // processes racing to rewrite the same overrides file.
+        HyprlandConfig.setMany(Object.assign({
             "decoration:rounding":                  h.decoration.rounding,
             "decoration:blur:enabled":              h.decoration.blur.enabled ? 1 : 0,
             "decoration:blur:size":                 h.decoration.blur.size,
@@ -61,10 +64,14 @@ ContentPage {
             "input:touchpad:natural_scroll":        h.input.touchpad.naturalScroll ? 1 : 0,
             "input:touchpad:disable_while_typing":  h.input.touchpad.disableWhileTyping ? 1 : 0,
             "input:touchpad:clickfinger_behavior":  h.input.touchpad.clickfingerBehavior ? 1 : 0,
-            "input:touchpad:scroll_factor":         h.input.touchpad.scrollFactor
-        })
+            "input:touchpad:scroll_factor":         h.input.touchpad.scrollFactor,
+            "misc:focus_on_activate":               h.misc.focusOnActivate ? 1 : 0
+        }, HyprlandConfig.borderColorEntries()))
     }
     MonitorConfigOption { id: monitorConfig }
+
+    // Same roles as the settings panel border color on the Interface page.
+    readonly property var borderColorRoles: ["primary", "secondary", "tertiary", "primaryContainer", "secondaryContainer", "tertiaryContainer", "layer0Border"]
 
     ColumnLayout {
         id: mainLayout
@@ -472,6 +479,83 @@ ContentPage {
                     ]
                 }
             }
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                visible: Config.options.hyprland.general.layout === "dwindle"
+                title: Translation.tr("Dwindle")
+
+                GroupedList {
+                    HyprOptionSwitch {
+                        optionKey: "dwindle:preserve_split"
+                        buttonIcon: "call_split"
+                        text: Translation.tr("Preserve split direction")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "dwindle:smart_split"
+                        buttonIcon: "smart_toy"
+                        text: Translation.tr("Smart split (follow the cursor)")
+                    }
+                    HyprOptionSelection {
+                        optionKey: "dwindle:force_split"
+                        icon: "splitscreen"
+                        text: Translation.tr("Force split side")
+                        fallback: 0
+                        options: [
+                            { displayName: Translation.tr("Auto"), icon: "auto_mode", value: 0 },
+                            { displayName: Translation.tr("Left / top"), icon: "align_horizontal_left", value: 1 },
+                            { displayName: Translation.tr("Right / bottom"), icon: "align_horizontal_right", value: 2 }
+                        ]
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "dwindle:default_split_ratio"
+                        icon: "percent"
+                        text: Translation.tr("Default split ratio")
+                        factor: 10
+                        from: 2; to: 18; stepSize: 1
+                    }
+                }
+            }
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                visible: Config.options.hyprland.general.layout === "master"
+                title: Translation.tr("Master")
+
+                GroupedList {
+                    HyprOptionSelection {
+                        optionKey: "master:new_status"
+                        icon: "add_box"
+                        text: Translation.tr("New windows become")
+                        fallback: "slave"
+                        options: [
+                            { displayName: Translation.tr("Master"), icon: "star", value: "master" },
+                            { displayName: Translation.tr("Slave"), icon: "view_agenda", value: "slave" },
+                            { displayName: Translation.tr("Inherit"), icon: "content_copy", value: "inherit" }
+                        ]
+                    }
+                    HyprOptionSelection {
+                        optionKey: "master:orientation"
+                        icon: "screen_rotation"
+                        text: Translation.tr("Master position")
+                        fallback: "left"
+                        options: [
+                            { displayName: Translation.tr("Left"), icon: "align_horizontal_left", value: "left" },
+                            { displayName: Translation.tr("Right"), icon: "align_horizontal_right", value: "right" },
+                            { displayName: Translation.tr("Top"), icon: "align_vertical_top", value: "top" },
+                            { displayName: Translation.tr("Bottom"), icon: "align_vertical_bottom", value: "bottom" },
+                            { displayName: Translation.tr("Center"), icon: "align_horizontal_center", value: "center" }
+                        ]
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "master:mfact"
+                        icon: "aspect_ratio"
+                        text: Translation.tr("Master size")
+                        factor: 100
+                        from: 10; to: 90; stepSize: 5
+                    }
+                }
+            }
         }
 
         // Input
@@ -537,6 +621,20 @@ ContentPage {
                             HyprlandConfig.set("input:repeat_rate", value)
                         }
                     }
+                    HyprOptionText {
+                        optionKey: "input:kb_variant"
+                        Layout.fillWidth: true
+                        buttonIcon: "keyboard_alt"
+                        text: Translation.tr("Keyboard variant")
+                        placeholderText: Translation.tr("e.g., intl, dvorak")
+                    }
+                    HyprOptionText {
+                        optionKey: "input:kb_options"
+                        Layout.fillWidth: true
+                        buttonIcon: "keyboard_command_key"
+                        text: Translation.tr("Keyboard options")
+                        placeholderText: Translation.tr("e.g., caps:escape, grp:alt_shift_toggle")
+                    }
                     ConfigSelectionArray {
                         text: Translation.tr("Follow mouse")
                         icon: "mouse"
@@ -551,6 +649,46 @@ ContentPage {
                             { displayName: Translation.tr("Loose"),    icon: "drag_pan",   value: 2 },
                             { displayName: Translation.tr("Explicit"), icon: "ads_click",  value: 3 },
                         ]
+                    }
+                }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Mouse")
+
+                GroupedList {
+                    HyprOptionSpinBox {
+                        optionKey: "input:sensitivity"
+                        icon: "speed"
+                        text: Translation.tr("Pointer sensitivity")
+                        factor: 10
+                        from: -10; to: 10; stepSize: 1
+                    }
+                    HyprOptionSelection {
+                        optionKey: "input:accel_profile"
+                        icon: "trending_up"
+                        text: Translation.tr("Acceleration profile")
+                        fallback: ""
+                        options: [
+                            { displayName: Translation.tr("Default"), icon: "settings_backup_restore", value: "" },
+                            { displayName: Translation.tr("Flat"), icon: "horizontal_rule", value: "flat" },
+                            { displayName: Translation.tr("Adaptive"), icon: "show_chart", value: "adaptive" }
+                        ]
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "input:force_no_accel"
+                        buttonIcon: "mouse"
+                        text: Translation.tr("Disable acceleration (raw input)")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "input:left_handed"
+                        buttonIcon: "front_hand"
+                        text: Translation.tr("Left-handed buttons")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:middle_click_paste"
+                        buttonIcon: "content_paste"
+                        text: Translation.tr("Middle click paste")
                     }
                 }
             }
@@ -591,6 +729,21 @@ ContentPage {
                         }
                     }
 
+                    HyprOptionSwitch {
+                        optionKey: "input:touchpad:tap-to-click"
+                        buttonIcon: "touch_app"
+                        text: Translation.tr("Tap to click")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "input:touchpad:tap-and-drag"
+                        buttonIcon: "drag_pan"
+                        text: Translation.tr("Tap and drag")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "input:touchpad:middle_button_emulation"
+                        buttonIcon: "mouse"
+                        text: Translation.tr("Middle button emulation (3-finger tap)")
+                    }
                     ConfigSpinBox {
                         icon: "swipe"
                         text: Translation.tr("Scroll factor")
@@ -603,6 +756,130 @@ ContentPage {
                             HyprlandConfig.set("input:touchpad:scroll_factor", newVal)
                         }
                     }
+                }
+            }
+        }
+
+        // Idle
+        ContentSection {
+            id: idleSection
+            icon: "timer"
+            shape: MaterialShape.Shape.Cookie12Sided
+            title: Translation.tr("Idle")
+
+            readonly property list<var> unitOptions: [
+                { displayName: Translation.tr("Seconds"), icon: "timer",    value: 1    },
+                { displayName: Translation.tr("Minutes"), icon: "av_timer", value: 60   },
+                { displayName: Translation.tr("Hours"),   icon: "schedule", value: 3600 },
+            ]
+
+            component IdleTimerRow: ConfigRow {
+                id: timerRow
+
+                property string icon
+                property string label
+                property int seconds: 0
+                property int displayValue: 60
+                property int displayUnit: 60
+                property bool loaded: false
+
+                signal edited(int newSeconds)
+
+                onSecondsChanged: {
+                    const display = idleSection.toDisplay(timerRow.seconds)
+                    timerRow.displayValue = display[0]
+                    timerRow.displayUnit = display[1]
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    Layout.leftMargin: 8
+                    OptionalMaterialSymbol {
+                        icon: timerRow.icon
+                        iconSize: Appearance.font.pixelSize.larger
+                    }
+                    StyledText {
+                        Layout.preferredWidth: 160
+                        text: timerRow.label
+                        color: Appearance.colors.colOnSecondaryContainer
+                        elide: Text.ElideRight
+                    }
+                    Item { Layout.fillWidth: true }
+                    StyledSpinBox {
+                        Layout.preferredWidth: 130
+                        value: timerRow.displayValue
+                        from: 0
+                        to: 9999
+                        stepSize: 1
+                        onValueChanged: {
+                            if (!timerRow.loaded) return
+                            timerRow.displayValue = value
+                            timerRow.edited(value * timerRow.displayUnit)
+                        }
+                    }
+                }
+                StyledComboBox {
+                    Layout.preferredWidth: 140
+                    Layout.alignment: Qt.AlignVCenter
+                    textRole: "displayName"
+                    model: idleSection.unitOptions
+                    currentIndex: idleSection.unitOptions.findIndex(o => o.value === timerRow.displayUnit)
+                    onActivated: index => {
+                        timerRow.displayUnit = idleSection.unitOptions[index].value
+                        timerRow.edited(timerRow.displayValue * timerRow.displayUnit)
+                    }
+                }
+            }
+
+            function toDisplay(seconds) {
+                if (seconds <= 0)
+                    return [0, 60]
+                if (seconds % 3600 === 0)
+                    return [seconds / 3600, 3600]
+                if (seconds % 60 === 0)
+                    return [seconds / 60, 60]
+                return [seconds, 1]
+            }
+
+            function applyIdle() {
+                HyprlandConfig.setIdle(
+                    Config.options.hyprland.idle.lock,
+                    Config.options.hyprland.idle.screenOff,
+                    Config.options.hyprland.idle.suspend
+                )
+            }
+
+            GroupedList {
+                IdleTimerRow {
+                    icon: "lock_clock"
+                    label: Translation.tr("Lock screen")
+                    seconds: Config.options.hyprland.idle.lock
+                    onEdited: newSeconds => {
+                        Config.options.hyprland.idle.lock = newSeconds
+                        idleSection.applyIdle()
+                    }
+                    Component.onCompleted: loaded = true
+                }
+                IdleTimerRow {
+                    icon: "monitor"
+                    label: Translation.tr("Screen off")
+                    seconds: Config.options.hyprland.idle.screenOff
+                    onEdited: newSeconds => {
+                        Config.options.hyprland.idle.screenOff = newSeconds
+                        idleSection.applyIdle()
+                    }
+                    Component.onCompleted: loaded = true
+                }
+                IdleTimerRow {
+                    icon: "bedtime"
+                    label: Translation.tr("Standby")
+                    seconds: Config.options.hyprland.idle.suspend
+                    onEdited: newSeconds => {
+                        Config.options.hyprland.idle.suspend = newSeconds
+                        idleSection.applyIdle()
+                    }
+                    Component.onCompleted: loaded = true
                 }
             }
         }
@@ -662,18 +939,6 @@ ContentPage {
                 }
 
                 ConfigSpinBox {
-                    icon: "border_outer"
-                    text: Translation.tr("Border Size")
-                    value: Config.options.hyprland.general.borderSize
-                    from: 0; to: 10; stepSize: 1
-                    onValueChanged: {
-                        if (value === Config.options.hyprland.general.borderSize) return
-                        Config.options.hyprland.general.borderSize = value
-                        HyprlandConfig.set("general:border_size", value)
-                    }
-                }
-
-                ConfigSpinBox {
                     icon: "margin"
                     text: Translation.tr("Gaps In")
                     value: Config.options.hyprland.general.gapsIn
@@ -720,6 +985,300 @@ ContentPage {
                         if (newVal === Config.options.hyprland.decoration.inactiveOpacity) return
                         Config.options.hyprland.decoration.inactiveOpacity = newVal
                         HyprlandConfig.set("decoration:inactive_opacity", newVal)
+                    }
+                }
+                ConfigSpinBox {
+                    icon: "border_outer"
+                    text: Translation.tr("Border Size")
+                    value: Config.options.hyprland.general.borderSize
+                    from: 0; to: 10; stepSize: 1
+                    onValueChanged: {
+                        if (value === Config.options.hyprland.general.borderSize) return
+                        Config.options.hyprland.general.borderSize = value
+                        HyprlandConfig.set("general:border_size", value)
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "format_paint"
+                    text: Translation.tr("Custom border colors")
+                    checked: Config.options.hyprland.general.borderColor.enable
+                    onCheckedChanged: {
+                        if (checked === Config.options.hyprland.general.borderColor.enable) return
+                        Config.options.hyprland.general.borderColor.enable = checked
+                        if (checked) HyprlandConfig.applyBorderColors()
+                        else HyprlandConfig.resetBorderColors()
+                    }
+                }
+            }
+            
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                visible: Config.options.hyprland.general.borderColor.enable
+                title: Translation.tr("Border Color Management")
+                GroupedList {
+                    visible: Config.options.hyprland.general.borderColor.enable
+
+                    ColorSelectionArray {
+                        icon: "border_color"
+                        text: Translation.tr("Active border")
+                        options: page.borderColorRoles
+                        currentValue: Config.options.hyprland.general.borderColor.activeRole
+                        onSelected: newValue => {
+                            Config.options.hyprland.general.borderColor.activeRole = newValue
+                            HyprlandConfig.applyBorderColors()
+                        }
+                    }
+
+                    ConfigSpinBox {
+                        icon: "opacity"
+                        text: Translation.tr("Active border opacity")
+                        value: Math.round(Config.options.hyprland.general.borderColor.activeOpacity * 100)
+                        from: 0; to: 100; stepSize: 5
+                        onValueChanged: {
+                            // Compared as integers: the spin box only holds whole percents.
+                            if (value === Math.round(Config.options.hyprland.general.borderColor.activeOpacity * 100)) return
+                            Config.options.hyprland.general.borderColor.activeOpacity = value / 100.0
+                            HyprlandConfig.applyBorderColors()
+                        }
+                    }
+
+                    ColorSelectionArray {
+                        icon: "border_color"
+                        text: Translation.tr("Inactive border")
+                        options: page.borderColorRoles
+                        currentValue: Config.options.hyprland.general.borderColor.inactiveRole
+                        onSelected: newValue => {
+                            Config.options.hyprland.general.borderColor.inactiveRole = newValue
+                            HyprlandConfig.applyBorderColors()
+                        }
+                    }
+
+                    ConfigSpinBox {
+                        icon: "opacity"
+                        text: Translation.tr("Inactive border opacity")
+                        value: Math.round(Config.options.hyprland.general.borderColor.inactiveOpacity * 100)
+                        from: 0; to: 100; stepSize: 5
+                        onValueChanged: {
+                            // Compared as integers: the spin box only holds whole percents.
+                            if (value === Math.round(Config.options.hyprland.general.borderColor.inactiveOpacity * 100)) return
+                            Config.options.hyprland.general.borderColor.inactiveOpacity = value / 100.0
+                            HyprlandConfig.applyBorderColors()
+                        }
+                    }
+                }
+            }
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                title: Translation.tr("Shadows, dimming & blur")
+
+                GroupedList {
+                    HyprOptionSwitch {
+                        optionKey: "decoration:shadow:enabled"
+                        buttonIcon: "shadow"
+                        text: Translation.tr("Window shadows")
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "decoration:shadow:range"
+                        icon: "blur_on"
+                        text: Translation.tr("Shadow range")
+                        from: 0; to: 50; stepSize: 1
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "decoration:dim_inactive"
+                        buttonIcon: "brightness_low"
+                        text: Translation.tr("Dim inactive windows")
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "decoration:dim_strength"
+                        icon: "contrast"
+                        text: Translation.tr("Dim strength")
+                        factor: 100
+                        from: 0; to: 100; stepSize: 5
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "decoration:blur:noise"
+                        icon: "grain"
+                        text: Translation.tr("Blur noise")
+                        factor: 100
+                        from: 0; to: 50; stepSize: 1
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "decoration:blur:vibrancy"
+                        icon: "palette"
+                        text: Translation.tr("Blur vibrancy")
+                        factor: 100
+                        from: 0; to: 100; stepSize: 5
+                    }
+                }
+            }
+        }
+
+        // Misc
+        ContentSection {
+            icon: "tune"
+            shape: MaterialShape.Shape.Gem
+            title: Translation.tr("Misc")
+
+            GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "center_focus_strong"
+                    text: Translation.tr("Focus on activate")
+                    checked: Config.options.hyprland.misc.focusOnActivate
+                    onCheckedChanged: {
+                        if (checked === Config.options.hyprland.misc.focusOnActivate) return
+                        Config.options.hyprland.misc.focusOnActivate = checked
+                        HyprlandConfig.set("misc:focus_on_activate", checked ? 1 : 0)
+                    }
+                }
+                    HyprOptionSelection {
+                        optionKey: "misc:vrr"
+                        icon: "slow_motion_video"
+                        text: Translation.tr("Variable refresh rate (VRR)")
+                        fallback: 0
+                        options: [
+                            { displayName: Translation.tr("Off"), icon: "block", value: 0 },
+                            { displayName: Translation.tr("On"), icon: "check_circle", value: 1 },
+                            { displayName: Translation.tr("Fullscreen only"), icon: "fullscreen", value: 2 }
+                        ]
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:enable_swallow"
+                        buttonIcon: "call_merge"
+                        text: Translation.tr("Window swallowing (terminal swallows launched apps)")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:animate_manual_resizes"
+                        buttonIcon: "animation"
+                        text: Translation.tr("Animate manual resizes")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:close_special_on_empty"
+                        buttonIcon: "close_fullscreen"
+                        text: Translation.tr("Close empty special workspace")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:disable_hyprland_logo"
+                        buttonIcon: "hide_image"
+                        text: Translation.tr("Hide the Hyprland logo")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:disable_splash_rendering"
+                        buttonIcon: "subtitles_off"
+                        text: Translation.tr("Hide the splash text")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:mouse_move_enables_dpms"
+                        buttonIcon: "mouse"
+                        text: Translation.tr("Mouse wakes the screen")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "misc:key_press_enables_dpms"
+                        buttonIcon: "keyboard"
+                        text: Translation.tr("Keys wake the screen")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "xwayland:force_zero_scaling"
+                        buttonIcon: "zoom_out_map"
+                        text: Translation.tr("XWayland: sharp apps (force zero scaling)")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "group:auto_group"
+                        buttonIcon: "tab_group"
+                        text: Translation.tr("Auto-group dragged windows")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "binds:workspace_back_and_forth"
+                        buttonIcon: "swap_horiz"
+                        text: Translation.tr("Switching to the current workspace goes back")
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "binds:allow_workspace_cycles"
+                        buttonIcon: "cached"
+                        text: Translation.tr("Allow workspace cycles")
+                    }
+                    HyprOptionSelection {
+                        optionKey: "render:direct_scanout"
+                        icon: "speed"
+                        text: Translation.tr("Direct scanout (fullscreen apps)")
+                        fallback: 0
+                        options: [
+                            { displayName: Translation.tr("Off"), icon: "block", value: 0 },
+                            { displayName: Translation.tr("On"), icon: "check_circle", value: 1 },
+                            { displayName: Translation.tr("Auto"), icon: "auto_mode", value: 2 }
+                        ]
+                    }
+            }
+        }
+
+        // Windows & Cursor
+        ContentSection {
+            icon: "pan_tool"
+            shape: MaterialShape.Shape.Cookie9Sided
+            title: Translation.tr("Windows & Cursor")
+
+            ContentSubsection {
+                title: Translation.tr("Windows")
+
+                GroupedList {
+                    HyprOptionSwitch {
+                        optionKey: "general:resize_on_border"
+                        buttonIcon: "open_in_full"
+                        text: Translation.tr("Resize windows by dragging their borders")
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "general:extend_border_grab_area"
+                        icon: "border_outer"
+                        text: Translation.tr("Border grab area (px)")
+                        from: 0; to: 60; stepSize: 1
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "general:allow_tearing"
+                        buttonIcon: "sports_esports"
+                        text: Translation.tr("Allow tearing (lower latency in games)")
+                    }
+                }
+            }
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                title: Translation.tr("Cursor")
+
+                GroupedList {
+                    HyprOptionSelection {
+                        optionKey: "cursor:no_hardware_cursors"
+                        icon: "mouse"
+                        text: Translation.tr("Hardware cursor")
+                        fallback: 2
+                        options: [
+                            { displayName: Translation.tr("Auto"), icon: "auto_mode", value: 2 },
+                            { displayName: Translation.tr("On"), icon: "check_circle", value: 0 },
+                            { displayName: Translation.tr("Off"), icon: "block", value: 1 }
+                        ]
+                    }
+                    HyprOptionSpinBox {
+                        optionKey: "cursor:inactive_timeout"
+                        icon: "hourglass_empty"
+                        text: Translation.tr("Hide cursor after inactivity (s, 0 = never)")
+                        from: 0; to: 60; stepSize: 1
+                    }
+                    HyprOptionSwitch {
+                        optionKey: "cursor:hide_on_key_press"
+                        buttonIcon: "keyboard_hide"
+                        text: Translation.tr("Hide cursor while typing")
+                    }
+                    HyprOptionSelection {
+                        optionKey: "cursor:warp_on_change_workspace"
+                        icon: "ads_click"
+                        text: Translation.tr("Move cursor to the new workspace")
+                        fallback: 0
+                        options: [
+                            { displayName: Translation.tr("Off"), icon: "block", value: 0 },
+                            { displayName: Translation.tr("On"), icon: "check_circle", value: 1 },
+                            { displayName: Translation.tr("Force"), icon: "bolt", value: 2 }
+                        ]
                     }
                 }
             }
