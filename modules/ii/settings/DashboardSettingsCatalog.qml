@@ -200,11 +200,13 @@ QtObject {
             ]
         },
         {
-            page: Translation.tr("Bar"), title: Translation.tr("Dynamic Island"), icon: "nest_wifi_pro", requires: "dynamicIsland", cards: [
+            page: Translation.tr("Bar"), title: Translation.tr("Dynamic Island"), icon: "nest_wifi_pro", cards: [
+                { type: "toggle", key: "bar:Dynamic Island", title: Translation.tr("Enable Dynamic Island"), icon: "nest_wifi_pro" },
                 { type: "select", key: "bar:Left widget", title: Translation.tr("Left widget"), icon: "right_panel_open" },
                 { type: "select", key: "bar:Right widget", title: Translation.tr("Right widget"), icon: "left_panel_open" },
                 { type: "select", key: "bar:Visualizer style", title: Translation.tr("Visualizer style"), icon: "graphic_eq" },
-                { type: "toggle", key: "bar:Show media controls", title: Translation.tr("Media controls"), icon: "play_circle" }
+                { type: "toggle", key: "bar:Show media controls", title: Translation.tr("Media controls"), icon: "play_circle" },
+                { type: "toggle", key: "bar:Enable clipboard alert", title: Translation.tr("Clipboard alert"), icon: "content_paste" }
             ]
         },
         {

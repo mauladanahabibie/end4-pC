@@ -51,7 +51,6 @@ ContentPage {
         ]
         if (section === "middle" && Config.options.bar.layouts.middleLayout.length > 0) {
             return Config.options.bar.layouts.middleLayout.includes("dynamicIsland") ? [] : allWidgets.filter(w => {
-                if (w.id === "dynamicIsland") return false
                 if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
                 const multipleAllowed = ["visualizer", "divisor"]
                 return !used.includes(w.id) || multipleAllowed.includes(w.id)
@@ -363,16 +362,32 @@ ContentPage {
             icon: "nest_wifi_pro"
             shape: MaterialShape.Shape.Cookie4Sided
             title: Translation.tr("Dynamic Island")
-            visible: page.isUsed("dynamicIsland")
 
             GroupedList {
+                ConfigSwitch {
+                    buttonIcon: "nest_wifi_pro"
+                    text: Translation.tr("Enable Dynamic Island")
+                    checked: (Config.options.bar.layouts.middleLayout ?? []).includes("dynamicIsland")
+                    onCheckedChanged: {
+                        const layouts = Config.options.bar.layouts;
+                        const current = (layouts.middleLayout ?? []).slice();
+                        if (checked) {
+                            if (!current.includes("dynamicIsland")) {
+                                layouts.middleLayout = ["dynamicIsland"];
+                            }
+                        } else {
+                            const filtered = current.filter(id => id !== "dynamicIsland");
+                            layouts.middleLayout = filtered.length > 0 ? filtered : ["clockWidget"];
+                        }
+                    }
+                }
                 ConfigSelectionArray {
                     text: Translation.tr("Left widget")
                     icon: "right_panel_open"
                     currentValue: Config.options.bar.dynamicIsland.leftWidget
                     onSelected: newValue => { Config.options.bar.dynamicIsland.leftWidget = newValue; }
                     options: [
-                        { displayName: Translation.tr(""),    icon: "block",        value: "none" },
+                        { displayName: Translation.tr("None"),    icon: "block",        value: "none" },
                         { displayName: Translation.tr("Clock"),   icon: "schedule",     value: "clockWidget" },
                         { displayName: Translation.tr("Weather"), icon: "partly_cloudy_day", value: "weatherBar" },
                         { displayName: Translation.tr("Updates"), icon: "update",       value: "updatesCount" }
@@ -384,7 +399,7 @@ ContentPage {
                     currentValue: Config.options.bar.dynamicIsland.rightWidget
                     onSelected: newValue => { Config.options.bar.dynamicIsland.rightWidget = newValue; }
                     options: [
-                        { displayName: Translation.tr(""),         icon: "block",        value: "none" },
+                        { displayName: Translation.tr("None"),         icon: "block",        value: "none" },
                         { displayName: Translation.tr("System icons"), icon: "settings",     value: "systemIcons" },
                         { displayName: Translation.tr("Tray"),  icon: "apps",         value: "sysTray" },
                         { displayName: Translation.tr("Util buttons"), icon: "widgets",   value: "utilButtons" }
@@ -394,7 +409,7 @@ ContentPage {
 
             ContentSubsection {
                 Layout.topMargin: 10
-                title: Translation.tr("Media")
+                title: Translation.tr("Media & Alerts")
                 GroupedList {
                     ConfigSelectionArray {
                         text: Translation.tr("Visualizer style")
@@ -402,7 +417,7 @@ ContentPage {
                         currentValue: Config.options.bar.dynamicIsland.visualizerStyle
                         onSelected: newValue => { Config.options.bar.dynamicIsland.visualizerStyle = newValue; }
                         options: [
-                            { displayName: Translation.tr(""),      icon: "block",       value: "none" },
+                            { displayName: Translation.tr("None"),  icon: "block",       value: "none" },
                             { displayName: Translation.tr("Dots"),  icon: "steppers",     value: "dots" },
                             { displayName: Translation.tr("Wave"),  icon: "ssid_chart",   value: "wave" }
                         ]
@@ -412,6 +427,12 @@ ContentPage {
                         text: Translation.tr("Show media controls")
                         checked: Config.options.bar.dynamicIsland.showMediaControls
                         onCheckedChanged: { Config.options.bar.dynamicIsland.showMediaControls = checked; }
+                    }
+                    ConfigSwitch {
+                        buttonIcon: "content_paste"
+                        text: Translation.tr("Clipboard alert")
+                        checked: Config.options.bar.dynamicIsland.enableClipboardAlert
+                        onCheckedChanged: { Config.options.bar.dynamicIsland.enableClipboardAlert = checked; }
                     }
                 }
             }

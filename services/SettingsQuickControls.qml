@@ -342,23 +342,40 @@ Singleton {
             { displayName: Translation.tr("No"), icon: "close", value: false },
             { displayName: Translation.tr("Yes"), icon: "check", value: true }
         ]),
+        "bar:Dynamic Island": root.toggle(
+            () => (Config.options.bar.layouts.middleLayout ?? []).includes("dynamicIsland"),
+            value => {
+                const layouts = Config.options.bar.layouts;
+                const current = (layouts.middleLayout ?? []).slice();
+                if (value) {
+                    if (!current.includes("dynamicIsland")) {
+                        layouts.middleLayout = ["dynamicIsland"];
+                    }
+                } else {
+                    const filtered = current.filter(id => id !== "dynamicIsland");
+                    layouts.middleLayout = filtered.length > 0 ? filtered : ["clockWidget"];
+                }
+            }
+        ),
         "bar:Left widget": root.optionSelect("bar.dynamicIsland.leftWidget", [
-            { displayName: Translation.tr(""), icon: "block", value: "none" },
+            { displayName: Translation.tr("None"), icon: "block", value: "none" },
             { displayName: Translation.tr("Clock"), icon: "schedule", value: "clockWidget" },
             { displayName: Translation.tr("Weather"), icon: "partly_cloudy_day", value: "weatherBar" },
             { displayName: Translation.tr("Updates"), icon: "update", value: "updatesCount" }
         ]),
         "bar:Right widget": root.optionSelect("bar.dynamicIsland.rightWidget", [
-            { displayName: Translation.tr(""), icon: "block", value: "none" },
+            { displayName: Translation.tr("None"), icon: "block", value: "none" },
             { displayName: Translation.tr("System icons"), icon: "settings", value: "systemIcons" },
             { displayName: Translation.tr("Tray"), icon: "apps", value: "sysTray" },
             { displayName: Translation.tr("Util buttons"), icon: "widgets", value: "utilButtons" }
         ]),
         "bar:Visualizer style": root.optionSelect("bar.dynamicIsland.visualizerStyle", [
-            { displayName: Translation.tr(""), icon: "block", value: "none" },
+            { displayName: Translation.tr("None"), icon: "block", value: "none" },
             { displayName: Translation.tr("Dots"), icon: "steppers", value: "dots" },
             { displayName: Translation.tr("Wave"), icon: "ssid_chart", value: "wave" }
         ]),
+        "bar:Show media controls": root.optionSwitch("bar.dynamicIsland.showMediaControls"),
+        "bar:Enable clipboard alert": root.optionSwitch("bar.dynamicIsland.enableClipboardAlert"),
         "bar:Divider/Style": root.optionSelect("bar.divider.style", [
             { displayName: Translation.tr("Line"), icon: "more_vert", value: "rect" },
             { displayName: Translation.tr("Dot"), icon: "fiber_manual_record", value: "dot" },
