@@ -205,10 +205,18 @@ Singleton {
         wipeProc.running = true;
     }
 
+    property string lastCopiedText: ""
+    signal itemCopied(string text)
+
     Connections {
         target: Quickshell
         function onClipboardTextChanged() {
             delayedUpdateTimer.restart()
+            const current = (Quickshell.clipboardText ?? "").trim()
+            if (current !== "" && current !== root.lastCopiedText) {
+                root.lastCopiedText = current
+                root.itemCopied(current)
+            }
         }
     }
 

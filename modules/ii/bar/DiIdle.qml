@@ -31,9 +31,11 @@ Item {
         Image {
             id: avatarImage
             anchors.fill: parent
-            source: Config.options.profile.avatarPath !== ""
-                ? "file://" + Config.options.profile.avatarPicture
-                : "file:///home/" + (Quickshell.env("USER") ?? "user") + "/.face"
+            source: {
+                const pic = Config.options.profile.avatarPicture ?? ""
+                if (pic !== "") return pic.startsWith("/") ? "file://" + pic : pic
+                return "file:///home/" + (Quickshell.env("USER") ?? "user") + "/.face"
+            }
             sourceSize.width: avatarImage.width * 2
             sourceSize.height: avatarImage.height * 2
             fillMode: Image.PreserveAspectCrop
@@ -48,6 +50,22 @@ Item {
             onStatusChanged: {
                 if (status === Image.Error)
                     visible = false
+            }
+        }
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            text: "person"
+            iconSize: di.isMaterial ? 18 : 14
+            color: Appearance.colors.colOnPrimaryContainer
+            visible: avatarImage.status !== Image.Ready
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                GlobalStates.settingsOpen = !GlobalStates.settingsOpen
             }
         }
     }
@@ -132,33 +150,55 @@ Item {
 
             Component {
                 id: clockComponent
-                StyledText {
-                    text: DateTime.time
-                    font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
-                    font.features: { "tnum": 1 }
-                    color: Appearance.colors.colOnLayer0
+                Item {
+                    implicitWidth: clockText.implicitWidth
+                    implicitHeight: clockText.implicitHeight
+                    StyledText {
+                        id: clockText
+                        anchors.centerIn: parent
+                        text: DateTime.time
+                        font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+                        font.features: { "tnum": 1 }
+                        color: Appearance.colors.colOnLayer0
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
+                    }
                 }
             }
 
             Component {
                 id: weatherComponent
-                RowLayout {
-                    spacing: 4
+                Item {
+                    implicitWidth: weatherLayout.implicitWidth
+                    implicitHeight: weatherLayout.implicitHeight
+                    RowLayout {
+                        id: weatherLayout
+                        anchors.centerIn: parent
+                        spacing: 4
 
-                    MaterialSymbol {
-                        fill: 0
-                        text: Icons.getWeatherIcon(Weather.data.wCode) ?? "cloud"
-                        iconSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colOnLayer0
-                        Layout.alignment: Qt.AlignVCenter
+                        MaterialSymbol {
+                            fill: 0
+                            text: Icons.getWeatherIcon(Weather.data.wCode) ?? "cloud"
+                            iconSize: Appearance.font.pixelSize.normal
+                            color: Appearance.colors.colOnLayer0
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        StyledText {
+                            font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+                            font.features: { "tnum": 1 }
+                            color: Appearance.colors.colOnLayer0
+                            text: Weather.data?.temp ?? "--°"
+                            Layout.alignment: Qt.AlignVCenter
+                        }
                     }
-
-                    StyledText {
-                        font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
-                        font.features: { "tnum": 1 }
-                        color: Appearance.colors.colOnLayer0
-                        text: Weather.data?.temp ?? "--°"
-                        Layout.alignment: Qt.AlignVCenter
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
                     }
                 }
             }

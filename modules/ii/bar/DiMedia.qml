@@ -11,7 +11,20 @@ import qs.modules.common.widgets
 Item {
     id: diMediaRoot
     required property Item di
+    readonly property Item root: diMediaRoot.di
     anchors.fill: parent
+
+    WheelHandler {
+        target: diMediaRoot
+        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+        onWheel: (event) => {
+            if (event.angleDelta.y > 0) {
+                Audio.incrementVolume()
+            } else if (event.angleDelta.y < 0) {
+                Audio.decrementVolume()
+            }
+        }
+    }
 
     Rectangle {
         id: mediaMask
@@ -137,6 +150,19 @@ Item {
                 elide: Text.ElideRight
                 wrapMode: Text.NoWrap
                 maximumLineCount: 1
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                cursorShape: Qt.PointingHandCursor
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
+                    } else {
+                        root.activePlayer?.togglePlaying()
+                    }
+                }
             }
 
             readonly property real widestLineWidth: Math.max(trackTitleMetrics.implicitWidth, trackArtistMetrics.implicitWidth)

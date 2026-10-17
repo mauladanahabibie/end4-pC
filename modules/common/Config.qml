@@ -569,6 +569,7 @@ Singleton {
                     property bool showMediaControls: false
                     property string leftWidget: "none"
                     property string rightWidget: "none"
+                    property bool enableClipboardAlert: true
                 }
                 property JsonObject divider: JsonObject {
                     property string style: "rect" // rect - dot - space

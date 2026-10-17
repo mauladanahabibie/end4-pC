@@ -245,15 +245,25 @@ Item {
         }
     }
 
+    Connections {
+        target: Cliphist
+        function onItemCopied(text) {
+            if (!(Config.options?.bar?.dynamicIsland?.enableClipboardAlert ?? true)) return
+            const clean = text.replace(/[\r\n\t]+/g, " ")
+            const preview = clean.length > 22 ? clean.substring(0, 21) + "…" : clean
+            root.triggerQuickAlert("content_copy", `${Translation.tr("Copied")}: "${preview}"`, Appearance.colors.colPrimary)
+        }
+    }
+
     readonly property var contentProviders: [
-        { id: "quickAlert",   active: root.quickAlertActive,            component: quickAlertComponent,   width: root.quickAlertWidth },
-        { id: "notification", active: root.latestNotification !== null, component: notificationComponent, width: root.notificationWidth },
-        { id: "battery",      active: root.batteryAlertActive,          component: batteryComponent,      width: root.batteryWidth },
-        { id: "recording",    active: root.isRecording,                 component: recordingComponent,    width: root.recordingWidth },
-        { id: "timer",        active: root.hasActiveTimer,              component: timerComponent,        width: root.timerWidth },
-        { id: "osd",          active: GlobalStates.osdVolumeOpen,       component: osdComponent,          width: root.osdWidth },
-        { id: "media",        active: root.hasMedia,                    component: mediaComponent,        width: root.mediaWidth },
-        { id: "session",      active: GlobalStates.diSessionOpen,       component: sessionComponent,      width: root.sessionWidth },
+        { id: "quickAlert",   active: root.quickAlertActive,                                           component: quickAlertComponent,   width: root.quickAlertWidth },
+        { id: "notification", active: root.latestNotification !== null,                                component: notificationComponent, width: root.notificationWidth },
+        { id: "battery",      active: root.batteryAlertActive,                                         component: batteryComponent,      width: root.batteryWidth },
+        { id: "recording",    active: root.isRecording,                                                component: recordingComponent,    width: root.recordingWidth },
+        { id: "timer",        active: root.hasActiveTimer,                                             component: timerComponent,        width: root.timerWidth },
+        { id: "osd",          active: GlobalStates.osdVolumeOpen || GlobalStates.osdBrightnessOpen,    component: osdComponent,          width: root.osdWidth },
+        { id: "media",        active: root.hasMedia,                                                   component: mediaComponent,        width: root.mediaWidth },
+        { id: "session",      active: GlobalStates.diSessionOpen,                                      component: sessionComponent,      width: root.sessionWidth },
     ]
 
     readonly property var alwaysWinIds: ["session", "quickAlert", "notification", "battery", "osd"]

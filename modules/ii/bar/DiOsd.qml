@@ -10,6 +10,7 @@ import qs.modules.common.widgets
 RowLayout {
     id: diOsdRoot
     required property Item di
+    readonly property Item root: diOsdRoot.di
     anchors {
         fill: parent
         leftMargin: root.isMaterial ? 0 : 4

@@ -7,6 +7,7 @@ import qs.modules.common.widgets
 RowLayout {
     id: diTimersRoot
     required property Item di
+    readonly property Item root: diTimersRoot.di
     anchors {
         fill: parent
         leftMargin: root.isMaterial ? 4 : 8

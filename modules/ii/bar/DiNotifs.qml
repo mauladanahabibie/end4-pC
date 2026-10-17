@@ -8,6 +8,7 @@ import qs.modules.common.widgets
 Item {
     id: diNotifsRoot
     required property Item di
+    readonly property Item root: diNotifsRoot.di
     anchors.fill: parent
 
     readonly property var notif: root.latestNotification
@@ -89,5 +90,13 @@ Item {
         font.pixelSize: Appearance.font.pixelSize.small - 2
         color: Appearance.colors.colOnLayer0
         opacity: 0.8
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            GlobalStates.sidebarRightOpen = true
+        }
     }
 }
