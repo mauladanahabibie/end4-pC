@@ -191,7 +191,62 @@ Item {
         return root.batteryAlertKind === "charging" ? Appearance.m3colors.m3success : Appearance.colors.colError
     }
 
+    // Quick alert for status notifications (mic, bluetooth, audio mute)
+    property bool quickAlertActive: false
+    property string quickAlertIcon: "info"
+    property string quickAlertText: ""
+    property color quickAlertColor: Appearance.colors.colPrimary
+    readonly property real quickAlertWidth: 200
+
+    Timer {
+        id: quickAlertTimer
+        interval: 2500
+        repeat: false
+        onTriggered: root.quickAlertActive = false
+    }
+
+    function triggerQuickAlert(icon, text, color) {
+        root.quickAlertIcon = icon
+        root.quickAlertText = text
+        root.quickAlertColor = color || Appearance.colors.colPrimary
+        root.quickAlertActive = true
+        quickAlertTimer.restart()
+    }
+
+    Connections {
+        target: Audio.source?.audio ?? null
+        function onMutedChanged() {
+            if (!Audio.source?.audio) return
+            if (Audio.source.audio.muted) {
+                root.triggerQuickAlert("mic_off", Translation.tr("Microphone Muted"), Appearance.colors.colError)
+            } else {
+                root.triggerQuickAlert("mic", Translation.tr("Microphone Active"), Appearance.m3colors.m3success)
+            }
+        }
+    }
+
+    Connections {
+        target: BluetoothStatus
+        function onConnectedChanged() {
+            if (BluetoothStatus.connected && BluetoothStatus.primaryConnectedDevice) {
+                const name = BluetoothStatus.primaryConnectedDevice.name || Translation.tr("Device")
+                root.triggerQuickAlert("bluetooth_connected", `${name} ${Translation.tr("Connected")}`, Appearance.colors.colPrimary)
+            }
+        }
+    }
+
+    Connections {
+        target: Audio.sink?.audio ?? null
+        function onMutedChanged() {
+            if (!Audio.sink?.audio) return
+            if (Audio.sink.audio.muted) {
+                root.triggerQuickAlert("volume_off", Translation.tr("Audio Muted"), Appearance.colors.colError)
+            }
+        }
+    }
+
     readonly property var contentProviders: [
+        { id: "quickAlert",   active: root.quickAlertActive,            component: quickAlertComponent,   width: root.quickAlertWidth },
         { id: "notification", active: root.latestNotification !== null, component: notificationComponent, width: root.notificationWidth },
         { id: "battery",      active: root.batteryAlertActive,          component: batteryComponent,      width: root.batteryWidth },
         { id: "recording",    active: root.isRecording,                 component: recordingComponent,    width: root.recordingWidth },
@@ -201,7 +256,7 @@ Item {
         { id: "session",      active: GlobalStates.diSessionOpen,       component: sessionComponent,      width: root.sessionWidth },
     ]
 
-    readonly property var alwaysWinIds: ["session", "notification", "battery", "osd"]
+    readonly property var alwaysWinIds: ["session", "quickAlert", "notification", "battery", "osd"]
 
     readonly property var activeOthers: root.contentProviders.filter(p => !root.alwaysWinIds.includes(p.id) && p.active)
 
@@ -222,6 +277,7 @@ Item {
 
     function iconForProviderId(id) {
         switch (id) {
+            case "quickAlert": return root.quickAlertIcon
             case "media":     return "music_note"
             case "recording": return "screen_record"
             case "timer":     return root.timerIcon()
@@ -416,6 +472,36 @@ Item {
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.features: { "tnum": 1 }
                     color: root.batteryAlertColor()
+                }
+            }
+        }
+
+        Component {
+            id: quickAlertComponent
+            RowLayout {
+                anchors {
+                    fill: parent
+                    leftMargin: 12
+                    rightMargin: 12
+                }
+                spacing: 8
+
+                MaterialSymbol {
+                    Layout.alignment: Qt.AlignVCenter
+                    text: root.quickAlertIcon
+                    fill: 1
+                    iconSize: 18
+                    color: root.quickAlertColor
+                }
+
+                StyledText {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    text: root.quickAlertText
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    font.weight: Font.DemiBold
+                    color: Appearance.colors.colOnLayer0
+                    elide: Text.ElideRight
                 }
             }
         }

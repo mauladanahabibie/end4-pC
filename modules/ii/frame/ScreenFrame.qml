@@ -34,53 +34,6 @@ Scope {
         return dockWants || barWants
     }
 
-    component FrameHoverArea: MouseArea {
-        required property string side
-        required property string screenName
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.NoButton
-        enabled: root.edgeNeedsInput(side)
-        onContainsMouseChanged: GlobalStates.setFrameHover(screenName, side, containsMouse)
-    }
-
-    component FrameCornerWindow: PanelWindow {
-        id: cornerPanelWindow
-        property var corner
-
-        visible: Config.options.bar.showFrame 
-        exclusionMode: ExclusionMode.Ignore
-        mask: Region {}
-        WlrLayershell.namespace: "quickshell:screenframe-corner"
-        WlrLayershell.layer: WlrLayer.Top
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-        color: "transparent"
-
-        anchors {
-            top: cornerWidget.isTopLeft || cornerWidget.isTopRight
-            left: cornerWidget.isBottomLeft || cornerWidget.isTopLeft
-            bottom: cornerWidget.isBottomLeft || cornerWidget.isBottomRight
-            right: cornerWidget.isTopRight || cornerWidget.isBottomRight
-        }
-        margins {
-            left: cornerWidget.isLeft ? root.frameThickness : 0
-            right: cornerWidget.isRight ? root.frameThickness : 0
-            top: cornerWidget.isTop ? root.frameThickness : 0
-            bottom: cornerWidget.isBottom ? root.frameThickness : 0
-        }
-
-        implicitWidth: cornerWidget.implicitWidth
-        implicitHeight: cornerWidget.implicitHeight
-
-        RoundCorner {
-            id: cornerWidget
-            anchors.fill: parent
-            corner: cornerPanelWindow.corner
-            implicitSize: Math.max(0, Appearance.rounding.screenRounding - root.frameThickness)
-            color: root.frameColor
-        }
-    }
-
     Variants {
         model: Quickshell.screens
 
@@ -102,7 +55,7 @@ Scope {
 
                 Rectangle { id: topRect; anchors.fill: parent; color: root.frameColor; visible: root.frameVisibleFor("top") }
 
-                FrameHoverArea { side: "top"; screenName: frameGroup.modelData.name }
+                FrameHoverArea { side: "top"; screenName: frameGroup.modelData.name; edgeNeedsInput: root.edgeNeedsInput("top") }
             }
 
             PanelWindow { // bottom
@@ -119,7 +72,7 @@ Scope {
 
                 Rectangle { id: bottomRect; anchors.fill: parent; color: root.frameColor; visible: root.frameVisibleFor("bottom") }
 
-                FrameHoverArea { side: "bottom"; screenName: frameGroup.modelData.name }
+                FrameHoverArea { side: "bottom"; screenName: frameGroup.modelData.name; edgeNeedsInput: root.edgeNeedsInput("bottom") }
             }
 
             PanelWindow { // left
@@ -136,7 +89,7 @@ Scope {
 
                 Rectangle { id: leftRect; anchors.fill: parent; color: root.frameColor; visible: root.frameVisibleFor("left") }
 
-                FrameHoverArea { side: "left"; screenName: frameGroup.modelData.name }
+                FrameHoverArea { side: "left"; screenName: frameGroup.modelData.name; edgeNeedsInput: root.edgeNeedsInput("left") }
             }
 
             PanelWindow { // right
@@ -153,7 +106,7 @@ Scope {
 
                 Rectangle { id: rightRect; anchors.fill: parent; color: root.frameColor; visible: root.frameVisibleFor("right") }
 
-                FrameHoverArea { side: "right"; screenName: frameGroup.modelData.name }
+                FrameHoverArea { side: "right"; screenName: frameGroup.modelData.name; edgeNeedsInput: root.edgeNeedsInput("right") }
             }
 
             FrameCornerWindow { screen: frameGroup.modelData; corner: RoundCorner.CornerEnum.TopLeft }

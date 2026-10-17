@@ -1788,6 +1788,14 @@ ContentPage {
                         }
                     }
                 }
+            }
+        }
+        ContentSection {
+            icon: "photo_size_select_large"
+            shape: MaterialShape.Shape.Cookie4Sided
+            title: Translation.tr("Image card")
+
+            GroupedList {
                 ConfigSwitch {
                     Layout.fillWidth: true
                     buttonIcon: "photo_size_select_large"

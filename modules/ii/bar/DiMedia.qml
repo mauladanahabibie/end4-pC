@@ -53,7 +53,12 @@ Item {
             StyledImage {
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
-                source: root.activePlayer?.trackArtUrl ?? ""
+                source: {
+                    const url = root.activePlayer?.trackArtUrl ?? ""
+                    if (!url) return ""
+                    if (url.startsWith("/")) return "file://" + url
+                    return url
+                }
                 sourceSize.width: artMask.width * 2
                 sourceSize.height: artMask.height * 2
                 visible: (root.activePlayer?.trackArtUrl ?? "") !== ""
@@ -65,6 +70,19 @@ Item {
                 iconSize: 14
                 color: Appearance.colors.colOnLayer1
                 visible: (root.activePlayer?.trackArtUrl ?? "") === ""
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                cursorShape: Qt.PointingHandCursor
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.RightButton) {
+                        GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
+                    } else {
+                        root.activePlayer?.togglePlaying()
+                    }
+                }
             }
         }
 
