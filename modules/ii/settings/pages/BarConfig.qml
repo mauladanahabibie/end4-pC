@@ -59,7 +59,7 @@ ContentPage {
         const multipleAllowed = ["visualizer", "divisor"]
         return allWidgets.filter(w => {
             if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
-            if (w.id === "dynamicIsland" && (Config.options.bar.vertical || section !== "middle")) return false
+            if (w.id === "dynamicIsland" && Config.options.bar.vertical) return false
             return !used.includes(w.id) || multipleAllowed.includes(w.id)
         })
     }
@@ -367,21 +367,30 @@ ContentPage {
                 ConfigSwitch {
                     buttonIcon: "nest_wifi_pro"
                     text: Translation.tr("Enable Dynamic Island")
-                    checked: (Config.options.bar.layouts.middleLayout ?? []).includes("dynamicIsland")
+                    checked: (Config.options.bar.layouts.leftLayout ?? []).includes("dynamicIsland")
+                        || (Config.options.bar.layouts.middleLayout ?? []).includes("dynamicIsland")
+                        || (Config.options.bar.layouts.rightLayout ?? []).includes("dynamicIsland")
                     onCheckedChanged: {
                         const layouts = Config.options.bar.layouts;
-                        const current = (layouts.middleLayout ?? []).slice();
-                        if (checked) {
-                            if (!current.includes("dynamicIsland")) {
-                                if (current.includes("clockWidget")) {
-                                    layouts.middleLayout = current.map(id => id === "clockWidget" ? "dynamicIsland" : id);
-                                } else {
-                                    layouts.middleLayout = ["dynamicIsland", ...current];
-                                }
+                        const isPresent = (layouts.leftLayout ?? []).includes("dynamicIsland")
+                            || (layouts.middleLayout ?? []).includes("dynamicIsland")
+                            || (layouts.rightLayout ?? []).includes("dynamicIsland");
+                        if (checked && !isPresent) {
+                            const current = (layouts.middleLayout ?? []).slice();
+                            if (current.includes("clockWidget")) {
+                                layouts.middleLayout = current.map(id => id === "clockWidget" ? "dynamicIsland" : id);
+                            } else {
+                                layouts.middleLayout = ["dynamicIsland", ...current];
                             }
-                        } else {
-                            if (current.includes("dynamicIsland")) {
-                                layouts.middleLayout = current.map(id => id === "dynamicIsland" ? "clockWidget" : id);
+                        } else if (!checked && isPresent) {
+                            if ((layouts.leftLayout ?? []).includes("dynamicIsland")) {
+                                layouts.leftLayout = layouts.leftLayout.filter(id => id !== "dynamicIsland");
+                            }
+                            if ((layouts.rightLayout ?? []).includes("dynamicIsland")) {
+                                layouts.rightLayout = layouts.rightLayout.filter(id => id !== "dynamicIsland");
+                            }
+                            if ((layouts.middleLayout ?? []).includes("dynamicIsland")) {
+                                layouts.middleLayout = layouts.middleLayout.map(id => id === "dynamicIsland" ? "clockWidget" : id);
                             }
                         }
                     }

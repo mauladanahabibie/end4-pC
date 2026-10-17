@@ -229,6 +229,13 @@ Singleton {
         }
     }
 
+    property string lastFirstEntry: ""
+    property bool initialized: false
+
+    Component.onCompleted: {
+        root.refresh()
+    }
+
     Process {
         id: readProc
         property var buffer: []
@@ -243,6 +250,16 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
+                const first = (readProc.buffer[0] ?? "").trim();
+                if (first !== "") {
+                    if (root.initialized && root.lastFirstEntry !== "" && first !== root.lastFirstEntry) {
+                        const isImg = root.entryIsImage(first);
+                        const text = isImg ? "[Image]" : root.entryText(first);
+                        root.itemCopied(text);
+                    }
+                    root.lastFirstEntry = first;
+                    root.initialized = true;
+                }
                 root.entries = readProc.buffer
                 root.dedupePinned()
             } else {

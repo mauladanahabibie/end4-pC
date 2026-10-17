@@ -166,7 +166,6 @@ Singleton {
                 "notification": notification,
                 "time": Date.now(),
             });
-			root.list = [...root.list, newNotifObject];
 
             // Popup
             if (!root.popupInhibited) {
@@ -179,6 +178,8 @@ Singleton {
                 }
                 root.unread++;
             }
+			root.list = [...root.list, newNotifObject];
+            root.popupList = root.list.filter((notif) => notif.popup);
             root.notify(newNotifObject);
             // console.log(notifToString(newNotifObject));
             notifFileView.setText(stringifyList(root.list));
@@ -202,6 +203,7 @@ Singleton {
         const remaining = root.list.filter((notif) => !idSet.has(notif.notificationId));
         if (remaining.length !== root.list.length) {
             root.list = remaining;
+            root.popupList = root.list.filter((notif) => notif.popup);
             notifFileView.setText(stringifyList(root.list));
         }
         notifServer.trackedNotifications.values
@@ -212,6 +214,7 @@ Singleton {
 
     function discardAllNotifications() {
         root.list = []
+        root.popupList = []
         triggerListChange()
         notifFileView.setText(stringifyList(root.list));
         notifServer.trackedNotifications.values.forEach((notif) => {
@@ -228,18 +231,19 @@ Singleton {
 
     function timeoutNotification(id) {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
-        if (root.list[index] != null)
+        if (root.list[index] != null) {
             root.list[index].popup = false;
+            root.popupList = root.list.filter((notif) => notif.popup);
+        }
         root.timeout(id);
     }
 
     function timeoutAll() {
         root.popupList.forEach((notif) => {
             root.timeout(notif.notificationId);
-        })
-        root.popupList.forEach((notif) => {
             notif.popup = false;
         });
+        root.popupList = [];
     }
 
     function attemptInvokeAction(id, notifIdentifier) {

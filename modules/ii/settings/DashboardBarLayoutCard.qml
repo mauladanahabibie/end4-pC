@@ -131,7 +131,6 @@ DashboardCard {
     }
 
     function canPlace(id, laneId) {
-        if (id === "dynamicIsland" && laneId !== "middle") return false;
         return true;
     }
 

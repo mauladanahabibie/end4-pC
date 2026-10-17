@@ -233,6 +233,7 @@ Item {
                             Layout.fillHeight: true
                             currentIndex: index
                             widgetName: modelData
+                            paintBackground: modelData !== "dynamicIsland"
                             totalCount: root.effectiveLeftLayout.length
                             paintMaterialPill: root.shouldPaintMaterialPill(modelData)
                             bgColor: root.getMaterialPillColor(modelData)
@@ -281,6 +282,7 @@ Item {
                         Layout.fillHeight: true
                         currentIndex: index
                         widgetName: modelData
+                        paintBackground: modelData !== "dynamicIsland"
                         totalCount: root.effectiveLeftLayout.length
                         Loader {
                             Layout.fillHeight: true
@@ -508,6 +510,7 @@ Item {
                             Layout.fillHeight: true
                             currentIndex: index
                             widgetName: modelData
+                            paintBackground: modelData !== "dynamicIsland"
                             totalCount: root.effectiveRightLayout.length
                             paintMaterialPill: root.shouldPaintMaterialPill(modelData)
                             bgColor: root.getMaterialPillColor(modelData)
@@ -548,6 +551,7 @@ Item {
                         Layout.fillHeight: true
                         currentIndex: index
                         widgetName: modelData
+                        paintBackground: modelData !== "dynamicIsland"
                         totalCount: root.effectiveRightLayout.length
                         Loader {
                             Layout.fillHeight: true

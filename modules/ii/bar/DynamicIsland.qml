@@ -191,12 +191,43 @@ Item {
         return root.batteryAlertKind === "charging" ? Appearance.m3colors.m3success : Appearance.colors.colError
     }
 
-    // Quick alert for status notifications (mic, bluetooth, audio mute)
+    // Dynamic Notification tracking
+    property var activeDynamicNotification: null
+    Timer {
+        id: dynamicNotifTimer
+        interval: 5000
+        repeat: false
+        onTriggered: root.activeDynamicNotification = null
+    }
+
+    Connections {
+        target: Notifications
+        function onNotify(notif) {
+            root.activeDynamicNotification = notif
+            dynamicNotifTimer.restart()
+        }
+        function onDiscard(id) {
+            if (root.activeDynamicNotification?.notificationId === id) {
+                root.activeDynamicNotification = null
+            }
+        }
+        function onDiscardAll() {
+            root.activeDynamicNotification = null
+        }
+    }
+
+    // Quick alert for status notifications (mic, bluetooth, audio mute, clipboard)
     property bool quickAlertActive: false
     property string quickAlertIcon: "info"
     property string quickAlertText: ""
     property color quickAlertColor: Appearance.colors.colPrimary
-    readonly property real quickAlertWidth: 200
+    TextMetrics {
+        id: quickAlertTextMetrics
+        text: root.quickAlertText
+        font.pixelSize: Appearance.font.pixelSize.small
+        font.weight: Font.DemiBold
+    }
+    readonly property real quickAlertWidth: Math.min(320, Math.max(180, quickAlertTextMetrics.width + 64))
 
     Timer {
         id: quickAlertTimer
@@ -257,7 +288,7 @@ Item {
 
     readonly property var contentProviders: [
         { id: "quickAlert",   active: root.quickAlertActive,                                           component: quickAlertComponent,   width: root.quickAlertWidth },
-        { id: "notification", active: root.latestNotification !== null,                                component: notificationComponent, width: root.notificationWidth },
+        { id: "notification", active: root.activeDynamicNotification !== null || root.latestNotification !== null, component: notificationComponent, width: root.notificationWidth },
         { id: "battery",      active: root.batteryAlertActive,                                         component: batteryComponent,      width: root.batteryWidth },
         { id: "recording",    active: root.isRecording,                                                component: recordingComponent,    width: root.recordingWidth },
         { id: "timer",        active: root.hasActiveTimer,                                             component: timerComponent,        width: root.timerWidth },

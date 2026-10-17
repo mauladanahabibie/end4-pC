@@ -11,7 +11,8 @@ Item {
     readonly property Item root: diNotifsRoot.di
     anchors.fill: parent
 
-    readonly property var notif: root.latestNotification
+    readonly property bool isMaterial: root?.isMaterial ?? false
+    readonly property var notif: root?.activeDynamicNotification ?? root?.latestNotification ?? null
 
     Image {
         id: notifIcon
@@ -19,10 +20,10 @@ Item {
         height: 20
         anchors {
             left: parent.left
-            leftMargin: root.isMaterial ? 4 : 12
+            leftMargin: isMaterial ? 4 : 12
             verticalCenter: parent.verticalCenter
         }
-        source: SystemAppearance.iconPath(notif?.appIcon ?? "", "notification-symbolic")
+        source: (notif?.appIcon ?? "") !== "" ? SystemAppearance.iconPath(notif.appIcon, "notification-symbolic") : ""
         visible: (notif?.appIcon ?? "") !== ""
         fillMode: Image.PreserveAspectFit
         asynchronous: true
@@ -32,14 +33,14 @@ Item {
         id: notifMaterialIcon
         anchors {
             left: parent.left
-            leftMargin: root.isMaterial ? 0 : 4
+            leftMargin: isMaterial ? 0 : 4
             verticalCenter: parent.verticalCenter
         }
         wrappedShape: MaterialShape.Shape.Cookie12Sided
         color: Appearance.colors.colPrimary
         colSymbol: Appearance.colors.colOnPrimary
         text: "notifications"
-        iconSize: root.isMaterial ? 20 : 14
+        iconSize: isMaterial ? 20 : 14
         fill: 1
         padding: 4
         visible: (notif?.appIcon ?? "") === ""
@@ -48,13 +49,13 @@ Item {
     ColumnLayout {
         id: notifTextColumn
         anchors {
-            left: notifIcon.right
-            leftMargin: root.isMaterial ? 14 : 2
+            left: notifIcon.visible ? notifIcon.right : notifMaterialIcon.right
+            leftMargin: 8
             verticalCenter: parent.verticalCenter
             right: nowLabel.left
             rightMargin: 8
         }
-        spacing: root.isMaterial ? -2 : -4
+        spacing: isMaterial ? -2 : -4
 
         StyledText {
             Layout.fillWidth: true
@@ -96,6 +97,7 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            root.activeDynamicNotification = null
             GlobalStates.sidebarRightOpen = true
         }
     }
