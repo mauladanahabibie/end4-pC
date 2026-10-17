@@ -34,7 +34,7 @@ Item {
             source: {
                 const pic = Config.options.profile.avatarPicture ?? ""
                 if (pic !== "") return pic.startsWith("/") ? "file://" + pic : pic
-                return "file:///home/" + (Quickshell.env("USER") ?? "user") + "/.face"
+                return ""
             }
             sourceSize.width: avatarImage.width * 2
             sourceSize.height: avatarImage.height * 2

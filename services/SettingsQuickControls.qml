@@ -349,11 +349,16 @@ Singleton {
                 const current = (layouts.middleLayout ?? []).slice();
                 if (value) {
                     if (!current.includes("dynamicIsland")) {
-                        layouts.middleLayout = ["dynamicIsland"];
+                        if (current.includes("clockWidget")) {
+                            layouts.middleLayout = current.map(id => id === "clockWidget" ? "dynamicIsland" : id);
+                        } else {
+                            layouts.middleLayout = ["dynamicIsland", ...current];
+                        }
                     }
                 } else {
-                    const filtered = current.filter(id => id !== "dynamicIsland");
-                    layouts.middleLayout = filtered.length > 0 ? filtered : ["clockWidget"];
+                    if (current.includes("dynamicIsland")) {
+                        layouts.middleLayout = current.map(id => id === "dynamicIsland" ? "clockWidget" : id);
+                    }
                 }
             }
         ),

@@ -50,7 +50,7 @@ ContentPage {
             ...Config.options.bar.layouts.rightLayout
         ]
         if (section === "middle" && Config.options.bar.layouts.middleLayout.length > 0) {
-            return Config.options.bar.layouts.middleLayout.includes("dynamicIsland") ? [] : allWidgets.filter(w => {
+            return allWidgets.filter(w => {
                 if (w.id === "divisor" && Config.options.bar.borderless !== "transparent") return false
                 const multipleAllowed = ["visualizer", "divisor"]
                 return !used.includes(w.id) || multipleAllowed.includes(w.id)
@@ -373,11 +373,16 @@ ContentPage {
                         const current = (layouts.middleLayout ?? []).slice();
                         if (checked) {
                             if (!current.includes("dynamicIsland")) {
-                                layouts.middleLayout = ["dynamicIsland"];
+                                if (current.includes("clockWidget")) {
+                                    layouts.middleLayout = current.map(id => id === "clockWidget" ? "dynamicIsland" : id);
+                                } else {
+                                    layouts.middleLayout = ["dynamicIsland", ...current];
+                                }
                             }
                         } else {
-                            const filtered = current.filter(id => id !== "dynamicIsland");
-                            layouts.middleLayout = filtered.length > 0 ? filtered : ["clockWidget"];
+                            if (current.includes("dynamicIsland")) {
+                                layouts.middleLayout = current.map(id => id === "dynamicIsland" ? "clockWidget" : id);
+                            }
                         }
                     }
                 }
