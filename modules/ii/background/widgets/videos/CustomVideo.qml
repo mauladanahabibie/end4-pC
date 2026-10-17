@@ -7,6 +7,7 @@ import Qt5Compat.GraphicalEffects
 import QtMultimedia
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -33,7 +34,6 @@ AbstractBackgroundWidget {
     property string videoPath: videoConfig.path ?? ""
     property bool videoValid: videoPath !== "" && !videoError
     property bool videoError: false
-    property bool playIntent: videoConfig.autoplay ?? true
     property bool dropHover:false
     property real widgetSize: videoConfig.size ??200
     property bool resizing: false
@@ -55,14 +55,60 @@ AbstractBackgroundWidget {
         return Math.max(0, Math.min(iy, scaledScreenHeight - height))
     }
 
-    readonly property bool powerAllowsPlay: {
-        if (!Battery.available)
-            return true
-        return Battery.isPluggedIn
-            ? (root.videoConfig.playWhenCharging ?? true)
-            : (root.videoConfig.playWhenOnBattery ?? true)
+    // ── Playback Rules & Power-Aware Controls ──
+    readonly property bool rulesEnabled: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
+    readonly property bool ruleAutoplay: root.videoConfig.autoplay ?? true
+    readonly property bool rulePauseInFullscreen: Config.options.background.widgets.customVideo.pauseInFullscreen ?? true
+    readonly property bool rulePauseOnBattery: Config.options.background.widgets.customVideo.pauseOnBattery ?? true
+    readonly property bool ruleResumeWhenCharging: Config.options.background.widgets.customVideo.resumeWhenCharging ?? true
+    readonly property bool rulePauseWhenHidden: Config.options.background.widgets.customVideo.pauseWhenHidden ?? true
+
+    // External power detection
+    readonly property bool isExternalPowerConnected: {
+        if (!Battery.available) return true
+        if (typeof UPower !== "undefined" && UPower.onBattery !== undefined) {
+            return !UPower.onBattery
+        }
+        return Battery.isPluggedIn || (Battery.chargeState === UPowerDeviceState.FullyCharged)
     }
-    readonly property bool effectivePlay: root.playIntent && root.powerAllowsPlay && root.videoValid && root.videoPath !== ""
+    readonly property bool isOnBattery: Battery.available && !root.isExternalPowerConnected
+
+    // Fullscreen state: isolated to this instance (matching videoIndex)
+    readonly property bool isThisInstanceInFullscreen: GlobalStates.customVideoFullscreenOpen
+        && (GlobalStates.customVideoFullscreenIndex === root.videoIndex)
+
+    // Visibility / enabled state
+    readonly property bool isWidgetHidden: !root.visible
+        || !Config.options.background.widgets.customVideo.enable
+
+    // Coordinated Pause Conditions
+    readonly property bool pauseConditionFullscreen: root.rulesEnabled
+        && root.rulePauseInFullscreen
+        && root.isThisInstanceInFullscreen
+
+    readonly property bool pauseConditionBattery: root.rulesEnabled
+        && root.rulePauseOnBattery
+        && root.isOnBattery
+
+    readonly property bool pauseConditionHidden: root.rulesEnabled
+        && root.rulePauseWhenHidden
+        && root.isWidgetHidden
+
+    readonly property bool hasActivePauseCondition: pauseConditionFullscreen
+        || pauseConditionBattery
+        || pauseConditionHidden
+
+    // Ephemeral Playback State Tracking (Isolated per widget instance)
+    property bool userManualPaused: !root.ruleAutoplay
+    property bool wasPlayingBeforeAutoPause: false
+    property bool autoPausedByBattery: false
+    property bool autoPausedByFullscreen: false
+    property bool autoPausedByHidden: false
+
+    property bool playIntent: !root.userManualPaused
+    readonly property bool effectivePlay: (!root.rulesEnabled)
+        ? (!root.userManualPaused && root.videoValid && root.videoPath !== "")
+        : (!root.userManualPaused && !root.hasActivePauseCondition && root.videoValid && root.videoPath !== "")
 
     // Picker process: captures stdout from zenity/kdialog script.
     // Uses scripts/images/pick-video.py (plain path output, not JSON).
@@ -140,20 +186,63 @@ AbstractBackgroundWidget {
         if (player.source === "" || player.source === undefined) return
         const ms = player.mediaStatus
         const ready = ms > MediaPlayer.NoMedia && ms < MediaPlayer.EndOfMedia
-        if (root.effectivePlay && ready) {
-            if (player.playbackState !== MediaPlayer.PlayingState)
-                player.play()
-        } else {
-            if (player.playbackState === MediaPlayer.PlayingState)
+
+        if (!root.rulesEnabled) {
+            // Master rules disabled: manual controls dictate playback
+            if (!root.userManualPaused && root.videoValid && ready) {
+                if (player.playbackState !== MediaPlayer.PlayingState)
+                    player.play()
+            } else {
+                if (player.playbackState === MediaPlayer.PlayingState)
+                    player.pause()
+            }
+            return
+        }
+
+        // Automatic playback rules active
+        if (root.hasActivePauseCondition) {
+            if (player.playbackState === MediaPlayer.PlayingState) {
+                root.wasPlayingBeforeAutoPause = true
+                if (root.pauseConditionBattery) root.autoPausedByBattery = true
+                if (root.pauseConditionFullscreen) root.autoPausedByFullscreen = true
+                if (root.pauseConditionHidden) root.autoPausedByHidden = true
                 player.pause()
+            }
+        } else {
+            // All active pause conditions have cleared
+            let permitResume = true
+            if (root.autoPausedByBattery) {
+                if (!root.ruleResumeWhenCharging) {
+                    permitResume = false
+                }
+                root.autoPausedByBattery = false
+            }
+            root.autoPausedByFullscreen = false
+            root.autoPausedByHidden = false
+
+            if (!root.userManualPaused && root.wasPlayingBeforeAutoPause && permitResume && ready && root.videoValid) {
+                root.wasPlayingBeforeAutoPause = false
+                if (player.playbackState !== MediaPlayer.PlayingState)
+                    player.play()
+            } else if (!root.userManualPaused && !root.wasPlayingBeforeAutoPause && ready && root.videoValid && root.ruleAutoplay && player.playbackState !== MediaPlayer.PlayingState) {
+                player.play()
+            }
         }
     }
 
     onEffectivePlayChanged: root.syncPlayback()
+    onHasActivePauseConditionChanged: root.syncPlayback()
+    onRulesEnabledChanged: root.syncPlayback()
+    onVisibleChanged: root.syncPlayback()
 
     onVideoPathChanged: {
         root.videoError = false
-        root.playIntent = root.videoConfig.autoplay ?? true
+        root.userManualPaused = !root.ruleAutoplay
+        root.wasPlayingBeforeAutoPause = false
+        root.autoPausedByBattery = false
+        root.autoPausedByFullscreen = false
+        root.autoPausedByHidden = false
+        root.syncPlayback()
     }
 
     Item {
@@ -293,16 +382,32 @@ AbstractBackgroundWidget {
                 ControlButton {
                     symbol: player.playbackState === MediaPlayer.PlayingState ? "pause" : "play_arrow"
                     onClicked: {
-                        root.playIntent = player.playbackState !== MediaPlayer.PlayingState
-                        root.syncPlayback()
+                        if (player.playbackState === MediaPlayer.PlayingState) {
+                            root.userManualPaused = true
+                            root.wasPlayingBeforeAutoPause = false
+                            player.pause()
+                        } else {
+                            root.userManualPaused = false
+                            root.autoPausedByBattery = false
+                            root.autoPausedByFullscreen = false
+                            root.autoPausedByHidden = false
+                            if (root.videoValid && root.videoPath !== "") {
+                                player.play()
+                            }
+                        }
                     }
                 }
                 ControlButton {
                     symbol: "replay"
                     onClicked: {
                         player.position = 0
-                        root.playIntent = true
-                        root.syncPlayback()
+                        root.userManualPaused = false
+                        root.autoPausedByBattery = false
+                        root.autoPausedByFullscreen = false
+                        root.autoPausedByHidden = false
+                        if (root.videoValid && root.videoPath !== "") {
+                            player.play()
+                        }
                     }
                 }
                 ControlButton {

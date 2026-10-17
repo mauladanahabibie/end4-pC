@@ -1384,15 +1384,6 @@ ContentPage {
                 }
                 ConfigSwitch {
                     Layout.fillWidth:true
-                    buttonIcon: "autoplay"
-                    text: Translation.tr("Autoplay")
-                    checked: Config.options.background.widgets.customVideo.autoplay
-                    onCheckedChanged: {
-                        Config.options.background.widgets.customVideo.autoplay = checked;
-                    }
-                }
-                ConfigSwitch {
-                    Layout.fillWidth:true
                     buttonIcon: "repeat"
                     text: Translation.tr("Loop")
                     checked: Config.options.background.widgets.customVideo.loop
@@ -1409,33 +1400,25 @@ ContentPage {
                         Config.options.background.widgets.customVideo.muted = checked;
                     }
                 }
-                ConfigSwitch {
-                    Layout.fillWidth:true
-                    buttonIcon: "battery_charging_full"
-                    text: Translation.tr("Play while charging")
-                    checked: Config.options.background.widgets.customVideo.playWhenCharging
-                    onCheckedChanged: {
-                        Config.options.background.widgets.customVideo.playWhenCharging = checked;
-                    }
-                }
-                ConfigSwitch {
-                    Layout.fillWidth:true
-                    buttonIcon: "battery_alert"
-                    text: Translation.tr("Play while on battery")
-                    checked: Config.options.background.widgets.customVideo.playWhenOnBattery
-                    onCheckedChanged: {
-                        Config.options.background.widgets.customVideo.playWhenOnBattery = checked;
-                    }
-                }
             }
 
             ContentSubsection {
-                title: Translation.tr("Playback Defaults")
-                tooltip: Translation.tr("Applied to the legacy single-video widget and used as defaults for newly added videos. Each video row below has its own switches.")
+                title: Translation.tr("Playback")
+                tooltip: Translation.tr("Configure automatic playback behavior and power-aware rules for the custom video widget.")
 
                 GroupedList {
                     ConfigSwitch {
-                        Layout.fillWidth:true
+                        Layout.fillWidth: true
+                        buttonIcon: "tune"
+                        text: Translation.tr("Enable playback rules")
+                        checked: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.enablePlaybackRules = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        enabled: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
                         buttonIcon: "autoplay"
                         text: Translation.tr("Autoplay")
                         checked: Config.options.background.widgets.customVideo.autoplay
@@ -1444,39 +1427,43 @@ ContentPage {
                         }
                     }
                     ConfigSwitch {
-                        Layout.fillWidth:true
-                        buttonIcon: "repeat"
-                        text: Translation.tr("Loop")
-                        checked: Config.options.background.widgets.customVideo.loop
+                        Layout.fillWidth: true
+                        enabled: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
+                        buttonIcon: "fullscreen"
+                        text: Translation.tr("Pause in fullscreen")
+                        checked: Config.options.background.widgets.customVideo.pauseInFullscreen ?? true
                         onCheckedChanged: {
-                            Config.options.background.widgets.customVideo.loop = checked;
+                            Config.options.background.widgets.customVideo.pauseInFullscreen = checked;
                         }
                     }
                     ConfigSwitch {
-                        Layout.fillWidth:true
-                        buttonIcon: "volume_off"
-                        text: Translation.tr("Muted")
-                        checked: Config.options.background.widgets.customVideo.muted
-                        onCheckedChanged: {
-                            Config.options.background.widgets.customVideo.muted = checked;
-                        }
-                    }
-                    ConfigSwitch {
-                        Layout.fillWidth:true
-                        buttonIcon: "battery_charging_full"
-                        text: Translation.tr("Play while charging")
-                        checked: Config.options.background.widgets.customVideo.playWhenCharging
-                        onCheckedChanged: {
-                            Config.options.background.widgets.customVideo.playWhenCharging = checked;
-                        }
-                    }
-                    ConfigSwitch {
-                        Layout.fillWidth:true
+                        Layout.fillWidth: true
+                        enabled: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
                         buttonIcon: "battery_alert"
-                        text: Translation.tr("Play while on battery")
-                        checked: Config.options.background.widgets.customVideo.playWhenOnBattery
+                        text: Translation.tr("Pause on battery")
+                        checked: Config.options.background.widgets.customVideo.pauseOnBattery ?? true
                         onCheckedChanged: {
-                            Config.options.background.widgets.customVideo.playWhenOnBattery = checked;
+                            Config.options.background.widgets.customVideo.pauseOnBattery = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        enabled: (Config.options.background.widgets.customVideo.enablePlaybackRules ?? true) && (Config.options.background.widgets.customVideo.pauseOnBattery ?? true)
+                        buttonIcon: "battery_charging_full"
+                        text: Translation.tr("Resume when charging")
+                        checked: Config.options.background.widgets.customVideo.resumeWhenCharging ?? true
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.resumeWhenCharging = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        enabled: Config.options.background.widgets.customVideo.enablePlaybackRules ?? true
+                        buttonIcon: "visibility_off"
+                        text: Translation.tr("Pause when hidden")
+                        checked: Config.options.background.widgets.customVideo.pauseWhenHidden ?? true
+                        onCheckedChanged: {
+                            Config.options.background.widgets.customVideo.pauseWhenHidden = checked;
                         }
                     }
                 }

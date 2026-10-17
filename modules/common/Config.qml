@@ -439,9 +439,14 @@ Singleton {
                         property string path: ""
                         property string shape: "Cookie4Sided"
                         property real size: 200
+                        property bool enablePlaybackRules: true
                         property bool autoplay:true
                         property bool loop: true
                         property bool muted: true
+                        property bool pauseInFullscreen: true
+                        property bool pauseOnBattery: true
+                        property bool resumeWhenCharging: true
+                        property bool pauseWhenHidden: true
                         property bool playWhenCharging: true
                         property bool playWhenOnBattery: true
                         // Multi-video support: array of {path, shape, size, x, y,
