@@ -74,9 +74,13 @@ Menu {
         property color iconColor: Appearance.colors.colOnLayer1
         property color textColor: Appearance.colors.colOnLayer1
 
-        implicitHeight: 38
+        visible: true
+        height: visible ? implicitHeight : 0
+        implicitHeight: visible ? 38 : 0
         leftPadding: 12
         rightPadding: 12
+        topPadding: 0
+        bottomPadding: 0
 
         background: Rectangle {
             radius: Appearance.rounding.small
