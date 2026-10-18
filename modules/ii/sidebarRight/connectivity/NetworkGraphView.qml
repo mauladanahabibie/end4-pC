@@ -10,7 +10,7 @@ Item {
 
     property color accentColor: "#A97363" // Warm terracotta accent matching rice wallpaper/term2
 
-    implicitHeight: 312
+    implicitHeight: 336
     implicitWidth: 380
 
     readonly property bool isConnected: Network.ethernet || (Network.wifiEnabled && Network.wifiStatus === "connected")
@@ -63,7 +63,7 @@ Item {
         id: cardIp
         z: 2
         x: 0
-        y: 104
+        y: 124
         width: root.colCardWidth
         anchorSide: "right"
         icon: "lan"
@@ -81,7 +81,7 @@ Item {
         id: cardBand
         z: 2
         x: parent.width - width
-        y: 104
+        y: 124
         width: root.colCardWidth
         anchorSide: "left"
         icon: "wifi_channel"
@@ -98,7 +98,7 @@ Item {
         id: cardGateway
         z: 2
         x: 0
-        y: 172
+        y: 192
         width: root.colCardWidth
         anchorSide: "right"
         icon: "dns"
@@ -115,7 +115,7 @@ Item {
         id: cardSignal
         z: 2
         x: parent.width - width
-        y: 172
+        y: 192
         width: root.colCardWidth
         anchorSide: "left"
         icon: "signal_wifi_4_bar"
@@ -136,7 +136,7 @@ Item {
         id: cardDetails
         z: 2
         x: 0
-        y: 240
+        y: 260
         width: parent.width
         implicitHeight: 64
         anchorSide: "top"

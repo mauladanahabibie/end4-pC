@@ -13,12 +13,12 @@ Item {
     property color accentColor: Appearance.colors.colPrimary
     property var selectedDevice: BluetoothStatus.primaryConnectedDevice ?? (BluetoothStatus.connectedDevices.length > 0 ? BluetoothStatus.connectedDevices[0] : null)
 
-    implicitHeight: 312
+    implicitHeight: 336
     implicitWidth: 380
 
     readonly property bool isConnected: BluetoothStatus.isConnected(selectedDevice)
     readonly property real colCardWidth: Math.floor((width - 10) / 2)
-    readonly property real gridTopY: multiDeviceRow.visible ? 116 : 104
+    readonly property real gridTopY: multiDeviceRow.visible ? 134 : 124
 
     // Optional device selector row when multiple devices are connected
     Row {
@@ -87,6 +87,7 @@ Item {
         anchors.topMargin: multiDeviceRow.visible ? 4 : 0
         anchors.horizontalCenter: parent.horizontalCenter
         width: parent.width
+        topGap: multiDeviceRow.visible ? 6 : 22
         accentColor: root.accentColor
         active: root.isConnected
         connecting: root.selectedDevice?.state === 3

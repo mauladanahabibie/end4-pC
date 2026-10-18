@@ -14,13 +14,14 @@ Item {
     property bool active: true
     property bool connecting: false
     property real circleDiameter: 60
+    property real topGap: 22
 
     implicitWidth: 280
-    implicitHeight: 98
+    implicitHeight: hubCircle.y + hubCircle.height + 4 + titleColumn.implicitHeight
 
     readonly property real hubCenterX: x + width / 2
     readonly property real hubCenterY: y + hubCircle.y + hubCircle.height / 2
-    readonly property real hubBottomY: y + height
+    readonly property real hubBottomY: y + hubCircle.y + hubCircle.height + 4 + titleColumn.implicitHeight
     readonly property real hubRadius: circleDiameter / 2
 
     // Outer concentric ripple ring 2
@@ -73,6 +74,7 @@ Item {
     Rectangle {
         id: hubCircle
         anchors.top: parent.top
+        anchors.topMargin: root.topGap
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.circleDiameter
         height: root.circleDiameter
@@ -108,6 +110,7 @@ Item {
 
     // Title and Subtitle Status pill below circle
     ColumnLayout {
+        id: titleColumn
         anchors.top: hubCircle.bottom
         anchors.topMargin: 4
         anchors.horizontalCenter: parent.horizontalCenter

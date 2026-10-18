@@ -23,7 +23,7 @@ WindowDialog {
     signal openBluetoothListRequested()
 
     backgroundWidth: Math.min(parent ? parent.width - 20 : 420, 420)
-    backgroundHeight: 490
+    backgroundHeight: 514
 
     // Header: Title Row
     RowLayout {
@@ -76,7 +76,7 @@ WindowDialog {
     // Main Graph Area
     Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: 312
+        Layout.preferredHeight: 336
         clip: true
 
         NetworkGraphView {
