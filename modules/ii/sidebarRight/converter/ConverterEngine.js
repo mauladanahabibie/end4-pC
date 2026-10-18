@@ -24,7 +24,7 @@ const CATEGORIES = [
     {
         id: "mass",
         name: "Mass",
-        icon: "scale",
+        icon: "balance",
         units: [
             { id: "kg", name: "Kilograms (kg)", factor: 1 },
             { id: "g", name: "Grams (g)", factor: 0.001 },

@@ -22,6 +22,21 @@ Item {
     property bool showUnitPicker: false
     property bool copiedFeedback: false
 
+    onVisibleChanged: {
+        if (!visible) {
+            root.showUnitPicker = false;
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onSidebarRightOpenChanged() {
+            if (!GlobalStates.sidebarRightOpen) {
+                root.showUnitPicker = false;
+            }
+        }
+    }
+
     function selectCategory(catId) {
         root.currentCategoryId = catId;
         const cat = ConverterEngine.CATEGORIES.find(c => c.id === catId);
@@ -100,11 +115,14 @@ Item {
                             contentItem: RowLayout {
                                 id: catBtnLayout
                                 anchors.centerIn: parent
-                                spacing: 4
+                                spacing: 5
 
                                 MaterialSymbol {
                                     text: catBtn.modelData.icon
                                     iconSize: 14
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                    Layout.alignment: Qt.AlignVCenter
                                     color: root.currentCategoryId === catBtn.modelData.id
                                         ? Appearance.colors.colOnSecondaryContainer
                                         : Appearance.colors.colOnLayer1
@@ -114,6 +132,8 @@ Item {
                                     text: Translation.tr(catBtn.modelData.name)
                                     font.bold: root.currentCategoryId === catBtn.modelData.id
                                     font.pixelSize: Appearance.font.pixelSize.small
+                                    verticalAlignment: Text.AlignVCenter
+                                    Layout.alignment: Qt.AlignVCenter
                                     color: root.currentCategoryId === catBtn.modelData.id
                                         ? Appearance.colors.colOnSecondaryContainer
                                         : Appearance.colors.colOnLayer1
@@ -151,15 +171,17 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer1
                         opacity: 0.6
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     Item { Layout.fillWidth: true }
 
                     RippleButton {
-                        Layout.preferredHeight: 24
-                        Layout.preferredWidth: fromBtnLayout.implicitWidth + 12
-                        buttonRadius: 12
+                        Layout.preferredHeight: 26
+                        Layout.preferredWidth: fromBtnLayout.implicitWidth + 16
+                        buttonRadius: 13
                         colBackground: Appearance.colors.colLayer1
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
 
                         contentItem: RowLayout {
                             id: fromBtnLayout
@@ -170,11 +192,16 @@ Item {
                                 text: root.getUnitName(root.currentCategoryId, root.fromUnitId)
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: Appearance.colors.colOnSurface
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
                             }
 
                             MaterialSymbol {
                                 text: "expand_more"
                                 iconSize: 14
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 color: Appearance.colors.colOnLayer1
                             }
                         }
@@ -226,6 +253,7 @@ Item {
                 height: 28
                 buttonRadius: 14
                 colBackground: Appearance.colors.colSecondaryContainer
+                colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                 StyledToolTip {
                     text: Translation.tr("Swap units")
                 }
@@ -233,6 +261,8 @@ Item {
                     anchors.centerIn: parent
                     text: "swap_vert"
                     iconSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                     color: Appearance.colors.colOnSecondaryContainer
                 }
                 onClicked: root.swapUnits()
@@ -251,7 +281,7 @@ Item {
                 anchors.margins: 10
                 spacing: 4
 
-                // Unit selection button & Copy
+                // Unit selection button (Symmetrical to From card)
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
@@ -261,15 +291,17 @@ Item {
                         font.pixelSize: Appearance.font.pixelSize.small
                         color: Appearance.colors.colOnLayer1
                         opacity: 0.6
+                        Layout.alignment: Qt.AlignVCenter
                     }
 
                     Item { Layout.fillWidth: true }
 
                     RippleButton {
-                        Layout.preferredHeight: 24
-                        Layout.preferredWidth: toBtnLayout.implicitWidth + 12
-                        buttonRadius: 12
+                        Layout.preferredHeight: 26
+                        Layout.preferredWidth: toBtnLayout.implicitWidth + 16
+                        buttonRadius: 13
                         colBackground: Appearance.colors.colLayer1
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
 
                         contentItem: RowLayout {
                             id: toBtnLayout
@@ -280,11 +312,16 @@ Item {
                                 text: root.getUnitName(root.currentCategoryId, root.toUnitId)
                                 font.pixelSize: Appearance.font.pixelSize.small
                                 color: Appearance.colors.colOnSurface
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
                             }
 
                             MaterialSymbol {
                                 text: "expand_more"
                                 iconSize: 14
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                Layout.alignment: Qt.AlignVCenter
                                 color: Appearance.colors.colOnLayer1
                             }
                         }
@@ -294,13 +331,32 @@ Item {
                             root.showUnitPicker = true;
                         }
                     }
+                }
+
+                // Result display & Copy button row
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    spacing: 8
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        text: root.convertedResult.length > 0 ? root.convertedResult : "0"
+                        font.bold: true
+                        font.pixelSize: 22
+                        color: Appearance.colors.colPrimary
+                        elide: Text.ElideRight
+                    }
 
                     RippleButton {
                         visible: root.convertedResult.length > 0
-                        Layout.preferredWidth: 24
-                        Layout.preferredHeight: 24
-                        buttonRadius: 12
-                        colBackground: "transparent"
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        Layout.alignment: Qt.AlignVCenter
+                        buttonRadius: 14
+                        colBackground: Appearance.colors.colLayer1
+                        colBackgroundHover: Appearance.colors.colLayer1Hover
                         StyledToolTip {
                             text: root.copiedFeedback ? Translation.tr("Copied!") : Translation.tr("Copy result")
                         }
@@ -308,6 +364,8 @@ Item {
                             anchors.centerIn: parent
                             text: root.copiedFeedback ? "check" : "content_copy"
                             iconSize: 15
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                             color: root.copiedFeedback ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer1
                         }
                         onClicked: {
@@ -315,23 +373,6 @@ Item {
                             root.copiedFeedback = true;
                             copyFeedbackTimer.restart();
                         }
-                    }
-                }
-
-                // Result display
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-
-                    StyledText {
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: root.convertedResult.length > 0 ? root.convertedResult : "0"
-                        font.bold: true
-                        font.pixelSize: 22
-                        color: Appearance.colors.colPrimary
-                        elide: Text.ElideRight
                     }
                 }
             }
@@ -350,7 +391,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.55)
+            color: ColorUtils.transparentize(Appearance.colors.colScrim, 0.25)
             radius: Appearance.rounding.normal
 
             MouseArea {
@@ -362,10 +403,10 @@ Item {
                 anchors.centerIn: parent
                 width: parent.width - 24
                 height: Math.min(parent.height - 24, 260)
-                color: Appearance.colors.colLayer1
+                color: Appearance.m3colors.m3surfaceContainerHigh
                 radius: Appearance.rounding.normal
                 border.width: 1
-                border.color: Appearance.colors.colLayer0Border
+                border.color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.5)
 
                 MouseArea {
                     anchors.fill: parent // prevent event bubbling
@@ -373,8 +414,8 @@ Item {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
+                    anchors.margins: 14
+                    spacing: 10
 
                     RowLayout {
                         Layout.fillWidth: true
@@ -384,21 +425,24 @@ Item {
                             text: root.pickingFrom ? Translation.tr("Select 'From' Unit") : Translation.tr("Select 'To' Unit")
                             font.bold: true
                             font.pixelSize: Appearance.font.pixelSize.normal
-                            color: Appearance.colors.colOnSurface
+                            color: Appearance.m3colors.m3onSurface
                         }
 
                         Item { Layout.fillWidth: true }
 
                         RippleButton {
-                            Layout.preferredWidth: 24
-                            Layout.preferredHeight: 24
-                            buttonRadius: 12
-                            colBackground: "transparent"
+                            Layout.preferredWidth: 26
+                            Layout.preferredHeight: 26
+                            buttonRadius: 13
+                            colBackground: Appearance.colors.colLayer2
+                            colBackgroundHover: Appearance.colors.colLayer2Hover
                             contentItem: MaterialSymbol {
                                 anchors.centerIn: parent
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
                                 text: "close"
-                                iconSize: 16
-                                color: Appearance.colors.colOnLayer1
+                                iconSize: 15
+                                color: Appearance.m3colors.m3onSurface
                             }
                             onClicked: root.showUnitPicker = false
                         }
@@ -423,7 +467,7 @@ Item {
                             color: {
                                 const selected = (root.pickingFrom ? root.fromUnitId : root.toUnitId) === unitItem.modelData.id;
                                 if (selected) return Appearance.colors.colSecondaryContainer;
-                                return itemMA.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2;
+                                return itemMA.containsMouse ? Appearance.m3colors.m3surfaceContainerHighest : "transparent";
                             }
 
                             PointingHandInteraction {}
@@ -444,8 +488,8 @@ Item {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 10
-                                anchors.rightMargin: 10
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
                                 spacing: 6
 
                                 StyledText {
@@ -454,13 +498,15 @@ Item {
                                     font.pixelSize: Appearance.font.pixelSize.normal
                                     color: (root.pickingFrom ? root.fromUnitId : root.toUnitId) === unitItem.modelData.id
                                         ? Appearance.colors.colOnSecondaryContainer
-                                        : Appearance.colors.colOnSurface
+                                        : Appearance.m3colors.m3onSurface
                                 }
 
                                 MaterialSymbol {
                                     visible: (root.pickingFrom ? root.fromUnitId : root.toUnitId) === unitItem.modelData.id
                                     text: "check"
                                     iconSize: 16
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
                                     color: Appearance.colors.colPrimary
                                 }
                             }
