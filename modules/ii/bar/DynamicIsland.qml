@@ -36,6 +36,52 @@ Item {
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     property bool vertical: Config.options.bar.vertical
 
+    readonly property var barGroup: {
+        let p = islandRoot.parent;
+        while (p) {
+            if (p.hasOwnProperty("currentRadius") || p.hasOwnProperty("widgetName")) return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    readonly property real configuredRadius: {
+        if (islandRoot.barGroup?.style?.radius !== undefined) {
+            return islandRoot.barGroup.style.radius;
+        }
+        if (islandRoot.barGroup?.currentRadius !== undefined) {
+            return islandRoot.barGroup.currentRadius;
+        }
+        if (Config.options.bar.cornerStyle === 5) {
+            return Appearance.rounding.unsharpenmore + 4;
+        }
+        if (Config.options.bar.cornerStyle === 2) {
+            return Appearance.rounding.unsharpenmore + 2;
+        }
+        return islandRoot.pillHeight / 2;
+    }
+
+    readonly property real effectivePillRadius: {
+        const raw = islandRoot.configuredRadius;
+        const maxRadius = islandRoot.pillHeight / 2;
+        const minRadius = Appearance.rounding.unsharpenmore;
+        if (raw >= maxRadius) return maxRadius;
+        return Math.max(minRadius, raw);
+    }
+
+    function calculateImageRadius(imageHeight) {
+        const maxCircle = imageHeight / 2;
+        const minRound = Math.min(Appearance.rounding.unsharpenmore, maxCircle);
+        const maxPill = islandRoot.pillHeight / 2;
+        const minPill = Appearance.rounding.unsharpenmore;
+        const current = islandRoot.effectivePillRadius;
+
+        if (current >= maxPill) return maxCircle;
+        if (current <= minPill) return minRound;
+        const ratio = (current - minPill) / (maxPill - minPill);
+        return minRound + (maxCircle - minRound) * ratio;
+    }
+
     property string manualFocusId: ""
     property bool forceIdle: false
 
@@ -363,9 +409,17 @@ Item {
         color: islandRoot.isMaterial || (GlobalStates.barCenterOnly && Config.options.bar.cornerStyle === 0) ? "transparent" : Config.options.bar.followFrameColor
             ? Appearance.getColorFromName(Config.options.bar.frameColor)
             : Appearance.colors.colUiBackground
-        radius: height / 2
+        radius: islandRoot.effectivePillRadius
         clip: true
         visible: !islandRoot.vertical
+
+        Behavior on radius {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+            }
+        }
 
         Behavior on width {
             NumberAnimation {

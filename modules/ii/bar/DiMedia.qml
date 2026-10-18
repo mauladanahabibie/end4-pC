@@ -62,8 +62,16 @@ Item {
             leftMargin: isMaterial ? 0 : 4
             verticalCenter: parent.verticalCenter
         }
-        radius: height / 2
+        radius: di?.calculateImageRadius ? di.calculateImageRadius(height) : (height / 2)
         color: Appearance.colors.colLayer1
+
+        Behavior on radius {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+            }
+        }
 
         layer.enabled: true
         layer.effect: OpacityMask {

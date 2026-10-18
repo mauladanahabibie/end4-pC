@@ -24,6 +24,32 @@ Item {
     property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
 
+    readonly property var barGroup: {
+        let p = root.parent;
+        while (p) {
+            if (p.hasOwnProperty("currentRadius") || p.hasOwnProperty("widgetName")) return p;
+            p = p.parent;
+        }
+        return null;
+    }
+
+    readonly property real customOrGroupRadius: {
+        if (root.barGroup?.style?.radius !== undefined) return root.barGroup.style.radius;
+        if (root.barGroup?.currentRadius !== undefined) return root.barGroup.currentRadius;
+        if (Config.options.bar.cornerStyle === 5) return Appearance.rounding.unsharpenmore + 4;
+        if (Config.options.bar.cornerStyle === 2) return Appearance.rounding.unsharpenmore + 2;
+        return Appearance.rounding.full;
+    }
+
+    readonly property real effectiveArtRadius: {
+        const raw = root.customOrGroupRadius;
+        const maxCircle = 13;
+        const minRound = Math.min(Appearance.rounding.unsharpenmore, maxCircle);
+        if (raw >= maxCircle) return maxCircle;
+        if (raw <= minRound) return minRound;
+        return raw;
+    }
+
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || Translation.tr("No media")
 
     property var    artUrl:      activePlayer?.trackArtUrl ?? ""
@@ -278,10 +304,18 @@ Item {
                         id: artRect
                         implicitWidth: 26
                         implicitHeight: 26
-                        radius: Appearance.rounding.full
+                        radius: root.effectiveArtRadius
                         color: Appearance.colors.colSecondaryContainer
                         Layout.alignment: Qt.AlignVCenter
                         Layout.leftMargin: -2
+
+                        Behavior on radius {
+                            NumberAnimation {
+                                duration: 200
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+                            }
+                        }
 
                         layer.enabled: true
                         layer.effect: OpacityMask {

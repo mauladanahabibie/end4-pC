@@ -30,9 +30,17 @@ Item {
         Rectangle {
             id: notifImageContainer
             anchors.fill: parent
-            radius: Appearance.rounding.full
+            radius: di?.calculateImageRadius ? di.calculateImageRadius(height) : (height / 2)
             color: Appearance.colors.colLayer1
             visible: (notif?.image ?? "") !== ""
+
+            Behavior on radius {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Appearance.animationCurves.expressiveFastSpatial
+                }
+            }
 
             layer.enabled: true
             layer.effect: OpacityMask {

@@ -117,7 +117,9 @@ Item {
     readonly property bool isPanel: Config.options.bar.cornerStyle === 5
     readonly property real panelRadius: Appearance.rounding.unsharpenmore + 4
 
-    readonly property real fullRadius: root.isPanel ? root.panelRadius : height / 2
+    readonly property real fullRadius: root.isPanel
+        ? root.panelRadius
+        : (Config.options.bar.cornerStyle === 2 ? Appearance.rounding.unsharpenmore + 2 : height / 2)
     readonly property real midRadius: root.isPanel
         ? root.panelRadius
         : root.isSegmented
