@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
-import Qt5Compat.GraphicalEffects
 import Quickshell
 import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 Item {
     id: diIdleRoot
@@ -18,15 +18,16 @@ Item {
 
     Rectangle {
         id: avatarRect
-        width: di.isMaterial ? di.pillHeight : di.pillHeight - 8
-        height: di.isMaterial ? di.pillHeight : di.pillHeight - 8
+        width: di?.isMaterial ? di.pillHeight : ((di?.pillHeight ?? 32) - 8)
+        height: width
         anchors {
             left: parent.left
-            leftMargin: di.isMaterial ? 0 : 4
+            leftMargin: di?.isMaterial ? 0 : 4
             verticalCenter: parent.verticalCenter
         }
         radius: width / 2
         color: Appearance.colors.colPrimaryContainer
+        clip: true
 
         Image {
             id: avatarImage
@@ -34,19 +35,12 @@ Item {
             source: {
                 const pic = Config.options.profile.avatarPicture ?? ""
                 if (pic !== "") return pic.startsWith("/") ? "file://" + pic : pic
-                return ""
+                return `file://${FileUtils.trimFileProtocol(Directories.home)}/.face`
             }
-            sourceSize.width: avatarImage.width * 2
-            sourceSize.height: avatarImage.height * 2
+            sourceSize.width: avatarRect.width * 2
+            sourceSize.height: avatarRect.height * 2
             fillMode: Image.PreserveAspectCrop
-            layer.enabled: true
-            layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: avatarRect.width
-                    height: avatarRect.height
-                    radius: avatarRect.radius
-                }
-            }
+            visible: status === Image.Ready
             onStatusChanged: {
                 if (status === Image.Error)
                     visible = false
@@ -56,9 +50,9 @@ Item {
         MaterialSymbol {
             anchors.centerIn: parent
             text: "person"
-            iconSize: di.isMaterial ? 18 : 14
+            iconSize: di?.isMaterial ? 18 : 14
             color: Appearance.colors.colOnPrimaryContainer
-            visible: avatarImage.status !== Image.Ready
+            visible: !avatarImage.visible
         }
 
         MouseArea {
@@ -157,7 +151,7 @@ Item {
                         id: clockText
                         anchors.centerIn: parent
                         text: DateTime.time
-                        font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+                        font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
                         font.features: { "tnum": 1 }
                         color: Appearance.colors.colOnLayer0
                     }
@@ -188,7 +182,7 @@ Item {
                         }
 
                         StyledText {
-                            font.pixelSize: di.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+                            font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
                             font.features: { "tnum": 1 }
                             color: Appearance.colors.colOnLayer0
                             text: Weather.data?.temp ?? "--°"
@@ -205,12 +199,16 @@ Item {
         }
 
         readonly property real computedIdleWidth: avatarRect.width
-            + (di.isMaterial ? 0 : 4)
+            + (di?.isMaterial ? 0 : 4)
             + 10
             + rightSideRow.implicitWidth
             + 10
 
-        onComputedIdleWidthChanged: di.idleTextContentWidth = rightSideRow.computedIdleWidth
-        Component.onCompleted: di.idleTextContentWidth = rightSideRow.computedIdleWidth
+        onComputedIdleWidthChanged: {
+            if (di) di.idleTextContentWidth = rightSideRow.computedIdleWidth
+        }
+        Component.onCompleted: {
+            if (di) di.idleTextContentWidth = rightSideRow.computedIdleWidth
+        }
     }
 }

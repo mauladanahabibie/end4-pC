@@ -12,44 +12,62 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 Item {
-    id: root
+    id: islandRoot
     property bool mirrored: false
 
     readonly property real pillHeight: 32
     readonly property real idleCollapsedWidth: 144
     readonly property real sessionWidth: 164
     property real idleTextContentWidth: 0
-    readonly property real idleWidth: Math.max(root.idleCollapsedWidth, root.idleTextContentWidth)
-    readonly property real mediaCollapsedWidth: 140
-    readonly property real mediaExpandedWidthCap: 220
-    property real mediaTextContentWidth: 0
-    property bool mediaTrackInfoVisible: mediaHoverHandler.hovered || mediaTrackChangeTimer.running
-    readonly property real mediaExpandedWidth: Math.min(root.mediaExpandedWidthCap, root.mediaTextContentWidth)
-    readonly property real mediaWidth: root.mediaTrackInfoVisible ? root.mediaExpandedWidth : root.mediaCollapsedWidth
+    readonly property real idleWidth: Math.max(islandRoot.idleCollapsedWidth, islandRoot.idleTextContentWidth)
+    
+    readonly property real mediaNormalWidth: 260
+    readonly property real mediaHoveredWidth: 290
+    readonly property real mediaWidth: mediaHoverHandler.hovered ? islandRoot.mediaHoveredWidth : islandRoot.mediaNormalWidth
+    readonly property alias mediaHoverHandler: mediaHoverHandler
+
     readonly property real timerWidth: 130
     readonly property real osdWidth: 132
-    readonly property real notificationWidth: 220
+    readonly property real notificationWidth: 340
     readonly property real batteryWidth: 170
+    readonly property real recordingWidth: 120
     readonly property real badgeSize: 32
     readonly property real badgeSpacing: 6
     readonly property bool isMaterial: Config.options.bar.cornerStyle === 3 || Config.options.bar.cornerStyle === 4
     property bool vertical: Config.options.bar.vertical
 
     property string manualFocusId: ""
-
     property bool forceIdle: false
 
-    readonly property var displayedProvider: root.forceIdle ? null : root.activeProvider
+    readonly property var displayedProvider: islandRoot.forceIdle ? null : islandRoot.activeProvider
 
     onActiveProviderChanged: {
-        if (root.activeProvider && root.alwaysWinIds.includes(root.activeProvider.id)) {
-            root.forceIdle = false
+        if (islandRoot.activeProvider && islandRoot.alwaysWinIds.includes(islandRoot.activeProvider.id)) {
+            islandRoot.forceIdle = false
         }
     }
 
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
-    readonly property bool hasMedia: root.activePlayer !== null
-        && ((root.activePlayer.trackTitle ?? "") !== "" || root.activePlayer.isPlaying)
+    readonly property bool hasMedia: islandRoot.activePlayer !== null
+        && ((islandRoot.activePlayer.trackTitle ?? "") !== "")
+        && (islandRoot.activePlayer.isPlaying || mediaPausedKeepAliveTimer.running || mediaHoverHandler.hovered)
+
+    Timer {
+        id: mediaPausedKeepAliveTimer
+        interval: 10000
+        repeat: false
+    }
+
+    Connections {
+        target: islandRoot.activePlayer
+        function onIsPlayingChanged() {
+            if (islandRoot.activePlayer?.isPlaying) {
+                mediaPausedKeepAliveTimer.stop()
+            } else {
+                mediaPausedKeepAliveTimer.restart()
+            }
+        }
+    }
     readonly property var latestNotification: Notifications.popupList.length > 0
         ? Notifications.popupList[Notifications.popupList.length - 1]
         : null
@@ -67,22 +85,22 @@ Item {
     Timer {
         interval: 1000
         repeat: true
-        running: root.isRecording
-        onTriggered: root.recordingElapsedSeconds++
+        running: islandRoot.isRecording
+        onTriggered: islandRoot.recordingElapsedSeconds++
     }
 
     property string engagedTimerKind: ""
-    readonly property bool hasActiveTimer: root.engagedTimerKind !== ""
+    readonly property bool hasActiveTimer: islandRoot.engagedTimerKind !== ""
 
     Connections {
         target: TimerService
-        function onPomodoroRunningChanged() { if (TimerService.pomodoroRunning) root.engagedTimerKind = "pomodoro" }
-        function onCountdownRunningChanged() { if (TimerService.countdownRunning) root.engagedTimerKind = "countdown" }
-        function onStopwatchRunningChanged() { if (TimerService.stopwatchRunning) root.engagedTimerKind = "stopwatch" }
+        function onPomodoroRunningChanged() { if (TimerService.pomodoroRunning) islandRoot.engagedTimerKind = "pomodoro" }
+        function onCountdownRunningChanged() { if (TimerService.countdownRunning) islandRoot.engagedTimerKind = "countdown" }
+        function onStopwatchRunningChanged() { if (TimerService.stopwatchRunning) islandRoot.engagedTimerKind = "stopwatch" }
     }
 
     function timerIcon() {
-        switch (root.engagedTimerKind) {
+        switch (islandRoot.engagedTimerKind) {
             case "pomodoro":  return TimerService.pomodoroBreak ? "coffee" : "visibility"
             case "countdown": return "hourglass_top"
             case "stopwatch": return "timer"
@@ -91,7 +109,7 @@ Item {
     }
 
     function timerValueText() {
-        switch (root.engagedTimerKind) {
+        switch (islandRoot.engagedTimerKind) {
             case "pomodoro":  return TimerService.formatSeconds(TimerService.pomodoroSecondsLeft)
             case "countdown": return TimerService.formatSeconds(TimerService.countdownSecondsLeft)
             case "stopwatch": return TimerService.formatSeconds(TimerService.stopwatchTime / 100)
@@ -100,7 +118,7 @@ Item {
     }
 
     function timerRunning() {
-        switch (root.engagedTimerKind) {
+        switch (islandRoot.engagedTimerKind) {
             case "pomodoro":  return TimerService.pomodoroRunning
             case "countdown": return TimerService.countdownRunning
             case "stopwatch": return TimerService.stopwatchRunning
@@ -109,7 +127,7 @@ Item {
     }
 
     function toggleActiveTimer() {
-        switch (root.engagedTimerKind) {
+        switch (islandRoot.engagedTimerKind) {
             case "pomodoro":  TimerService.togglePomodoro(); break
             case "countdown": TimerService.toggleCountdown(); break
             case "stopwatch": TimerService.toggleStopwatch(); break
@@ -117,12 +135,12 @@ Item {
     }
 
     function resetActiveTimer() {
-        switch (root.engagedTimerKind) {
+        switch (islandRoot.engagedTimerKind) {
             case "pomodoro":  TimerService.resetPomodoro(); break
             case "countdown": TimerService.resetCountdown(); break
             case "stopwatch": TimerService.stopwatchReset(); break
         }
-        root.engagedTimerKind = ""
+        islandRoot.engagedTimerKind = ""
     }
 
     property bool batteryAlertActive: false
@@ -131,44 +149,32 @@ Item {
 
     Timer {
         id: batteryAlertTimer
-        interval: root.batteryAlertDuration
+        interval: islandRoot.batteryAlertDuration
         repeat: false
-        onTriggered: root.batteryAlertActive = false
-    }
-
-    Timer {
-        id: mediaTrackChangeTimer
-        interval: 3000
-        repeat: false
-    }
-
-    Connections {
-        target: root.activePlayer
-        function onTrackTitleChanged() { mediaTrackChangeTimer.restart() }
-        function onTrackArtistChanged() { mediaTrackChangeTimer.restart() }
+        onTriggered: islandRoot.batteryAlertActive = false
     }
 
     function triggerBatteryAlert(kind) {
-        root.batteryAlertKind = kind
-        root.batteryAlertActive = true
+        islandRoot.batteryAlertKind = kind
+        islandRoot.batteryAlertActive = true
         batteryAlertTimer.restart()
     }
 
     Connections {
         target: Battery
         function onIsCriticalAndNotChargingChanged() {
-            if (Battery.isCriticalAndNotCharging) root.triggerBatteryAlert("critical")
+            if (Battery.isCriticalAndNotCharging) islandRoot.triggerBatteryAlert("critical")
         }
         function onIsLowAndNotChargingChanged() {
-            if (Battery.isLowAndNotCharging && !Battery.isCriticalAndNotCharging) root.triggerBatteryAlert("low")
+            if (Battery.isLowAndNotCharging && !Battery.isCriticalAndNotCharging) islandRoot.triggerBatteryAlert("low")
         }
         function onIsPluggedInChanged() {
-            if (Battery.isPluggedIn) root.triggerBatteryAlert("charging")
+            if (Battery.isPluggedIn) islandRoot.triggerBatteryAlert("charging")
         }
     }
 
     function batteryStatusText() {
-        switch (root.batteryAlertKind) {
+        switch (islandRoot.batteryAlertKind) {
             case "critical": return Translation.tr("Critical Battery")
             case "charging": return Translation.tr("Charging")
             default:         return Translation.tr("Low Battery")
@@ -176,7 +182,7 @@ Item {
     }
 
     function batteryIcon() {
-        if (root.batteryAlertKind === "charging" || Battery.isCharging) return "battery_android_frame_bolt"
+        if (islandRoot.batteryAlertKind === "charging" || Battery.isCharging) return "battery_android_frame_bolt"
         const pct = Battery.percentage
         if (pct <= 0.1) return "battery_android_frame_alert"
         if (pct <= 0.2) return "battery_android_frame_1"
@@ -188,31 +194,31 @@ Item {
     }
 
     function batteryAlertColor() {
-        return root.batteryAlertKind === "charging" ? Appearance.m3colors.m3success : Appearance.colors.colError
+        return islandRoot.batteryAlertKind === "charging" ? Appearance.m3colors.m3success : Appearance.colors.colError
     }
 
-    // Dynamic Notification tracking
+    // Dynamic Notification tracking (transient 5s display)
     property var activeDynamicNotification: null
     Timer {
         id: dynamicNotifTimer
         interval: 5000
         repeat: false
-        onTriggered: root.activeDynamicNotification = null
+        onTriggered: islandRoot.activeDynamicNotification = null
     }
 
     Connections {
         target: Notifications
         function onNotify(notif) {
-            root.activeDynamicNotification = notif
+            islandRoot.activeDynamicNotification = notif
             dynamicNotifTimer.restart()
         }
         function onDiscard(id) {
-            if (root.activeDynamicNotification?.notificationId === id) {
-                root.activeDynamicNotification = null
+            if (islandRoot.activeDynamicNotification?.notificationId === id) {
+                islandRoot.activeDynamicNotification = null
             }
         }
         function onDiscardAll() {
-            root.activeDynamicNotification = null
+            islandRoot.activeDynamicNotification = null
         }
     }
 
@@ -223,7 +229,7 @@ Item {
     property color quickAlertColor: Appearance.colors.colPrimary
     TextMetrics {
         id: quickAlertTextMetrics
-        text: root.quickAlertText
+        text: islandRoot.quickAlertText
         font.pixelSize: Appearance.font.pixelSize.small
         font.weight: Font.DemiBold
     }
@@ -233,14 +239,14 @@ Item {
         id: quickAlertTimer
         interval: 2500
         repeat: false
-        onTriggered: root.quickAlertActive = false
+        onTriggered: islandRoot.quickAlertActive = false
     }
 
     function triggerQuickAlert(icon, text, color) {
-        root.quickAlertIcon = icon
-        root.quickAlertText = text
-        root.quickAlertColor = color || Appearance.colors.colPrimary
-        root.quickAlertActive = true
+        islandRoot.quickAlertIcon = icon
+        islandRoot.quickAlertText = text
+        islandRoot.quickAlertColor = color || Appearance.colors.colPrimary
+        islandRoot.quickAlertActive = true
         quickAlertTimer.restart()
     }
 
@@ -249,9 +255,9 @@ Item {
         function onMutedChanged() {
             if (!Audio.source?.audio) return
             if (Audio.source.audio.muted) {
-                root.triggerQuickAlert("mic_off", Translation.tr("Microphone Muted"), Appearance.colors.colError)
+                islandRoot.triggerQuickAlert("mic_off", Translation.tr("Microphone Muted"), Appearance.colors.colError)
             } else {
-                root.triggerQuickAlert("mic", Translation.tr("Microphone Active"), Appearance.m3colors.m3success)
+                islandRoot.triggerQuickAlert("mic", Translation.tr("Microphone Active"), Appearance.m3colors.m3success)
             }
         }
     }
@@ -261,7 +267,7 @@ Item {
         function onConnectedChanged() {
             if (BluetoothStatus.connected && BluetoothStatus.primaryConnectedDevice) {
                 const name = BluetoothStatus.primaryConnectedDevice.name || Translation.tr("Device")
-                root.triggerQuickAlert("bluetooth_connected", `${name} ${Translation.tr("Connected")}`, Appearance.colors.colPrimary)
+                islandRoot.triggerQuickAlert("bluetooth_connected", `${name} ${Translation.tr("Connected")}`, Appearance.colors.colPrimary)
             }
         }
     }
@@ -271,7 +277,7 @@ Item {
         function onMutedChanged() {
             if (!Audio.sink?.audio) return
             if (Audio.sink.audio.muted) {
-                root.triggerQuickAlert("volume_off", Translation.tr("Audio Muted"), Appearance.colors.colError)
+                islandRoot.triggerQuickAlert("volume_off", Translation.tr("Audio Muted"), Appearance.colors.colError)
             }
         }
     }
@@ -282,47 +288,47 @@ Item {
             if (!(Config.options?.bar?.dynamicIsland?.enableClipboardAlert ?? true)) return
             const clean = text.replace(/[\r\n\t]+/g, " ")
             const preview = clean.length > 22 ? clean.substring(0, 21) + "…" : clean
-            root.triggerQuickAlert("content_copy", `${Translation.tr("Copied")}: "${preview}"`, Appearance.colors.colPrimary)
+            islandRoot.triggerQuickAlert("content_copy", `${Translation.tr("Copied")}: "${preview}"`, Appearance.colors.colPrimary)
         }
     }
 
     readonly property var contentProviders: [
-        { id: "quickAlert",   active: root.quickAlertActive,                                           component: quickAlertComponent,   width: root.quickAlertWidth },
-        { id: "notification", active: root.activeDynamicNotification !== null || root.latestNotification !== null, component: notificationComponent, width: root.notificationWidth },
-        { id: "battery",      active: root.batteryAlertActive,                                         component: batteryComponent,      width: root.batteryWidth },
-        { id: "recording",    active: root.isRecording,                                                component: recordingComponent,    width: root.recordingWidth },
-        { id: "timer",        active: root.hasActiveTimer,                                             component: timerComponent,        width: root.timerWidth },
-        { id: "osd",          active: GlobalStates.osdVolumeOpen || GlobalStates.osdBrightnessOpen,    component: osdComponent,          width: root.osdWidth },
-        { id: "media",        active: root.hasMedia,                                                   component: mediaComponent,        width: root.mediaWidth },
-        { id: "session",      active: GlobalStates.diSessionOpen,                                      component: sessionComponent,      width: root.sessionWidth },
+        { id: "quickAlert",   active: islandRoot.quickAlertActive,                     component: quickAlertComponent,   width: islandRoot.quickAlertWidth },
+        { id: "notification", active: islandRoot.activeDynamicNotification !== null,   component: notificationComponent, width: islandRoot.notificationWidth },
+        { id: "battery",      active: islandRoot.batteryAlertActive,                   component: batteryComponent,      width: islandRoot.batteryWidth },
+        { id: "recording",    active: islandRoot.isRecording,                          component: recordingComponent,    width: islandRoot.recordingWidth },
+        { id: "timer",        active: islandRoot.hasActiveTimer,                       component: timerComponent,        width: islandRoot.timerWidth },
+        { id: "osd",          active: GlobalStates.osdVolumeOpen || GlobalStates.osdBrightnessOpen, component: osdComponent, width: islandRoot.osdWidth },
+        { id: "media",        active: islandRoot.hasMedia,                             component: mediaComponent,        width: islandRoot.mediaWidth },
+        { id: "session",      active: GlobalStates.diSessionOpen,                      component: sessionComponent,      width: islandRoot.sessionWidth },
     ]
 
     readonly property var alwaysWinIds: ["session", "quickAlert", "notification", "battery", "osd"]
 
-    readonly property var activeOthers: root.contentProviders.filter(p => !root.alwaysWinIds.includes(p.id) && p.active)
+    readonly property var activeOthers: islandRoot.contentProviders.filter(p => !islandRoot.alwaysWinIds.includes(p.id) && p.active)
 
     readonly property var activeProvider: {
-        const forcedTop = root.contentProviders.find(p => root.alwaysWinIds.includes(p.id) && p.active)
+        const forcedTop = islandRoot.contentProviders.find(p => islandRoot.alwaysWinIds.includes(p.id) && p.active)
         if (forcedTop) return forcedTop
-        if (root.manualFocusId !== "") {
-            const forced = root.activeOthers.find(p => p.id === root.manualFocusId)
+        if (islandRoot.manualFocusId !== "") {
+            const forced = islandRoot.activeOthers.find(p => p.id === islandRoot.manualFocusId)
             if (forced) return forced
         }
-        return root.activeOthers[0] ?? null
+        return islandRoot.activeOthers[0] ?? null
     }
 
     readonly property var badgeProviders: {
-        if (root.alwaysWinIds.some(id => root.contentProviders.find(p => p.id === id)?.active)) return []
-        return root.activeOthers.filter(p => p.id !== root.activeProvider?.id)
+        if (islandRoot.alwaysWinIds.some(id => islandRoot.contentProviders.find(p => p.id === id)?.active)) return []
+        return islandRoot.activeOthers.filter(p => p.id !== islandRoot.activeProvider?.id)
     }
 
     function iconForProviderId(id) {
         switch (id) {
-            case "quickAlert": return root.quickAlertIcon
+            case "quickAlert": return islandRoot.quickAlertIcon
             case "media":     return "music_note"
             case "recording": return "screen_record"
-            case "timer":     return root.timerIcon()
-            case "battery":   return root.batteryIcon()
+            case "timer":     return islandRoot.timerIcon()
+            case "battery":   return islandRoot.batteryIcon()
             case "osd":
                 switch (GlobalStates.osdIndicatorType) {
                     case "brightness": return Hyprsunset.temperatureActive ? "routine" : "light_mode"
@@ -333,12 +339,12 @@ Item {
         }
     }
 
-    readonly property string activeContentId: root.displayedProvider?.id ?? "idle"
+    readonly property string activeContentId: islandRoot.displayedProvider?.id ?? "idle"
 
-    implicitHeight: root.pillHeight
-    implicitWidth: (root.displayedProvider?.width ?? root.idleWidth)
-        + (!root.vertical && root.badgeProviders.length > 0
-            ? root.badgeProviders.length * (root.badgeSpacing + root.badgeSize)
+    implicitHeight: islandRoot.pillHeight
+    implicitWidth: (islandRoot.displayedProvider?.width ?? islandRoot.idleWidth)
+        + (!islandRoot.vertical && islandRoot.badgeProviders.length > 0
+            ? islandRoot.badgeProviders.length * (islandRoot.badgeSpacing + islandRoot.badgeSize)
             : 0)
 
     Behavior on implicitWidth {
@@ -352,14 +358,14 @@ Item {
     Rectangle {
         id: pill
         anchors.left: parent.left
-        width: root.displayedProvider?.width ?? root.idleWidth
-        height: root.pillHeight
-        color: root.isMaterial || (GlobalStates.barCenterOnly && Config.options.bar.cornerStyle === 0) ? "transparent" : Config.options.bar.followFrameColor
+        width: islandRoot.displayedProvider?.width ?? islandRoot.idleWidth
+        height: islandRoot.pillHeight
+        color: islandRoot.isMaterial || (GlobalStates.barCenterOnly && Config.options.bar.cornerStyle === 0) ? "transparent" : Config.options.bar.followFrameColor
             ? Appearance.getColorFromName(Config.options.bar.frameColor)
             : Appearance.colors.colUiBackground
         radius: height / 2
         clip: true
-        visible: !root.vertical
+        visible: !islandRoot.vertical
 
         Behavior on width {
             NumberAnimation {
@@ -371,7 +377,7 @@ Item {
 
         HoverHandler {
             id: mediaHoverHandler
-            enabled: root.activeContentId === "media"
+            enabled: islandRoot.activeContentId === "media"
         }
 
         WheelHandler {
@@ -383,7 +389,7 @@ Item {
                 if (coolingDown) return
                 coolingDown = true
                 idleToggleDebounceTimer.restart()
-                root.forceIdle = !root.forceIdle
+                islandRoot.forceIdle = !islandRoot.forceIdle
             }
         }
 
@@ -396,11 +402,11 @@ Item {
         Loader {
             id: contentLoader
             anchors.fill: parent
-            sourceComponent: root.displayedProvider?.component ?? idleComponent
-            active: !root.vertical
+            sourceComponent: islandRoot.displayedProvider?.component ?? idleComponent
+            active: !islandRoot.vertical
 
             onLoaded: {
-                if (root.displayedProvider?.id === "session" && item) {
+                if (islandRoot.displayedProvider?.id === "session" && item) {
                     item.forceActiveFocus()
                 }
             }
@@ -408,32 +414,35 @@ Item {
 
         Component {
             id: idleComponent
-            DiIdle { di: root }
+            DiIdle { di: islandRoot }
         }
 
         Component {
             id: mediaComponent
-            DiMedia { di: root }
+            DiMedia { di: islandRoot }
         }
 
         Component {
             id: osdComponent
-            DiOsd { di: root }
+            DiOsd { di: islandRoot }
         }
 
         Component {
             id: notificationComponent
-            DiNotifs { di: root }
+            DiNotifs {
+                di: islandRoot
+                notif: islandRoot.activeDynamicNotification
+            }
         }
 
         Component {
             id: timerComponent
-            DiTimers { di: root }
+            DiTimers { di: islandRoot }
         }
 
         Component {
             id: sessionComponent
-            DiSession { di: root }
+            DiSession { di: islandRoot }
         }
 
         Component {
@@ -441,7 +450,7 @@ Item {
             RowLayout {
                 anchors {
                     fill: parent
-                    leftMargin: root.isMaterial ? 4 : 8
+                    leftMargin: islandRoot.isMaterial ? 4 : 8
                     rightMargin: 10
                 }
                 spacing: 6
@@ -456,7 +465,7 @@ Item {
                         anchors.fill: parent
                         text: "stop_circle"
                         fill: 1
-                        iconSize: root.isMaterial ? 26 : 16
+                        iconSize: islandRoot.isMaterial ? 26 : 16
                         color: Appearance.colors.colError
                     }
 
@@ -471,7 +480,7 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.formatRecordingTime(root.recordingElapsedSeconds)
+                    text: islandRoot.formatRecordingTime(islandRoot.recordingElapsedSeconds)
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.features: { "tnum": 1 }
                     color: Appearance.colors.colOnLayer0
@@ -491,20 +500,20 @@ Item {
 
                 StyledText {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.batteryStatusText()
+                    text: islandRoot.batteryStatusText()
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
-                    color: root.batteryAlertColor()
+                    color: islandRoot.batteryAlertColor()
                 }
 
                 Item { Layout.fillWidth: true }
 
                 MaterialSymbol {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.batteryIcon()
+                    text: islandRoot.batteryIcon()
                     fill: 1
                     iconSize: 16
-                    color: root.batteryAlertColor()
+                    color: islandRoot.batteryAlertColor()
                 }
 
                 StyledText {
@@ -512,7 +521,7 @@ Item {
                     text: `${Math.round(Battery.percentage * 100)}`
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.features: { "tnum": 1 }
-                    color: root.batteryAlertColor()
+                    color: islandRoot.batteryAlertColor()
                 }
             }
         }
@@ -529,16 +538,16 @@ Item {
 
                 MaterialSymbol {
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.quickAlertIcon
+                    text: islandRoot.quickAlertIcon
                     fill: 1
                     iconSize: 18
-                    color: root.quickAlertColor
+                    color: islandRoot.quickAlertColor
                 }
 
                 StyledText {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
-                    text: root.quickAlertText
+                    text: islandRoot.quickAlertText
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.DemiBold
                     color: Appearance.colors.colOnLayer0
@@ -550,28 +559,28 @@ Item {
 
     Row {
         id: badgesRow
-        visible: root.badgeProviders.length > 0 && !root.vertical
+        visible: islandRoot.badgeProviders.length > 0 && !islandRoot.vertical
         anchors {
             left: pill.right
-            leftMargin: root.badgeSpacing
+            leftMargin: islandRoot.badgeSpacing
             verticalCenter: pill.verticalCenter
         }
-        spacing: root.badgeSpacing
+        spacing: islandRoot.badgeSpacing
 
         Repeater {
-            model: root.badgeProviders
+            model: islandRoot.badgeProviders
             delegate: Item {
                 id: badgeItem
                 required property var modelData
-                width: root.badgeSize
-                height: root.badgeSize
+                width: islandRoot.badgeSize
+                height: islandRoot.badgeSize
 
                 MaterialShapeWrappedMaterialSymbol {
                     anchors.fill: parent
                     wrappedShape: MaterialShape.Shape.Cookie7Sided
-                    color: root.isMaterial ? Appearance.colors.colPrimary : Appearance.colors.colLayer0
-                    colSymbol: root.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
-                    text: root.iconForProviderId(badgeItem.modelData.id)
+                    color: islandRoot.isMaterial ? Appearance.colors.colPrimary : Appearance.colors.colLayer0
+                    colSymbol: islandRoot.isMaterial ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer0
+                    text: islandRoot.iconForProviderId(badgeItem.modelData.id)
                     iconSize: 16
                     fill: 1
                     padding: 4
@@ -580,7 +589,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.manualFocusId = badgeItem.modelData.id
+                    onClicked: islandRoot.manualFocusId = badgeItem.modelData.id
                 }
             }
         }

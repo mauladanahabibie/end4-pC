@@ -7,10 +7,10 @@ import qs.modules.common.widgets
 RowLayout {
     id: diTimersRoot
     required property Item di
-    readonly property Item root: diTimersRoot.di
+    readonly property Item island: diTimersRoot.di
     anchors {
         fill: parent
-        leftMargin: root.isMaterial ? 4 : 8
+        leftMargin: island?.isMaterial ? 4 : 8
         rightMargin: 10
     }
     spacing: 6
@@ -23,16 +23,16 @@ RowLayout {
 
         MaterialSymbol {
             anchors.fill: parent
-            text: root.timerRunning() ? "pause" : "play_arrow"
+            text: (island?.timerRunning() ?? false) ? "pause" : "play_arrow"
             fill: 1
-            iconSize: root.isMaterial ? 24 : 16
+            iconSize: island?.isMaterial ? 24 : 16
             color: Appearance.colors.colOnLayer0
         }
 
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.toggleActiveTimer()
+            onClicked: island?.toggleActiveTimer()
         }
     }
 
@@ -46,14 +46,14 @@ RowLayout {
             anchors.fill: parent
             text: "stop_circle"
             fill: 1
-            iconSize: root.isMaterial ? 24 : 16
+            iconSize: island?.isMaterial ? 24 : 16
             color: Appearance.colors.colOnLayer0
         }
 
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.resetActiveTimer()
+            onClicked: island?.resetActiveTimer()
         }
     }
 
@@ -61,7 +61,7 @@ RowLayout {
 
     StyledText {
         Layout.alignment: Qt.AlignVCenter
-        text: root.timerValueText()
+        text: island?.timerValueText() ?? ""
         font.pixelSize: Appearance.font.pixelSize.small
         font.features: { "tnum": 1 }
         color: Appearance.colors.colOnLayer0

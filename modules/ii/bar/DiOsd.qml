@@ -10,10 +10,10 @@ import qs.modules.common.widgets
 RowLayout {
     id: diOsdRoot
     required property Item di
-    readonly property Item root: diOsdRoot.di
+    readonly property Item island: diOsdRoot.di
     anchors {
         fill: parent
-        leftMargin: root.isMaterial ? 0 : 4
+        leftMargin: island?.isMaterial ? 0 : 4
         rightMargin: 10
     }
     spacing: 6
@@ -28,8 +28,8 @@ RowLayout {
         wrappedShape: MaterialShape.Shape.Cookie12Sided
         color: Appearance.colors.colPrimary
         colSymbol: Appearance.colors.colOnPrimary
-        text: root.iconForProviderId("osd")
-        iconSize: root.isMaterial ? 20 : 16
+        text: island?.iconForProviderId("osd") ?? "volume_up"
+        iconSize: island?.isMaterial ? 20 : 16
         fill: 1
         padding: 4
     }
@@ -45,7 +45,7 @@ RowLayout {
                 default:           return `${Math.round((Audio.sink?.audio?.volume ?? 0) * 100)}`
             }
         }
-        font.pixelSize: root.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+        font.pixelSize: island?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
         font.features: { "tnum": 1 }
         color: Appearance.colors.colOnLayer0
     }

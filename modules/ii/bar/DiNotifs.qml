@@ -1,65 +1,92 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Widgets
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 Item {
     id: diNotifsRoot
     required property Item di
-    readonly property Item root: diNotifsRoot.di
+    property var notif: di?.activeDynamicNotification ?? null
+    readonly property bool isMaterial: di?.isMaterial ?? false
     anchors.fill: parent
 
-    readonly property bool isMaterial: root?.isMaterial ?? false
-    readonly property var notif: root?.activeDynamicNotification ?? root?.latestNotification ?? null
-
-    Image {
-        id: notifIcon
-        width: 20
-        height: 20
+    // App Icon or Avatar container
+    Item {
+        id: notifIconArea
+        width: 24
+        height: 24
         anchors {
             left: parent.left
-            leftMargin: isMaterial ? 4 : 12
+            leftMargin: isMaterial ? 4 : 8
             verticalCenter: parent.verticalCenter
         }
-        source: (notif?.appIcon ?? "") !== "" ? SystemAppearance.iconPath(notif.appIcon, "notification-symbolic") : ""
-        visible: (notif?.appIcon ?? "") !== ""
-        fillMode: Image.PreserveAspectFit
-        asynchronous: true
-    }
 
-    MaterialShapeWrappedMaterialSymbol {
-        id: notifMaterialIcon
-        anchors {
-            left: parent.left
-            leftMargin: isMaterial ? 0 : 4
-            verticalCenter: parent.verticalCenter
+        // 1. Notification image / avatar if provided
+        Rectangle {
+            id: notifImageContainer
+            anchors.fill: parent
+            radius: Appearance.rounding.full
+            color: Appearance.colors.colLayer1
+            clip: true
+            visible: (notif?.image ?? "") !== ""
+
+            Image {
+                anchors.fill: parent
+                source: notif?.image ?? ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                visible: status === Image.Ready
+            }
         }
-        wrappedShape: MaterialShape.Shape.Cookie12Sided
-        color: Appearance.colors.colPrimary
-        colSymbol: Appearance.colors.colOnPrimary
-        text: "notifications"
-        iconSize: isMaterial ? 20 : 14
-        fill: 1
-        padding: 4
-        visible: (notif?.appIcon ?? "") === ""
+
+        // 2. App Icon via Quickshell IconImage
+        IconImage {
+            id: notifAppIcon
+            anchors.centerIn: parent
+            implicitWidth: 20
+            implicitHeight: 20
+            asynchronous: true
+            source: (notif?.appIcon ?? "") !== "" ? SystemAppearance.iconPath(notif.appIcon, "image-missing") : ""
+            visible: !notifImageContainer.visible && (notif?.appIcon ?? "") !== "" && source != ""
+        }
+
+        // 3. Fallback Material Symbol
+        MaterialShapeWrappedMaterialSymbol {
+            anchors.fill: parent
+            wrappedShape: MaterialShape.Shape.Cookie12Sided
+            color: Appearance.colors.colPrimary
+            colSymbol: Appearance.colors.colOnPrimary
+            text: NotificationUtils.findSuitableMaterialSymbol(notif?.summary || notif?.appName || "")
+            iconSize: 14
+            fill: 1
+            padding: 4
+            visible: !notifImageContainer.visible && !notifAppIcon.visible
+        }
     }
 
+    // Two-line notification content
     ColumnLayout {
         id: notifTextColumn
         anchors {
-            left: notifIcon.visible ? notifIcon.right : notifMaterialIcon.right
+            left: notifIconArea.right
             leftMargin: 8
-            verticalCenter: parent.verticalCenter
-            right: nowLabel.left
+            right: rightSideRow.left
             rightMargin: 8
+            verticalCenter: parent.verticalCenter
         }
-        spacing: isMaterial ? -2 : -4
+        spacing: 1
 
         StyledText {
             Layout.fillWidth: true
-            text: (notif?.summary ?? "").replace(/\n/g, " ")
+            text: {
+                const s = (notif?.summary ?? "").trim()
+                if (s !== "") return s.replace(/[\r\n]+/g, " ")
+                return notif?.appName ?? Translation.tr("Notification")
+            }
             font.pixelSize: Appearance.font.pixelSize.smaller
             font.weight: Font.DemiBold
             color: Appearance.colors.colOnLayer0
@@ -67,37 +94,58 @@ Item {
             wrapMode: Text.NoWrap
             maximumLineCount: 1
         }
+
         StyledText {
             Layout.fillWidth: true
-            text: (notif?.body ?? "").replace(/\n/g, " ")
+            visible: (notif?.body ?? "").trim() !== ""
+            text: (notif?.body ?? "").replace(/[\r\n]+/g, " ")
             font.pixelSize: Appearance.font.pixelSize.smallest
             color: Appearance.colors.colOnLayer0
-            opacity: 0.7
+            opacity: 0.8
             elide: Text.ElideRight
             wrapMode: Text.NoWrap
             maximumLineCount: 1
         }
     }
 
-    StyledText {
-        id: nowLabel
+    // Right side: Timestamp & dismiss icon on hover
+    RowLayout {
+        id: rightSideRow
         anchors {
             right: parent.right
-            top: parent.top
             rightMargin: 10
-            topMargin: 8
+            verticalCenter: parent.verticalCenter
         }
-        text: DateTime.time
-        font.pixelSize: Appearance.font.pixelSize.small - 2
-        color: Appearance.colors.colOnLayer0
-        opacity: 0.8
+        spacing: 4
+
+        StyledText {
+            Layout.alignment: Qt.AlignVCenter
+            text: DateTime.time
+            font.pixelSize: Appearance.font.pixelSize.smallest
+            font.features: { "tnum": 1 }
+            color: Appearance.colors.colOnLayer0
+            opacity: 0.7
+        }
+
+        MaterialSymbol {
+            Layout.alignment: Qt.AlignVCenter
+            text: "close"
+            iconSize: 14
+            color: Appearance.colors.colOnLayer0
+            opacity: 0.6
+            visible: notifHoverHandler.hovered
+        }
+    }
+
+    HoverHandler {
+        id: notifHoverHandler
     }
 
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            root.activeDynamicNotification = null
+            if (di) di.activeDynamicNotification = null
             GlobalStates.sidebarRightOpen = true
         }
     }
