@@ -33,6 +33,8 @@ Scope {
     property real popupRounding: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
 
     readonly property string mediaPosition: {
+        if (GlobalStates.mediaControlsPosition !== "") return GlobalStates.mediaControlsPosition
+        if (Config.options.bar.layouts.middleLayout.includes("dynamicIsland") && GlobalStates.dynamicIslandEnabled) return "center"
         if (Config.options.bar.layouts.leftLayout.includes("media")) return "left"
         if (Config.options.bar.layouts.middleLayout.includes("media")) return "center"
         if (Config.options.bar.layouts.rightLayout.includes("media")) return "right"
@@ -129,6 +131,7 @@ Scope {
             implicitHeight: playerColumnLayout.implicitHeight
             color: "transparent"
             WlrLayershell.namespace: "quickshell:mediaControls"
+            WlrLayershell.layer: WlrLayer.Overlay
 
             anchors {
                 top: true

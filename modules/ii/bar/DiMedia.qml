@@ -28,6 +28,16 @@ Item {
         }
     }
 
+    // Main interaction: clicking anywhere on the media card opens the detailed media controls popup
+    MouseArea {
+        anchors.fill: parent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            GlobalStates.mediaControlsPosition = "center"
+            GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
+        }
+    }
+
     // 1. Album Artwork
     Rectangle {
         id: artContainer
@@ -63,19 +73,6 @@ Item {
             iconSize: 14
             color: Appearance.colors.colOnLayer1
             visible: !artImage.visible
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            cursorShape: Qt.PointingHandCursor
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.RightButton) {
-                    GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
-                } else {
-                    activePlayer?.togglePlaying()
-                }
-            }
         }
     }
 
@@ -113,25 +110,12 @@ Item {
             wrapMode: Text.NoWrap
             maximumLineCount: 1
         }
-
     }
 
-    MouseArea {
-        anchors.fill: trackInfoColumn
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        cursorShape: Qt.PointingHandCursor
-        onClicked: (mouse) => {
-            if (mouse.button === Qt.RightButton) {
-                GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
-            } else {
-                activePlayer?.togglePlaying()
-            }
-        }
-    }
-
-    // 3. Playback Controls
+    // 3. Playback Controls (Higher z so controls intercept their own clicks)
     RowLayout {
         id: mediaControlsRow
+        z: 10
         anchors {
             right: parent.right
             rightMargin: isMaterial ? 4 : 8
@@ -161,7 +145,7 @@ Item {
             }
         }
 
-        // Play / Pause Button (Always visible)
+        // Play / Pause Button (Explicitly toggles playback without opening details)
         Item {
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: 22
