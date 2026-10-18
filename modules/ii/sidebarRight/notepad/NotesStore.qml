@@ -9,7 +9,7 @@ Item {
 
     property string filePath: Directories.notepadPath
     property var notes: []
-    property int activeNoteId: -1
+    property var activeNoteId: -1
     property string searchQuery: ""
     property bool hasUnsavedChanges: false
     property bool isSaving: false

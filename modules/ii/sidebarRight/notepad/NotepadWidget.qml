@@ -28,8 +28,13 @@ Item {
             return;
         }
 
-        // Return from note editor on Escape
+        // Return from note editor on Escape (or dismiss delete dialog if open)
         if (event.key === Qt.Key_Escape && notesStore.activeNoteId !== -1 && swipeView.currentIndex === 0) {
+            if (editorLoader.item && editorLoader.item.showDeleteDialog) {
+                editorLoader.item.showDeleteDialog = false;
+                event.accepted = true;
+                return;
+            }
             notesStore.flush();
             notesStore.activeNoteId = -1;
             event.accepted = true;
@@ -84,6 +89,7 @@ Item {
                 }
 
                 Loader {
+                    id: editorLoader
                     anchors.fill: parent
                     active: notesStore.activeNoteId !== -1
                     visible: active

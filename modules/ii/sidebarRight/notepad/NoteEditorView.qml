@@ -9,13 +9,29 @@ Item {
     id: root
 
     required property var store
-    property int noteId: -1
+    property var noteId: -1
     signal backRequested()
 
     readonly property var currentNote: root.store.getNoteById(root.noteId)
     property bool showDeleteDialog: false
 
+    onVisibleChanged: {
+        if (!visible) {
+            root.showDeleteDialog = false;
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onSidebarRightOpenChanged() {
+            if (!GlobalStates.sidebarRightOpen) {
+                root.showDeleteDialog = false;
+            }
+        }
+    }
+
     onNoteIdChanged: {
+        root.showDeleteDialog = false;
         if (currentNote) {
             titleInput.text = currentNote.title ?? "";
             contentInput.text = currentNote.content ?? "";
@@ -328,23 +344,12 @@ Item {
                             onClicked: root.showDeleteDialog = false
                         }
 
-                        RippleButton {
-                            buttonRadius: Appearance.rounding.full
-                            implicitHeight: 34
-                            implicitWidth: deleteBtnText.implicitWidth + 28
-                            colBackground: Appearance.colors.colError
-                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.15)
-                            colRipple: Appearance.colors.colOnError
-
-                            contentItem: StyledText {
-                                id: deleteBtnText
-                                anchors.centerIn: parent
-                                text: Translation.tr("Delete")
-                                font.weight: Font.DemiBold
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                color: Appearance.colors.colOnError
-                            }
-
+                        DialogButton {
+                            buttonText: Translation.tr("Delete")
+                            colEnabled: Appearance.colors.colError
+                            colText: Appearance.colors.colError
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+                            colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.70)
                             onClicked: {
                                 root.showDeleteDialog = false;
                                 root.store.deleteNote(root.noteId);
