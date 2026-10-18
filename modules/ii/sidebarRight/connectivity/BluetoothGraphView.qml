@@ -13,11 +13,12 @@ Item {
     property color accentColor: Appearance.colors.colPrimary
     property var selectedDevice: BluetoothStatus.primaryConnectedDevice ?? (BluetoothStatus.connectedDevices.length > 0 ? BluetoothStatus.connectedDevices[0] : null)
 
-    implicitHeight: 260
-    implicitWidth: 390
+    implicitHeight: 312
+    implicitWidth: 380
 
     readonly property bool isConnected: BluetoothStatus.isConnected(selectedDevice)
-    readonly property real colCardWidth: Math.min(136, Math.floor((width - 110) / 2))
+    readonly property real colCardWidth: Math.floor((width - 10) / 2)
+    readonly property real gridTopY: multiDeviceRow.visible ? 116 : 104
 
     // Optional device selector row when multiple devices are connected
     Row {
@@ -25,7 +26,7 @@ Item {
         visible: BluetoothStatus.connectedDevices.length > 1
         z: 3
         anchors.horizontalCenter: parent.horizontalCenter
-        y: -24
+        anchors.top: parent.top
         spacing: 6
 
         Repeater {
@@ -66,9 +67,9 @@ Item {
         anchors.fill: parent
         z: 0
         hubX: centralHub.hubCenterX
-        hubY: centralHub.hubCenterY
-        hubRadius: centralHub.hubRadius + 2
-        strokeColor: ColorUtils.transparentize(root.accentColor, root.isConnected ? 0.45 : 0.85)
+        hubY: centralHub.hubBottomY
+        hubRadius: centralHub.hubRadius
+        strokeColor: ColorUtils.transparentize(root.accentColor, root.isConnected ? 0.40 : 0.85)
         strokeWidth: 1.5
 
         cardTopLeft: cardBattery
@@ -78,13 +79,14 @@ Item {
         cardBottomCenter: cardMac
     }
 
-    // Central Node (Orbital Hub)
+    // Central Node (Hero Hub at top)
     CentralNode {
         id: centralHub
         z: 1
+        anchors.top: multiDeviceRow.visible ? multiDeviceRow.bottom : parent.top
+        anchors.topMargin: multiDeviceRow.visible ? 4 : 0
         anchors.horizontalCenter: parent.horizontalCenter
-        y: 48
-        hubDiameter: 122
+        width: parent.width
         accentColor: root.accentColor
         active: root.isConnected
         connecting: root.selectedDevice?.state === 3
@@ -101,14 +103,14 @@ Item {
                 : Translation.tr("Bluetooth Off"))
     }
 
-    // Satellite Card 1: Top-Left -> Battery Level
+    // Grid Row 1 Left: Battery Level
     DetailCard {
         id: cardBattery
         z: 2
         x: 0
-        y: 8
+        y: root.gridTopY
         width: root.colCardWidth
-        anchorSide: "left"
+        anchorSide: "right"
         icon: {
             if (!BluetoothStatus.hasBattery(root.selectedDevice)) return "battery_unknown";
             const b = root.selectedDevice.battery;
@@ -129,14 +131,14 @@ Item {
         copyable: false
     }
 
-    // Satellite Card 2: Top-Right -> Device Category
+    // Grid Row 1 Right: Device Category
     DetailCard {
         id: cardType
         z: 2
         x: parent.width - width
-        y: 8
+        y: root.gridTopY
         width: root.colCardWidth
-        anchorSide: "right"
+        anchorSide: "left"
         icon: root.selectedDevice ? Icons.getBluetoothDeviceMaterialSymbol(root.selectedDevice.icon) : "devices_other"
         iconColor: root.accentColor
         label: Translation.tr("Category")
@@ -148,14 +150,14 @@ Item {
         copyable: false
     }
 
-    // Satellite Card 3: Bottom-Left -> Audio Route / Sink
+    // Grid Row 2 Left: Audio Route / Sink
     DetailCard {
         id: cardAudio
         z: 2
         x: 0
-        y: 122
+        y: root.gridTopY + 68
         width: root.colCardWidth
-        anchorSide: "left"
+        anchorSide: "right"
         icon: "volume_up"
         iconColor: root.accentColor
         label: Translation.tr("Audio Output")
@@ -164,14 +166,14 @@ Item {
         copyable: false
     }
 
-    // Satellite Card 4: Bottom-Right -> Security & Trust
+    // Grid Row 2 Right: Security & Trust
     DetailCard {
         id: cardTrust
         z: 2
         x: parent.width - width
-        y: 122
+        y: root.gridTopY + 68
         width: root.colCardWidth
-        anchorSide: "right"
+        anchorSide: "left"
         icon: "verified_user"
         iconColor: root.accentColor
         label: Translation.tr("Status & Trust")
@@ -183,20 +185,26 @@ Item {
         copyable: false
     }
 
-    // Satellite Card 5: Bottom-Center -> Hardware MAC & Adapter
+    // Summary Row: Full-width Hardware MAC & Adapter
     DetailCard {
         id: cardMac
         z: 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 194
+        x: 0
+        y: root.gridTopY + 136
         width: parent.width
-        implicitHeight: 56
+        implicitHeight: 64
         anchorSide: "top"
         icon: "bluetooth"
         iconColor: root.accentColor
         label: Translation.tr("Hardware Address & Adapter")
-        value: root.selectedDevice?.address || "—"
-        subtext: Bluetooth.defaultAdapter ? "Adapter: " + (Bluetooth.defaultAdapter.name || "hci0") : ""
+        value: {
+            let str = root.selectedDevice?.address || "—";
+            if (Bluetooth.defaultAdapter) {
+                str += " • " + (Bluetooth.defaultAdapter.name || "hci0");
+            }
+            return str;
+        }
+        subtext: root.selectedDevice?.address ? "MAC: " + root.selectedDevice.address : (Bluetooth.defaultAdapter ? "Adapter: " + (Bluetooth.defaultAdapter.name || "hci0") : "")
         badge: root.selectedDevice?.address ? "MAC" : ""
         copyable: !!root.selectedDevice?.address
         copyText: root.selectedDevice?.address ?? ""

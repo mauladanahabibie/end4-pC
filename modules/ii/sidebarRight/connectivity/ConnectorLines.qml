@@ -8,8 +8,8 @@ Shape {
 
     property real hubX: 0
     property real hubY: 0
-    property real hubRadius: 68
-    property color strokeColor: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.25)
+    property real hubRadius: 30
+    property color strokeColor: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.35)
     property real strokeWidth: 1.5
 
     // Satellite card items to connect
@@ -24,158 +24,91 @@ Shape {
     layer.samples: 4
     preferredRendererType: Shape.CurveRenderer
 
-    function getPoints(card, isLeft) {
-        if (!card || !card.visible) {
-            return { valid: false, sx: 0, sy: 0, ex: 0, ey: 0, c1x: 0, c1y: 0, c2x: 0, c2y: 0 };
-        }
+    readonly property bool hasTopRow: cardTopLeft && cardTopRight && cardTopLeft.visible && cardTopRight.visible
+    readonly property bool hasBottomRow: cardBottomLeft && cardBottomRight && cardBottomLeft.visible && cardBottomRight.visible
+    readonly property bool hasSummary: cardBottomCenter && cardBottomCenter.visible
 
-        const sx = card.connectionPointX;
-        const sy = card.connectionPointY;
+    readonly property real row1Y: hasTopRow ? cardTopLeft.connectionPointY : 0
+    readonly property real row2Y: hasBottomRow ? cardBottomLeft.connectionPointY : 0
+    readonly property real summaryY: hasSummary ? cardBottomCenter.connectionPointY : 0
 
-        if (card.anchorSide === "top") {
-            const ex = root.hubX;
-            const ey = root.hubY + root.hubRadius;
-            return {
-                valid: true,
-                sx: sx,
-                sy: sy,
-                ex: ex,
-                ey: ey,
-                c1x: sx,
-                c1y: sy - 14,
-                c2x: ex,
-                c2y: ey + 14
-            };
-        }
-
-        const angle = Math.atan2(sy - root.hubY, sx - root.hubX);
-        const ex = root.hubX + root.hubRadius * Math.cos(angle);
-        const ey = root.hubY + root.hubRadius * Math.sin(angle);
-
-        const dx = ex - sx;
-        const dy = ey - sy;
-
-        // Smooth S-curve control points
-        const c1x = sx + dx * 0.45;
-        const c1y = sy;
-        const c2x = ex - dx * 0.15;
-        const c2y = ey;
-
-        return {
-            valid: true,
-            sx: sx,
-            sy: sy,
-            ex: ex,
-            ey: ey,
-            c1x: c1x,
-            c1y: c1y,
-            c2x: c2x,
-            c2y: c2y
-        };
-    }
-
-    // Top-Left Line
-    readonly property var ptTL: getPoints(cardTopLeft, true)
+    // Central Backbone Spine (Vertical)
     ShapePath {
-        strokeColor: root.ptTL.valid ? root.strokeColor : "transparent"
-        strokeWidth: root.ptTL.valid ? root.strokeWidth : 0
+        strokeColor: (root.hasTopRow || root.hasSummary) ? root.strokeColor : "transparent"
+        strokeWidth: root.strokeWidth
         fillColor: "transparent"
         capStyle: ShapePath.RoundCap
         joinStyle: ShapePath.RoundJoin
-        startX: root.ptTL.sx
-        startY: root.ptTL.sy
+        startX: root.hubX
+        startY: root.hubY
 
-        PathCubic {
-            x: root.ptTL.ex
-            y: root.ptTL.ey
-            control1X: root.ptTL.c1x
-            control1Y: root.ptTL.c1y
-            control2X: root.ptTL.c2x
-            control2Y: root.ptTL.c2y
+        PathLine {
+            x: root.hubX
+            y: root.hasSummary ? root.summaryY : (root.hasBottomRow ? root.row2Y : (root.hasTopRow ? root.row1Y : root.hubY))
         }
     }
 
-    // Bottom-Left Line
-    readonly property var ptBL: getPoints(cardBottomLeft, true)
+    // Top-Left Horizontal Branch
     ShapePath {
-        strokeColor: root.ptBL.valid ? root.strokeColor : "transparent"
-        strokeWidth: root.ptBL.valid ? root.strokeWidth : 0
+        strokeColor: root.hasTopRow ? root.strokeColor : "transparent"
+        strokeWidth: root.strokeWidth
         fillColor: "transparent"
         capStyle: ShapePath.RoundCap
         joinStyle: ShapePath.RoundJoin
-        startX: root.ptBL.sx
-        startY: root.ptBL.sy
+        startX: root.hubX
+        startY: root.row1Y
 
-        PathCubic {
-            x: root.ptBL.ex
-            y: root.ptBL.ey
-            control1X: root.ptBL.c1x
-            control1Y: root.ptBL.c1y
-            control2X: root.ptBL.c2x
-            control2Y: root.ptBL.c2y
+        PathLine {
+            x: root.hasTopRow ? root.cardTopLeft.connectionPointX : root.hubX
+            y: root.row1Y
         }
     }
 
-    // Top-Right Line
-    readonly property var ptTR: getPoints(cardTopRight, false)
+    // Top-Right Horizontal Branch
     ShapePath {
-        strokeColor: root.ptTR.valid ? root.strokeColor : "transparent"
-        strokeWidth: root.ptTR.valid ? root.strokeWidth : 0
+        strokeColor: root.hasTopRow ? root.strokeColor : "transparent"
+        strokeWidth: root.strokeWidth
         fillColor: "transparent"
         capStyle: ShapePath.RoundCap
         joinStyle: ShapePath.RoundJoin
-        startX: root.ptTR.sx
-        startY: root.ptTR.sy
+        startX: root.hubX
+        startY: root.row1Y
 
-        PathCubic {
-            x: root.ptTR.ex
-            y: root.ptTR.ey
-            control1X: root.ptTR.c1x
-            control1Y: root.ptTR.c1y
-            control2X: root.ptTR.c2x
-            control2Y: root.ptTR.c2y
+        PathLine {
+            x: root.hasTopRow ? root.cardTopRight.connectionPointX : root.hubX
+            y: root.row1Y
         }
     }
 
-    // Bottom-Right Line
-    readonly property var ptBR: getPoints(cardBottomRight, false)
+    // Bottom-Left Horizontal Branch
     ShapePath {
-        strokeColor: root.ptBR.valid ? root.strokeColor : "transparent"
-        strokeWidth: root.ptBR.valid ? root.strokeWidth : 0
+        strokeColor: root.hasBottomRow ? root.strokeColor : "transparent"
+        strokeWidth: root.strokeWidth
         fillColor: "transparent"
         capStyle: ShapePath.RoundCap
         joinStyle: ShapePath.RoundJoin
-        startX: root.ptBR.sx
-        startY: root.ptBR.sy
+        startX: root.hubX
+        startY: root.row2Y
 
-        PathCubic {
-            x: root.ptBR.ex
-            y: root.ptBR.ey
-            control1X: root.ptBR.c1x
-            control1Y: root.ptBR.c1y
-            control2X: root.ptBR.c2x
-            control2Y: root.ptBR.c2y
+        PathLine {
+            x: root.hasBottomRow ? root.cardBottomLeft.connectionPointX : root.hubX
+            y: root.row2Y
         }
     }
 
-    // Bottom-Center Line
-    readonly property var ptBC: getPoints(cardBottomCenter, false)
+    // Bottom-Right Horizontal Branch
     ShapePath {
-        strokeColor: root.ptBC.valid ? root.strokeColor : "transparent"
-        strokeWidth: root.ptBC.valid ? root.strokeWidth : 0
+        strokeColor: root.hasBottomRow ? root.strokeColor : "transparent"
+        strokeWidth: root.strokeWidth
         fillColor: "transparent"
         capStyle: ShapePath.RoundCap
         joinStyle: ShapePath.RoundJoin
-        startX: root.ptBC.sx
-        startY: root.ptBC.sy
+        startX: root.hubX
+        startY: root.row2Y
 
-        PathCubic {
-            x: root.ptBC.ex
-            y: root.ptBC.ey
-            control1X: root.ptBC.c1x
-            control1Y: root.ptBC.c1y
-            control2X: root.ptBC.c2x
-            control2Y: root.ptBC.c2y
+        PathLine {
+            x: root.hasBottomRow ? root.cardBottomRight.connectionPointX : root.hubX
+            y: root.row2Y
         }
     }
 }

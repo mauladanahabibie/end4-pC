@@ -16,24 +16,24 @@ Item {
     property bool isWifiTab: currentTab === "wifi"
     property bool isPowered: isWifiTab ? Network.wifiEnabled : BluetoothStatus.enabled
 
-    implicitHeight: 46
+    implicitHeight: 40
     implicitWidth: 380
 
     RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 8
 
         // Segmented pill switcher
         Rectangle {
             id: segmentedPill
             Layout.fillWidth: true
-            Layout.preferredHeight: 44
+            Layout.preferredHeight: 38
             radius: height / 2
             color: Appearance.colors.colLayer2
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
 
-            readonly property real segmentWidth: (width - 6) / 2
+            readonly property real segmentWidth: Math.floor((width - 6) / 2)
 
             // Sliding selection indicator thumb
             Rectangle {
@@ -132,8 +132,8 @@ Item {
 
         // Action: Rescan / Refresh
         Rectangle {
-            Layout.preferredWidth: 44
-            Layout.preferredHeight: 44
+            Layout.preferredWidth: 38
+            Layout.preferredHeight: 38
             radius: height / 2
             color: refreshHover.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2
             border.width: 1
@@ -161,7 +161,7 @@ Item {
 
             MaterialSymbol {
                 anchors.centerIn: parent
-                iconSize: 20
+                iconSize: 18
                 text: "refresh"
                 color: (root.isWifiTab ? Network.wifiScanning : BluetoothStatus.discovering)
                     ? Appearance.colors.colPrimary
@@ -179,8 +179,8 @@ Item {
 
         // Action: Power Toggle
         Rectangle {
-            Layout.preferredWidth: 44
-            Layout.preferredHeight: 44
+            Layout.preferredWidth: 38
+            Layout.preferredHeight: 38
             radius: height / 2
             color: root.isPowered
                 ? (powerHover.containsMouse ? Appearance.colors.colPrimaryContainerHover : Appearance.colors.colPrimaryContainer)
@@ -209,7 +209,7 @@ Item {
 
             MaterialSymbol {
                 anchors.centerIn: parent
-                iconSize: 20
+                iconSize: 18
                 text: "power_settings_new"
                 color: root.isPowered
                     ? Appearance.colors.colOnPrimaryContainer
@@ -221,8 +221,8 @@ Item {
 
         // Action: Manage / View All Devices List
         Rectangle {
-            Layout.preferredWidth: 44
-            Layout.preferredHeight: 44
+            Layout.preferredWidth: 38
+            Layout.preferredHeight: 38
             radius: height / 2
             color: listHover.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2
             border.width: 1
@@ -241,7 +241,7 @@ Item {
 
             MaterialSymbol {
                 anchors.centerIn: parent
-                iconSize: 20
+                iconSize: 18
                 text: "list"
                 color: Appearance.colors.colOnSurface
             }

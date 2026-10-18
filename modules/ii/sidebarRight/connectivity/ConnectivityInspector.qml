@@ -12,19 +12,20 @@ WindowDialog {
     property string initialTab: "wifi"
     property string activeTab: initialTab
 
-    signal openWifiListRequested()
-    signal openBluetoothListRequested()
-
-    backgroundWidth: Math.min(parent ? parent.width - 24 : 430, 430)
-    backgroundHeight: 430
-
+    onInitialTabChanged: root.activeTab = root.initialTab
     onShowChanged: {
         if (show) {
             root.activeTab = root.initialTab;
         }
     }
 
-    // Title Row
+    signal openWifiListRequested()
+    signal openBluetoothListRequested()
+
+    backgroundWidth: Math.min(parent ? parent.width - 20 : 420, 420)
+    backgroundHeight: 490
+
+    // Header: Title Row
     RowLayout {
         Layout.fillWidth: true
         spacing: 10
@@ -32,7 +33,7 @@ WindowDialog {
         Rectangle {
             Layout.preferredWidth: 32
             Layout.preferredHeight: 32
-            radius: Appearance.rounding?.small ?? 12
+            radius: Appearance.rounding?.small ?? 10
             color: ColorUtils.transparentize(root.activeTab === "wifi" ? "#A97363" : Appearance.colors.colPrimary, 0.85)
 
             MaterialSymbol {
@@ -75,7 +76,7 @@ WindowDialog {
     // Main Graph Area
     Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: 260
+        Layout.preferredHeight: 312
         clip: true
 
         NetworkGraphView {

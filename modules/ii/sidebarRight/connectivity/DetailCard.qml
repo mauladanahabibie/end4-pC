@@ -16,13 +16,13 @@ Rectangle {
     property bool copyable: true
     property string copyText: value
     property color iconColor: Appearance.colors.colPrimary
-    property string anchorSide: "left" // "left", "right", "top", "bottom"
+    property string anchorSide: "right" // "right" for left card, "left" for right card, "top" for bottom card
 
     // Anchor point coordinates for connecting lines (exposed relative to parent)
     readonly property real connectionPointX: {
         switch (anchorSide) {
-            case "left": return x + width;
-            case "right": return x;
+            case "right": return x + width;
+            case "left": return x;
             case "top": return x + width / 2;
             case "bottom": return x + width / 2;
             default: return x + width / 2;
@@ -31,19 +31,19 @@ Rectangle {
 
     readonly property real connectionPointY: {
         switch (anchorSide) {
-            case "left": return y + height / 2;
             case "right": return y + height / 2;
-            case "top": return y + height;
-            case "bottom": return y;
+            case "left": return y + height / 2;
+            case "top": return y;
+            case "bottom": return y + height;
             default: return y + height / 2;
         }
     }
 
     property bool copiedRecently: false
 
-    implicitHeight: 56
-    implicitWidth: 136
-    radius: Appearance.rounding?.normal ?? 17
+    implicitHeight: 60
+    implicitWidth: 180
+    radius: Appearance.rounding?.normal ?? 14
     color: mouseArea.containsMouse ? Appearance.colors.colLayer2Hover : Appearance.colors.colLayer2
     border.width: 1
     border.color: mouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colLayer0Border
@@ -72,13 +72,14 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 8
+        anchors.margins: 10
+        spacing: 9
 
         // Icon container with soft circular/rounded backdrop
         Rectangle {
-            Layout.preferredWidth: 30
-            Layout.preferredHeight: 30
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
+            Layout.alignment: Qt.AlignVCenter
             radius: Appearance.rounding?.verysmall ?? 8
             color: ColorUtils.transparentize(root.iconColor, 0.88)
             border.width: 1
@@ -86,7 +87,7 @@ Rectangle {
 
             MaterialSymbol {
                 anchors.centerIn: parent
-                iconSize: 17
+                iconSize: 18
                 text: root.copiedRecently ? "check" : (root.icon || "info")
                 color: root.copiedRecently ? Appearance.colors.colPrimary : root.iconColor
 
@@ -98,7 +99,7 @@ Rectangle {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 2
+            spacing: 1
 
             RowLayout {
                 Layout.fillWidth: true
@@ -107,7 +108,7 @@ Rectangle {
                 StyledText {
                     Layout.fillWidth: true
                     text: root.copiedRecently ? Translation.tr("COPIED") : root.label.toUpperCase()
-                    font.pixelSize: Appearance.font.pixelSize.smallest
+                    font.pixelSize: Appearance.font.pixelSize.smallest - 1
                     font.weight: Font.DemiBold
                     color: root.copiedRecently ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
                     elide: Text.ElideRight
@@ -137,8 +138,8 @@ Rectangle {
             StyledText {
                 Layout.fillWidth: true
                 text: root.value.length > 0 ? root.value : "—"
-                font.pixelSize: Appearance.font.pixelSize.small
-                font.weight: Font.Medium
+                font.pixelSize: Appearance.font.pixelSize.smallie ?? 13
+                font.weight: Font.DemiBold
                 color: Appearance.colors.colOnSurface
                 elide: Text.ElideRight
             }

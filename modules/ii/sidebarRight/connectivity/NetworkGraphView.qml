@@ -10,12 +10,12 @@ Item {
 
     property color accentColor: "#A97363" // Warm terracotta accent matching rice wallpaper/term2
 
-    implicitHeight: 260
-    implicitWidth: 390
+    implicitHeight: 312
+    implicitWidth: 380
 
     readonly property bool isConnected: Network.ethernet || (Network.wifiEnabled && Network.wifiStatus === "connected")
     readonly property bool isConnecting: Network.wifiStatus === "connecting"
-    readonly property real colCardWidth: Math.min(136, Math.floor((width - 110) / 2))
+    readonly property real colCardWidth: Math.floor((width - 10) / 2)
 
     // Vector connector lines rendered underneath cards and hub
     ConnectorLines {
@@ -23,9 +23,9 @@ Item {
         anchors.fill: parent
         z: 0
         hubX: centralHub.hubCenterX
-        hubY: centralHub.hubCenterY
-        hubRadius: centralHub.hubRadius + 2
-        strokeColor: ColorUtils.transparentize(root.accentColor, root.isConnected ? 0.45 : 0.85)
+        hubY: centralHub.hubBottomY
+        hubRadius: centralHub.hubRadius
+        strokeColor: ColorUtils.transparentize(root.accentColor, root.isConnected ? 0.40 : 0.85)
         strokeWidth: 1.5
 
         cardTopLeft: cardIp
@@ -35,13 +35,13 @@ Item {
         cardBottomCenter: cardDetails
     }
 
-    // Central Node (Orbital Hub)
+    // Central Node (Hero Hub at top)
     CentralNode {
         id: centralHub
         z: 1
+        anchors.top: parent.top
         anchors.horizontalCenter: parent.horizontalCenter
-        y: 48
-        hubDiameter: 122
+        width: parent.width
         accentColor: root.accentColor
         active: root.isConnected
         connecting: root.isConnecting
@@ -58,14 +58,14 @@ Item {
                         : Translation.tr("Not Connected"))))
     }
 
-    // Satellite Card 1: Top-Left -> IPv4 Address
+    // Grid Row 1 Left: IPv4 Address
     DetailCard {
         id: cardIp
         z: 2
         x: 0
-        y: 8
+        y: 104
         width: root.colCardWidth
-        anchorSide: "left"
+        anchorSide: "right"
         icon: "lan"
         iconColor: root.accentColor
         label: Translation.tr("IPv4 Address")
@@ -76,31 +76,31 @@ Item {
         copyText: Network.ipAddress
     }
 
-    // Satellite Card 2: Top-Right -> Frequency / Band
+    // Grid Row 1 Right: Frequency / Band
     DetailCard {
         id: cardBand
         z: 2
         x: parent.width - width
-        y: 8
+        y: 104
         width: root.colCardWidth
-        anchorSide: "right"
+        anchorSide: "left"
         icon: "wifi_channel"
         iconColor: root.accentColor
         label: Translation.tr("Frequency")
         value: Network.activeBand || (Network.ethernet ? Translation.tr("Wired (802.3)") : "—")
-        subtext: Network.active?.frequency ? Network.active.frequency + " MHz" : ""
+        subtext: Network.active?.frequency ? Network.active.frequency + " MHz" : (Network.ethernet ? Translation.tr("Gigabit Link") : "")
         badge: Network.activeBand ? Network.activeBand : ""
         copyable: false
     }
 
-    // Satellite Card 3: Bottom-Left -> Gateway & DNS
+    // Grid Row 2 Left: Gateway & DNS
     DetailCard {
         id: cardGateway
         z: 2
         x: 0
-        y: 122
+        y: 172
         width: root.colCardWidth
-        anchorSide: "left"
+        anchorSide: "right"
         icon: "dns"
         iconColor: root.accentColor
         label: Translation.tr("Gateway")
@@ -110,14 +110,14 @@ Item {
         copyText: Network.gateway
     }
 
-    // Satellite Card 4: Bottom-Right -> Signal Strength
+    // Grid Row 2 Right: Signal Strength
     DetailCard {
         id: cardSignal
         z: 2
         x: parent.width - width
-        y: 122
+        y: 172
         width: root.colCardWidth
-        anchorSide: "right"
+        anchorSide: "left"
         icon: "signal_wifi_4_bar"
         iconColor: root.accentColor
         label: Translation.tr("Signal")
@@ -126,19 +126,19 @@ Item {
             : (Network.networkStrength !== undefined
                 ? Network.networkStrength + "%"
                 : "—")
-        subtext: Network.active?.bssid ? "AP: " + Network.active.bssid : ""
+        subtext: Network.active?.bssid ? "AP: " + Network.active.bssid : (Network.ethernet ? Translation.tr("Ethernet Port Active") : "")
         copyable: !!Network.active?.bssid
         copyText: Network.active?.bssid ?? ""
     }
 
-    // Satellite Card 5: Bottom-Center -> Physical Interface & Security
+    // Summary Row: Full-width Physical Interface & Security
     DetailCard {
         id: cardDetails
         z: 2
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: 194
+        x: 0
+        y: 240
         width: parent.width
-        implicitHeight: 56
+        implicitHeight: 64
         anchorSide: "top"
         icon: "security"
         iconColor: root.accentColor

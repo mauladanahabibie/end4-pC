@@ -13,21 +13,22 @@ Item {
     property color accentColor: Appearance.colors.colPrimary
     property bool active: true
     property bool connecting: false
-    property real hubDiameter: 136
+    property real circleDiameter: 60
 
-    implicitWidth: hubDiameter + 50
-    implicitHeight: hubDiameter + 50
+    implicitWidth: 280
+    implicitHeight: 98
 
     readonly property real hubCenterX: x + width / 2
-    readonly property real hubCenterY: y + height / 2
-    readonly property real hubRadius: hubDiameter / 2
+    readonly property real hubCenterY: y + hubCircle.y + hubCircle.height / 2
+    readonly property real hubBottomY: y + height
+    readonly property real hubRadius: circleDiameter / 2
 
     // Outer concentric ripple ring 2
     Rectangle {
         id: rippleRing2
-        anchors.centerIn: parent
-        width: root.hubDiameter + 42
-        height: root.hubDiameter + 42
+        anchors.centerIn: hubCircle
+        width: root.circleDiameter + 28
+        height: root.circleDiameter + 28
         radius: width / 2
         color: "transparent"
         border.width: 1
@@ -37,7 +38,7 @@ Item {
         SequentialAnimation on scale {
             running: root.active || root.connecting
             loops: Animation.Infinite
-            NumberAnimation { to: 1.05; duration: 2400; easing.type: Easing.InOutSine }
+            NumberAnimation { to: 1.06; duration: 2400; easing.type: Easing.InOutSine }
             NumberAnimation { to: 1.0; duration: 2400; easing.type: Easing.InOutSine }
         }
 
@@ -52,9 +53,9 @@ Item {
     // Outer concentric ripple ring 1
     Rectangle {
         id: rippleRing1
-        anchors.centerIn: parent
-        width: root.hubDiameter + 20
-        height: root.hubDiameter + 20
+        anchors.centerIn: hubCircle
+        width: root.circleDiameter + 14
+        height: root.circleDiameter + 14
         radius: width / 2
         color: "transparent"
         border.width: 1.5
@@ -71,9 +72,10 @@ Item {
     // Central circular hub
     Rectangle {
         id: hubCircle
-        anchors.centerIn: parent
-        width: root.hubDiameter
-        height: root.hubDiameter
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: root.circleDiameter
+        height: root.circleDiameter
         radius: width / 2
         color: root.active
             ? ColorUtils.mix(Appearance.colors.colLayer1, root.accentColor, 0.22)
@@ -86,50 +88,68 @@ Item {
         Behavior on color { ColorAnimation { duration: 250 } }
         Behavior on border.color { ColorAnimation { duration: 250 } }
 
-        ColumnLayout {
+        MaterialSymbol {
             anchors.centerIn: parent
-            width: parent.width - 24
-            spacing: 3
+            iconSize: 26
+            text: root.icon
+            color: root.active ? root.accentColor : Appearance.colors.colSubtext
 
-            MaterialSymbol {
-                Layout.alignment: Qt.AlignHCenter
-                iconSize: 36
-                text: root.icon
-                color: root.active ? root.accentColor : Appearance.colors.colSubtext
+            Behavior on color { ColorAnimation { duration: 250 } }
 
-                Behavior on color { ColorAnimation { duration: 250 } }
+            // Pulse icon if connecting
+            SequentialAnimation on opacity {
+                running: root.connecting
+                loops: Animation.Infinite
+                NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+            }
+        }
+    }
 
-                // Pulse icon if connecting
+    // Title and Subtitle Status pill below circle
+    ColumnLayout {
+        anchors.top: hubCircle.bottom
+        anchors.topMargin: 4
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width
+        spacing: 1
+
+        StyledText {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: root.title
+            font.pixelSize: Appearance.font.pixelSize.smallie ?? 13
+            font.weight: Font.DemiBold
+            color: Appearance.colors.colOnSurface
+            elide: Text.ElideRight
+            maximumLineCount: 1
+        }
+
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 5
+
+            Rectangle {
+                Layout.preferredWidth: 6
+                Layout.preferredHeight: 6
+                radius: 3
+                color: root.active
+                    ? root.accentColor
+                    : (root.connecting ? "#E5A93C" : Appearance.colors.colSubtext)
+
                 SequentialAnimation on opacity {
                     running: root.connecting
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 0.3; duration: 500 }
+                    NumberAnimation { to: 1.0; duration: 500 }
                 }
             }
 
             StyledText {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                horizontalAlignment: Text.AlignHCenter
-                text: root.title
-                font.pixelSize: Appearance.font.pixelSize.smallie ?? 13
-                font.weight: Font.DemiBold
-                color: Appearance.colors.colOnSurface
-                wrapMode: Text.Wrap
-                maximumLineCount: 2
-                elide: Text.ElideRight
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignHCenter
-                horizontalAlignment: Text.AlignHCenter
                 text: root.subtitle
                 font.pixelSize: Appearance.font.pixelSize.smallest
                 color: Appearance.colors.colSubtext
                 elide: Text.ElideRight
-                maximumLineCount: 1
             }
         }
     }
