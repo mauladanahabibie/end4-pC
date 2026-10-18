@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Widgets
 import qs.services
@@ -31,8 +32,16 @@ Item {
             anchors.fill: parent
             radius: Appearance.rounding.full
             color: Appearance.colors.colLayer1
-            clip: true
             visible: (notif?.image ?? "") !== ""
+
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle {
+                    width: notifImageContainer.width
+                    height: notifImageContainer.height
+                    radius: notifImageContainer.radius
+                }
+            }
 
             Image {
                 anchors.fill: parent

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Services.Mpris
 import qs
@@ -61,9 +62,17 @@ Item {
             leftMargin: isMaterial ? 0 : 4
             verticalCenter: parent.verticalCenter
         }
-        radius: isMaterial ? Appearance.rounding.full : (Appearance.rounding?.verysmall ?? 6)
+        radius: height / 2
         color: Appearance.colors.colLayer1
-        clip: true
+
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: Rectangle {
+                width: artContainer.width
+                height: artContainer.height
+                radius: artContainer.radius
+            }
+        }
 
         StyledImage {
             id: artImage

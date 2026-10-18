@@ -643,11 +643,26 @@ Item {
         property alias dialog: toggleDialogLoader.sourceComponent
         readonly property bool shown: root[shownPropertyString]
         anchors.fill: parent
+        z: shown ? 20 : 0
+        visible: active
 
-        onShownChanged: if (shown) toggleDialogLoader.active = true;
         active: shown
-        onActiveChanged: {
-            if (active) {
+        onShownChanged: {
+            if (shown) {
+                toggleDialogLoader.active = true;
+                if (item) {
+                    item.show = true;
+                    item.forceActiveFocus();
+                }
+            } else {
+                if (item) {
+                    item.show = false;
+                }
+                toggleDialogLoader.active = false;
+            }
+        }
+        onLoaded: {
+            if (item && shown) {
                 item.show = true;
                 item.forceActiveFocus();
             }
@@ -655,12 +670,10 @@ Item {
         Connections {
             target: toggleDialogLoader.item
             function onDismiss() {
-                toggleDialogLoader.item.show = false
+                if (toggleDialogLoader.item) {
+                    toggleDialogLoader.item.show = false;
+                }
                 root[toggleDialogLoader.shownPropertyString] = false;
-            }
-            function onVisibleChanged() {
-                if (toggleDialogLoader.item && !toggleDialogLoader.item.visible && !root[toggleDialogLoader.shownPropertyString])
-                    toggleDialogLoader.active = false;
             }
         }
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import qs
 import qs.services
@@ -27,7 +28,15 @@ Item {
         }
         radius: width / 2
         color: Appearance.colors.colPrimaryContainer
-        clip: true
+
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            maskSource: Rectangle {
+                width: avatarRect.width
+                height: avatarRect.height
+                radius: avatarRect.radius
+            }
+        }
 
         Image {
             id: avatarImage
