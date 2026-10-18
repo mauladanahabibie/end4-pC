@@ -29,6 +29,7 @@ import qs.modules.ii.dropover
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.displayProjection
 import qs.modules.ii.frame
+import qs.modules.ii.whiteboard
 
 Scope {
     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
@@ -59,4 +60,5 @@ Scope {
     PanelLoader { component: DisplayProjectionOsd {} }
     PanelLoader { component: NiriBackdrop {} }
     PanelLoader { component: ScreenFrame {} }
+    PanelLoader { component: Whiteboard {} }
 }
