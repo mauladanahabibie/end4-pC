@@ -78,13 +78,16 @@ Item {
         radius: root.lerp(Appearance.rounding.verysmall, 16)
         color: ColorUtils.transparentize(root.blendedColors.colLayer1, 0.5)
 
+        Rectangle {
+            id: artMask
+            anchors.fill: parent
+            radius: artBackground.radius + 6 * (1 - root.t)
+            visible: false
+        }
+
         layer.enabled: true
         layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: artBackground.width
-                height: artBackground.height
-                radius: artBackground.radius + 6 * (1 - root.t)
-            }
+            maskSource: artMask
         }
 
         StyledImage {

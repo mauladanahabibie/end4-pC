@@ -28,13 +28,15 @@ Rectangle {
         fillMode: Image.PreserveAspectCrop
         cache: false
         visible: status === Image.Ready
+        Rectangle {
+            id: avatarMask
+            anchors.fill: parent
+            radius: Math.max(0, root.radius - root.border.width)
+            visible: false
+        }
         layer.enabled: true
         layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: avatarImage.width
-                height: avatarImage.height
-                radius: Math.max(0, root.radius - root.border.width)
-            }
+            maskSource: avatarMask
         }
     }
 

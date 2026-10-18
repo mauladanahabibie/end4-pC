@@ -37,13 +37,16 @@ Item {
             }
         }
 
+        Rectangle {
+            id: avatarMask
+            anchors.fill: parent
+            radius: avatarRect.radius
+            visible: false
+        }
+
         layer.enabled: true
         layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: avatarRect.width
-                height: avatarRect.height
-                radius: avatarRect.radius
-            }
+            maskSource: avatarMask
         }
 
         Image {

@@ -213,13 +213,16 @@ Item { // Notification item area
                     implicitWidth: actionsFlickable.implicitWidth
                     implicitHeight: actionsFlickable.implicitHeight
 
+                    Rectangle {
+                        id: actionsFlickableMask
+                        anchors.fill: parent
+                        radius: Appearance.rounding.small
+                        visible: false
+                    }
+
                     layer.enabled: true
                     layer.effect: OpacityMask {
-                        maskSource: Rectangle {
-                            width: actionsFlickable.width
-                            height: actionsFlickable.height
-                            radius: Appearance.rounding.small
-                        }
+                        maskSource: actionsFlickableMask
                     }
 
                     ScrollEdgeFade {

@@ -80,13 +80,16 @@ MaterialShape { // App icon
                 sourceSize.width: size
                 sourceSize.height: size
 
+                Rectangle {
+                    id: notifImageMask
+                    anchors.fill: parent
+                    radius: Appearance.rounding.full
+                    visible: false
+                }
+
                 layer.enabled: true
                 layer.effect: OpacityMask {
-                    maskSource: Rectangle {
-                        width: notifImage.size
-                        height: notifImage.size
-                        radius: Appearance.rounding.full
-                    }
+                    maskSource: notifImageMask
                 }
             }
             Loader {

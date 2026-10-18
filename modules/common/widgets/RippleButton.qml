@@ -158,13 +158,16 @@ Button {
             animation: Appearance?.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
+        Rectangle {
+            id: buttonMask
+            anchors.fill: parent
+            radius: root.buttonEffectiveRadius
+            visible: false
+        }
+
         layer.enabled: ripple.opacity > 0
         layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: buttonBackground.width
-                height: buttonBackground.height
-                radius: root.buttonEffectiveRadius
-            }
+            maskSource: buttonMask
         }
 
         Item {

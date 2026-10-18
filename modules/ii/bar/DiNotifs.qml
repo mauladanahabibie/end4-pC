@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Widgets
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -42,13 +43,16 @@ Item {
                 }
             }
 
+            Rectangle {
+                id: notifMask
+                anchors.fill: parent
+                radius: notifImageContainer.radius
+                visible: false
+            }
+
             layer.enabled: true
             layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: notifImageContainer.width
-                    height: notifImageContainer.height
-                    radius: notifImageContainer.radius
-                }
+                maskSource: notifMask
             }
 
             Image {

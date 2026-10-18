@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs
 import qs.modules.common
 import qs.modules.common.models.hyprland
 import QtQuick

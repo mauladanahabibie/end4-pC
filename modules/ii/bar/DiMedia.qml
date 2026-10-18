@@ -73,13 +73,16 @@ Item {
             }
         }
 
+        Rectangle {
+            id: artMask
+            anchors.fill: parent
+            radius: artContainer.radius
+            visible: false
+        }
+
         layer.enabled: true
         layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: artContainer.width
-                height: artContainer.height
-                radius: artContainer.radius
-            }
+            maskSource: artMask
         }
 
         StyledImage {
