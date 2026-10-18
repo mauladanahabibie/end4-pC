@@ -34,7 +34,6 @@ Scope {
 
     readonly property string mediaPosition: {
         if (GlobalStates.mediaControlsPosition !== "") return GlobalStates.mediaControlsPosition
-        if (Config.options.bar.layouts.middleLayout.includes("dynamicIsland") && GlobalStates.dynamicIslandEnabled) return "center"
         if (Config.options.bar.layouts.leftLayout.includes("media")) return "left"
         if (Config.options.bar.layouts.middleLayout.includes("media")) return "center"
         if (Config.options.bar.layouts.rightLayout.includes("media")) return "right"
@@ -131,7 +130,6 @@ Scope {
             implicitHeight: playerColumnLayout.implicitHeight
             color: "transparent"
             WlrLayershell.namespace: "quickshell:mediaControls"
-            WlrLayershell.layer: WlrLayer.Overlay
 
             anchors {
                 top: true
@@ -168,7 +166,7 @@ Scope {
             }
 
             mask: Region {
-                item: root.meaningfulPlayers.length === 1 && playerColumnLayout.firstCard ? playerColumnLayout.firstCard : playerColumnLayout
+                item: playerColumnLayout
             }
 
             Component.onCompleted: {
@@ -268,17 +266,17 @@ Scope {
         target: "mediaControls"
 
         function toggle(): void {
-            mediaControlsLoader.active = !mediaControlsLoader.active;
-            if (mediaControlsLoader.active)
+            GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen;
+            if (GlobalStates.mediaControlsOpen)
                 Notifications.timeoutAll();
         }
 
         function close(): void {
-            mediaControlsLoader.active = false;
+            GlobalStates.mediaControlsOpen = false;
         }
 
         function open(): void {
-            mediaControlsLoader.active = true;
+            GlobalStates.mediaControlsOpen = true;
             Notifications.timeoutAll();
         }
     }

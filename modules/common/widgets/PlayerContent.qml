@@ -302,7 +302,7 @@ Item {
         property real size: 44
         implicitWidth: size
         implicitHeight: size
-        downAction: () => root.player.togglePlaying()
+        downAction: () => root.player?.togglePlaying()
 
         buttonRadius: root.player?.isPlaying ? Appearance?.rounding.normal : size / 2
         colBackground: root.player?.isPlaying ? root.blendedColors.colPrimary : root.blendedColors.colSecondaryContainer

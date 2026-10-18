@@ -28,9 +28,15 @@ Item {
         }
     }
 
-    // Main interaction: clicking anywhere on the media card opens the detailed media controls popup
+    // Clicking on artwork or track info opens the detailed media controls popup
     MouseArea {
-        anchors.fill: parent
+        id: openDetailsMouseArea
+        anchors {
+            left: parent.left
+            right: mediaControlsRow.left
+            top: parent.top
+            bottom: parent.bottom
+        }
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             GlobalStates.mediaControlsPosition = "center"
@@ -112,10 +118,9 @@ Item {
         }
     }
 
-    // 3. Playback Controls (Higher z so controls intercept their own clicks)
+    // 3. Playback Controls
     RowLayout {
         id: mediaControlsRow
-        z: 10
         anchors {
             right: parent.right
             rightMargin: isMaterial ? 4 : 8
@@ -124,67 +129,67 @@ Item {
         spacing: isMaterial ? -2 : 0
 
         // Skip Previous
-        Item {
+        RippleButton {
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 20
-            implicitHeight: 20
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
+            implicitWidth: 24
+            implicitHeight: 24
+            buttonRadius: 12
+            colBackground: "transparent"
+            colBackgroundHover: Appearance.colors.colLayer1Hover
             visible: (activePlayer?.canGoPrevious ?? false) && (island?.mediaHoverHandler?.hovered || Config.options.bar.dynamicIsland.showMediaControls)
+            onClicked: activePlayer?.previous()
 
-            MaterialSymbol {
+            contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "skip_previous"
                 fill: 1
                 iconSize: isMaterial ? 20 : 16
                 color: Appearance.colors.colOnLayer0
             }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: activePlayer?.previous()
-            }
         }
 
-        // Play / Pause Button (Explicitly toggles playback without opening details)
-        Item {
+        // Play / Pause Button
+        RippleButton {
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 22
-            implicitHeight: 22
+            Layout.preferredWidth: 26
+            Layout.preferredHeight: 26
+            implicitWidth: 26
+            implicitHeight: 26
+            buttonRadius: 13
+            colBackground: "transparent"
+            colBackgroundHover: Appearance.colors.colLayer1Hover
+            onClicked: activePlayer?.togglePlaying()
 
-            MaterialSymbol {
+            contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: activePlayer?.isPlaying ? "pause" : "play_arrow"
                 fill: 1
                 iconSize: isMaterial ? 20 : 18
                 color: Appearance.colors.colOnLayer0
             }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: activePlayer?.togglePlaying()
-            }
         }
 
         // Skip Next
-        Item {
+        RippleButton {
             Layout.alignment: Qt.AlignVCenter
-            implicitWidth: 20
-            implicitHeight: 20
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
+            implicitWidth: 24
+            implicitHeight: 24
+            buttonRadius: 12
+            colBackground: "transparent"
+            colBackgroundHover: Appearance.colors.colLayer1Hover
             visible: (activePlayer?.canGoNext ?? false) && (island?.mediaHoverHandler?.hovered || Config.options.bar.dynamicIsland.showMediaControls)
+            onClicked: activePlayer?.next()
 
-            MaterialSymbol {
+            contentItem: MaterialSymbol {
                 anchors.centerIn: parent
                 text: "skip_next"
                 fill: 1
                 iconSize: isMaterial ? 20 : 16
                 color: Appearance.colors.colOnLayer0
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: activePlayer?.next()
             }
         }
     }
