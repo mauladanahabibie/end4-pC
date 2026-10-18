@@ -11,6 +11,8 @@ WindowDialog {
     id: root
     backgroundHeight: 600
 
+    signal openInspector()
+
     WindowDialogTitle {
         text: Translation.tr("Connect to Wi-Fi")
     }
@@ -49,10 +51,7 @@ WindowDialog {
     WindowDialogButtonRow {
         DialogButton {
             buttonText: Translation.tr("Details")
-            onClicked: {
-                Quickshell.execDetached(["bash", "-c", `${Network.ethernet ? Config.options.apps.networkEthernet : Config.options.apps.network}`]);
-                GlobalStates.sidebarRightOpen = false;
-            }
+            onClicked: root.openInspector()
         }
 
         Item {

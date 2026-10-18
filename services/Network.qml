@@ -39,6 +39,19 @@ Singleton {
     property string publicIpAddress: ""
     property string gateway: ""
     property string macAddress: ""
+    property string dns: ""
+    readonly property string activeBand: {
+        const freq = root.active?.frequency ?? 0;
+        if (freq <= 0) return root.ethernet ? "Wired (802.3)" : "";
+        if (freq < 3000) return "2.4 GHz";
+        if (freq < 5900) return "5.0 GHz";
+        return "6.0 GHz";
+    }
+    readonly property string activeSecurity: {
+        if (root.active?.security) return root.active.security;
+        if (root.ethernet) return "Wired (802.3)";
+        return root.wifiStatus === "connected" ? "Open" : "";
+    }
     property string materialSymbol: root.ethernet
         ? "lan"
         : (root.wifiEnabled && root.wifiStatus === "connected")
@@ -251,13 +264,14 @@ Singleton {
     Process {
         id: updateNetworkDetails
         running: true
-        command: ["sh", "-c", "device=$(nmcli -t -f DEVICE,TYPE,STATE device status | awk -F: '$3 == \"connected\" && $2 ~ /^(wifi|ethernet)$/ { print $1; exit }'); if [ -n \"$device\" ]; then nmcli -t -f GENERAL.DEVICE,GENERAL.HWADDR,IP4.ADDRESS,IP4.GATEWAY device show \"$device\"; fi"]
+        command: ["sh", "-c", "device=$(nmcli -t -f DEVICE,TYPE,STATE device status | awk -F: '$3 == \"connected\" && $2 ~ /^(wifi|ethernet)$/ { print $1; exit }'); if [ -n \"$device\" ]; then nmcli -t -f GENERAL.DEVICE,GENERAL.HWADDR,IP4.ADDRESS,IP4.GATEWAY,IP4.DNS device show \"$device\"; fi"]
         stdout: StdioCollector {
             onStreamFinished: {
                 let networkInterface = "";
                 let ipAddress = "";
                 let gateway = "";
                 let macAddress = "";
+                let dnsList = [];
 
                 for (const line of text.trim().split("\n")) {
                     const separator = line.indexOf(":");
@@ -273,12 +287,17 @@ Singleton {
                         ipAddress = value.split("/")[0];
                     else if (key === "IP4.GATEWAY")
                         gateway = value;
+                    else if (key.startsWith("IP4.DNS")) {
+                        if (value && !dnsList.includes(value))
+                            dnsList.push(value);
+                    }
                 }
 
                 root.networkInterface = networkInterface;
                 root.ipAddress = ipAddress;
                 root.gateway = gateway;
                 root.macAddress = macAddress;
+                root.dns = dnsList.join(", ");
             }
         }
     }

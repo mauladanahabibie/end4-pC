@@ -13,8 +13,7 @@ QuickToggleButton {
     buttonIcon: Network.materialSymbol
     onClicked: Network.toggleWifi()
     altAction: () => {
-        Quickshell.execDetached(["bash", "-c", `${Network.ethernet ? Config.options.apps.networkEthernet : Config.options.apps.network}`])
-        GlobalStates.sidebarRightOpen = false
+        GlobalStates.openConnectionInspector("wifi")
     }
     StyledToolTip {
         text: Translation.tr("%1 | Right-click to configure").arg(Network.networkName)

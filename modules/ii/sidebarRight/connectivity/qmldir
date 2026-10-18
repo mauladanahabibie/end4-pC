@@ -1,0 +1,8 @@
+module qs.modules.ii.sidebarRight.connectivity
+ConnectivityInspector 1.0 ConnectivityInspector.qml
+CentralNode 1.0 CentralNode.qml
+DetailCard 1.0 DetailCard.qml
+ConnectorLines 1.0 ConnectorLines.qml
+NetworkGraphView 1.0 NetworkGraphView.qml
+BluetoothGraphView 1.0 BluetoothGraphView.qml
+PillSwitcher 1.0 PillSwitcher.qml

@@ -10,6 +10,11 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
     signal requestBluetoothDialog()
+    signal requestInspectorDialog(string tab)
+    function openConnectionInspector(tab) {
+        root.requestInspectorDialog(tab || "wifi");
+        root.sidebarRightOpen = true;
+    }
     property bool barOpen: true
     property bool barStyleEditorOpen: false
     property bool crosshairOpen: false

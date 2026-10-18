@@ -17,8 +17,7 @@ QuickToggleButton {
         BluetoothStatus.togglePower()
     }
     altAction: () => {
-        Quickshell.execDetached(["bash", "-c", `${Config.options.apps.bluetooth}`])
-        GlobalStates.sidebarRightOpen = false
+        GlobalStates.openConnectionInspector("bluetooth")
     }
     StyledToolTip {
         text: Translation.tr("%1 | Right-click to configure").arg(

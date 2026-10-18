@@ -21,6 +21,7 @@ import qs.modules.ii.sidebarRight.volumeMixer
 import qs.modules.ii.sidebarRight.wifiNetworks
 import qs.modules.ii.sidebarRight.vpn
 import qs.modules.ii.sidebarRight.iconPicker
+import qs.modules.ii.sidebarRight.connectivity
 
 Item {
     id: root
@@ -32,6 +33,8 @@ Item {
     property bool showNightLightDialog: false
     property bool showWifiDialog: false
     property bool showVpnDialog: false
+    property bool showInspectorDialog: false
+    property string inspectorInitialTab: "wifi"
     property bool editMode: false
     property string editTab: Config.options.sidebar.quickToggles.style === "android" ? "toggles" : "layout"
     readonly property var editTabs: Config.options.sidebar.quickToggles.style === "android"
@@ -101,6 +104,17 @@ Item {
             GlobalStates.sidebarRightOpen = true;
         }
 
+        function onRequestInspectorDialog(tab) {
+            root.showWifiDialog = false;
+            root.showBluetoothDialog = false;
+            root.showVpnDialog = false;
+            root.showAudioOutputDialog = false;
+            root.showAudioInputDialog = false;
+            root.inspectorInitialTab = tab || "wifi";
+            root.showInspectorDialog = true;
+            GlobalStates.sidebarRightOpen = true;
+        }
+
         function onSidebarRightOpenChanged() {
             if (!GlobalStates.sidebarRightOpen) {
                 root.editMode = false;
@@ -109,6 +123,7 @@ Item {
                 root.showBluetoothDialog = false;
                 root.showAudioOutputDialog = false;
                 root.showAudioInputDialog = false;
+                root.showInspectorDialog = false;
             }
         }
     }
@@ -556,7 +571,13 @@ Item {
 
     ToggleDialog {
         shownPropertyString: "showBluetoothDialog"
-        dialog: BluetoothDialog {}
+        dialog: BluetoothDialog {
+            onOpenInspector: {
+                root.showBluetoothDialog = false;
+                root.inspectorInitialTab = "bluetooth";
+                root.showInspectorDialog = true;
+            }
+        }
         onShownChanged: {
             const adapter = Bluetooth.defaultAdapter;
             if (!adapter) return;
@@ -576,11 +597,32 @@ Item {
 
     ToggleDialog {
         shownPropertyString: "showWifiDialog"
-        dialog: WifiDialog {}
+        dialog: WifiDialog {
+            onOpenInspector: {
+                root.showWifiDialog = false;
+                root.inspectorInitialTab = "wifi";
+                root.showInspectorDialog = true;
+            }
+        }
         onShownChanged: {
             if (!shown) return;
             Network.enableWifi();
             Network.rescanWifi();
+        }
+    }
+
+    ToggleDialog {
+        shownPropertyString: "showInspectorDialog"
+        dialog: ConnectivityInspector {
+            initialTab: root.inspectorInitialTab
+            onOpenWifiListRequested: {
+                root.showInspectorDialog = false;
+                root.showWifiDialog = true;
+            }
+            onOpenBluetoothListRequested: {
+                root.showInspectorDialog = false;
+                root.showBluetoothDialog = true;
+            }
         }
     }
 

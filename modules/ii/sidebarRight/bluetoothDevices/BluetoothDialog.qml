@@ -16,6 +16,8 @@ WindowDialog {
     id: root
     backgroundHeight: 600
 
+    signal openInspector()
+
     WindowDialogTitle {
         text: Translation.tr("Bluetooth devices")
     }
@@ -58,10 +60,7 @@ WindowDialog {
     WindowDialogButtonRow {
         DialogButton {
             buttonText: Translation.tr("Details")
-            onClicked: {
-                Quickshell.execDetached(["bash", "-c", `${Config.options.apps.bluetooth}`]);
-                GlobalStates.sidebarRightOpen = false;
-            }
+            onClicked: root.openInspector()
         }
 
         Item {

@@ -196,6 +196,10 @@ Scope {
             function open(): void {
                 GlobalStates.sidebarRightOpen = true;
             }
+
+            function inspectConnection(tab: string): void {
+                GlobalStates.openConnectionInspector(tab || "wifi");
+            }
         }
 
         CompositorGlobalShortcut {
