@@ -25,6 +25,8 @@ Scope {
     property int savedWindowX: -1
     property int savedWindowY: -1
     property bool preservePositionOnSwitch: false
+    property bool switchingScreen: false
+    property bool initialLoaded: false
 
     function getNextScreen() {
         const screens = Quickshell.screens;
@@ -54,14 +56,12 @@ Scope {
             root.preservePositionOnSwitch = false;
         }
 
-        // Step 1: Deactivate loader to cleanly unmap old layer surface from Wayland
-        windowLoader.active = false;
+        root.switchingScreen = true;
         root.activeScreen = targetScreen;
         GlobalStates.whiteboardScreen = targetScreen;
 
-        // Step 2: Reactivate on target screen on next event loop tick
         Qt.callLater(() => {
-            windowLoader.active = true;
+            root.switchingScreen = false;
         });
     }
 
@@ -92,15 +92,6 @@ Scope {
             }
         }
 
-        // Fallback boundary detection if window dragged past screen edges
-        if (!targetScreen && screens.length > 1) {
-            for (let i = 0; i < screens.length; i++) {
-                const s = screens[i];
-                if (!s || s.name === currentScreen.name) continue;
-                targetScreen = s;
-                break;
-            }
-        }
 
         if (targetScreen && targetScreen.name !== currentScreen.name) {
             const targetX = targetScreen.x ?? 0;
@@ -151,6 +142,13 @@ Scope {
         }
     }
 
+    function saveActiveFileNow() {
+        autoSaveTimer.stop();
+        const json = sharedDoc.toJSON();
+        activeFile.setText(json);
+        sharedDoc.isDirty = false;
+    }
+
     // Auto-save active document at Scope root level
     Timer {
         id: autoSaveTimer
@@ -166,18 +164,19 @@ Scope {
     FileView {
         id: activeFile
         path: `${Directories.state}/user/whiteboard/active.json`
-        watchChanges: true
-        onFileChanged: activeFile.reload()
+        watchChanges: false
         onLoaded: {
-            const content = activeFile.text();
-            if (content && content.trim().length > 0) {
-                if (sharedDoc.objectCount === 0) {
+            if (!root.initialLoaded) {
+                root.initialLoaded = true;
+                const content = activeFile.text();
+                if (content && content.trim().length > 0) {
                     sharedDoc.fromJSON(content);
                 }
             }
         }
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) {
+                root.initialLoaded = true;
                 autoSaveTimer.restart();
             } else {
                 console.log("[Whiteboard] Error loading active file: " + error);
@@ -187,7 +186,7 @@ Scope {
 
     Loader {
         id: windowLoader
-        active: GlobalStates.whiteboardOpen
+        active: GlobalStates.whiteboardOpen && !root.switchingScreen
 
         sourceComponent: PanelWindow {
             id: panelWindow
@@ -286,7 +285,12 @@ Scope {
                     anchors.fill: parent
                     doc: sharedDoc
                     nextScreenName: root.getNextScreen()?.name ?? ""
-                    onCloseRequested: panelWindow.hide()
+                    onCloseRequested: {
+                        if (sharedDoc.objectCount === 0) {
+                            root.saveActiveFileNow();
+                        }
+                        panelWindow.hide();
+                    }
                     onSwitchScreenRequested: {
                         const nextSc = root.getNextScreen();
                         if (nextSc) root.switchScreen(nextSc);

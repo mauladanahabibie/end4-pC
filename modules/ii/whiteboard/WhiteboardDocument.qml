@@ -170,6 +170,18 @@ QtObject {
         documentChanged();
     }
 
+    function resetDocument() {
+        title = "Untitled Board";
+        objects = [];
+        selectedIds = [];
+        undoStack = [];
+        redoStack = [];
+        syncHistoryCounts();
+        isDirty = false;
+        selectionChanged();
+        documentChanged();
+    }
+
     function undo() {
         if (undoStack.length === 0) return;
         const curUndo = undoStack.slice();

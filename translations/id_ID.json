@@ -488,5 +488,9 @@
   "Colors": "Warna",
   "Monitors": "Monitor",
   "Fuzzy": "Fuzzy",
-  "Discord": "Discord"
+  "Discord": "Discord",
+  "Save changes?": "Simpan perubahan?",
+  "Your whiteboard contains unsaved drawings. Do you want to save your work before closing?": "Papan tulis Anda memiliki coretan yang belum disimpan. Apakah Anda ingin menyimpannya sebelum ditutup?",
+  "Don't Save": "Jangan Simpan",
+  "Save": "Simpan"
 }

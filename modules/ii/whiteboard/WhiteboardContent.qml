@@ -16,6 +16,7 @@ Item {
 
     property bool maximized: false
     property string nextScreenName: ""
+    property bool closeAfterSave: false
     signal closeRequested()
     signal switchScreenRequested()
 
@@ -156,7 +157,20 @@ Item {
                     });
                     externalWriteFile.path = path;
                     externalWriteFile.setText(json);
+                    docItem.isDirty = false;
+                    if (root.closeAfterSave) {
+                        root.closeAfterSave = false;
+                        if (docItem.resetDocument) {
+                            docItem.resetDocument();
+                        }
+                        root.forceClose();
+                    }
                 }
+            }
+        }
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                root.closeAfterSave = false;
             }
         }
     }
@@ -190,6 +204,32 @@ Item {
 
     function exportImage() {
         exportPickerProc.running = true;
+    }
+
+    function requestClose() {
+        if (confirmCloseDialog.show) {
+            confirmCloseDialog.show = false;
+            return;
+        }
+        if (docItem && docItem.objectCount > 0) {
+            confirmCloseDialog.show = true;
+        } else {
+            forceClose();
+        }
+    }
+
+    function discardAndClose() {
+        confirmCloseDialog.show = false;
+        if (docItem) {
+            if (docItem.resetDocument) docItem.resetDocument();
+            else docItem.clearBoard(false);
+        }
+        forceClose();
+    }
+
+    function forceClose() {
+        confirmCloseDialog.show = false;
+        root.closeRequested();
     }
 
     // Keyboard Shortcuts
@@ -232,13 +272,17 @@ Item {
             }
         }
         if (event.key === Qt.Key_Escape) {
-            if (canvasItem.isEditingText) {
+            if (confirmCloseDialog.show) {
+                confirmCloseDialog.show = false;
+            } else if (canvasItem.isEditingText) {
                 canvasItem.finishTextEdit(false);
             } else if (docItem.selectedIds.length > 0) {
                 docItem.selectedIds = [];
                 docItem.selectionChanged();
-            } else {
+            } else if (toolbarItem.openPopup && toolbarItem.openPopup.length > 0) {
                 toolbarItem.closeAllPopups();
+            } else {
+                root.requestClose();
             }
             event.accepted = true;
             return;
@@ -406,7 +450,7 @@ Item {
                         iconSize: 18
                         color: Appearance.colors.colOnSurfaceVariant
                     }
-                    onClicked: root.closeRequested()
+                    onClicked: root.requestClose()
                 }
             }
         }
@@ -437,6 +481,65 @@ Item {
                 onSaveRequested: root.saveBoardAs()
                 onOpenRequested: root.openBoard()
                 onExportRequested: root.exportImage()
+            }
+        }
+    }
+
+    WindowDialog {
+        id: confirmCloseDialog
+        anchors.fill: parent
+        z: 100
+        show: false
+        backgroundWidth: Math.min(420, root.width - 48)
+        radius: Appearance.rounding.windowRounding
+        onDismiss: show = false
+
+        MaterialSymbol {
+            Layout.alignment: Qt.AlignHCenter
+            iconSize: 32
+            text: "save"
+            color: Appearance.colors.colPrimary
+        }
+
+        WindowDialogTitle {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: Translation.tr("Save changes?")
+        }
+
+        WindowDialogParagraph {
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            text: Translation.tr("Your whiteboard contains unsaved drawings. Do you want to save your work before closing?")
+        }
+
+        WindowDialogButtonRow {
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 8
+
+            DialogButton {
+                buttonText: Translation.tr("Cancel")
+                colEnabled: Appearance.colors.colOnSurfaceVariant
+                onClicked: confirmCloseDialog.show = false
+            }
+
+            Item { Layout.fillWidth: true }
+
+            DialogButton {
+                buttonText: Translation.tr("Don't Save")
+                colEnabled: Appearance.colors.colError ?? "#ba1a1a"
+                onClicked: root.discardAndClose()
+            }
+
+            DialogButton {
+                buttonText: Translation.tr("Save")
+                colEnabled: Appearance.colors.colPrimary
+                onClicked: {
+                    confirmCloseDialog.show = false;
+                    root.closeAfterSave = true;
+                    root.saveBoardAs();
+                }
             }
         }
     }
