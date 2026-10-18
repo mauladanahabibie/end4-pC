@@ -220,7 +220,9 @@ Rectangle {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // implicitHeight: tabStack.implicitHeight
+            Layout.topMargin: 10
+            Layout.rightMargin: 12
+            Layout.bottomMargin: 10
 
             Loader {
                 id: tabStack

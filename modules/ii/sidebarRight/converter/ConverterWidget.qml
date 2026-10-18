@@ -22,11 +22,24 @@ Item {
     property bool showUnitPicker: false
     property bool copiedFeedback: false
 
-    onCurrentCategoryIdChanged: {
-        const cat = root.currentCategory;
-        if (cat && cat.units.length >= 2) {
+    function selectCategory(catId) {
+        root.currentCategoryId = catId;
+        const cat = ConverterEngine.CATEGORIES.find(c => c.id === catId);
+        if (cat && cat.units && cat.units.length >= 2) {
             root.fromUnitId = cat.units[0].id;
             root.toUnitId = cat.units[1].id;
+        }
+    }
+
+    onCurrentCategoryIdChanged: {
+        const cat = ConverterEngine.CATEGORIES.find(c => c.id === root.currentCategoryId);
+        if (cat && cat.units && cat.units.length >= 2) {
+            const hasFrom = cat.units.some(u => u.id === root.fromUnitId);
+            const hasTo = cat.units.some(u => u.id === root.toUnitId);
+            if (!hasFrom || !hasTo) {
+                root.fromUnitId = cat.units[0].id;
+                root.toUnitId = cat.units[1].id;
+            }
         }
     }
 
@@ -108,7 +121,7 @@ Item {
                             }
 
                             onClicked: {
-                                root.currentCategoryId = catBtn.modelData.id;
+                                root.selectCategory(catBtn.modelData.id);
                             }
                         }
                     }

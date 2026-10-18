@@ -247,7 +247,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.55)
+            color: Appearance.colors.colScrim
             radius: Appearance.rounding.normal
 
             MouseArea {
@@ -257,12 +257,12 @@ Item {
 
             Rectangle {
                 anchors.centerIn: parent
-                width: parent.width - 40
-                implicitHeight: dialogLayout.implicitHeight + 24
-                color: Appearance.colors.colLayer1
+                width: parent.width - 32
+                implicitHeight: dialogLayout.implicitHeight + 32
+                color: Appearance.m3colors.m3surfaceContainerHigh
                 radius: Appearance.rounding.normal
                 border.width: 1
-                border.color: Appearance.colors.colLayer0Border
+                border.color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.6)
 
                 MouseArea {
                     anchors.fill: parent // prevent click bubbling to backdrop
@@ -273,24 +273,49 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 16
+                    anchors.margins: 18
                     spacing: 12
 
-                    StyledText {
-                        text: Translation.tr("Delete Note?")
-                        font.bold: true
-                        font.pixelSize: Appearance.font.pixelSize.large
-                        color: Appearance.colors.colOnSurface
+                    // Dialog Header with Icon
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Rectangle {
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                            radius: 18
+                            color: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "delete_forever"
+                                iconSize: 20
+                                color: Appearance.colors.colError
+                            }
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: Translation.tr("Delete note?")
+                            font.bold: true
+                            font.pixelSize: Appearance.font.pixelSize.larger
+                            color: Appearance.m3colors.m3onSurface
+                        }
                     }
 
+                    // Body Description
                     StyledText {
                         Layout.fillWidth: true
-                        text: Translation.tr("Are you sure you want to delete \"%1\"? This cannot be undone.").arg(titleInput.text.length > 0 ? titleInput.text : Translation.tr("Untitled Note"))
+                        Layout.topMargin: 2
+                        text: Translation.tr("Are you sure you want to delete \"%1\"? This note cannot be recovered.").arg(titleInput.text.length > 0 ? titleInput.text : Translation.tr("Untitled Note"))
                         font.pixelSize: Appearance.font.pixelSize.normal
-                        color: Appearance.colors.colOnLayer1
+                        color: Appearance.m3colors.m3onSurfaceVariant
                         wrapMode: Text.Wrap
+                        lineHeight: 1.25
                     }
 
+                    // Buttons Row
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.topMargin: 8
@@ -303,10 +328,23 @@ Item {
                             onClicked: root.showDeleteDialog = false
                         }
 
-                        DialogButton {
-                            buttonText: Translation.tr("Delete")
-                            colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.8)
-                            colEnabled: Appearance.colors.colError
+                        RippleButton {
+                            buttonRadius: Appearance.rounding.full
+                            implicitHeight: 34
+                            implicitWidth: deleteBtnText.implicitWidth + 28
+                            colBackground: Appearance.colors.colError
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.15)
+                            colRipple: Appearance.colors.colOnError
+
+                            contentItem: StyledText {
+                                id: deleteBtnText
+                                anchors.centerIn: parent
+                                text: Translation.tr("Delete")
+                                font.weight: Font.DemiBold
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colOnError
+                            }
+
                             onClicked: {
                                 root.showDeleteDialog = false;
                                 root.store.deleteNote(root.noteId);

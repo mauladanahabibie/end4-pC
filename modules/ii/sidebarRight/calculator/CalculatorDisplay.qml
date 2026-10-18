@@ -29,14 +29,17 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 4
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        anchors.topMargin: 6
+        anchors.bottomMargin: 6
+        spacing: 2
 
-        // Header controls (History & Copy)
+        // Top Row: History button on left, Expression & Copy on right
         RowLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 24
-            spacing: 4
+            spacing: 6
 
             RippleButton {
                 Layout.preferredWidth: 26
@@ -57,11 +60,21 @@ Rectangle {
 
             Item { Layout.fillWidth: true }
 
+            StyledText {
+                visible: root.expression.length > 0 && (root.result.length > 0 ? root.expression !== root.result : true)
+                text: root.expression
+                font.pixelSize: Appearance.font.pixelSize.small
+                color: Appearance.colors.colOnLayer1
+                opacity: 0.7
+                elide: Text.ElideLeft
+                Layout.maximumWidth: parent.width - 70
+            }
+
             RippleButton {
-                visible: root.result.length > 0 && !root.isError
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
-                buttonRadius: 13
+                visible: (root.result.length > 0 || root.expression.length > 0) && !root.isError
+                Layout.preferredWidth: 24
+                Layout.preferredHeight: 24
+                buttonRadius: 12
                 colBackground: "transparent"
                 StyledToolTip {
                     text: root.copiedFeedback ? Translation.tr("Copied!") : Translation.tr("Copy result")
@@ -69,34 +82,19 @@ Rectangle {
                 contentItem: MaterialSymbol {
                     anchors.centerIn: parent
                     text: root.copiedFeedback ? "check" : "content_copy"
-                    iconSize: 15
+                    iconSize: 14
                     color: root.copiedFeedback ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer1
                 }
                 onClicked: {
-                    Quickshell.clipboardText = root.result;
+                    const textToCopy = root.result.length > 0 ? root.result : root.expression;
+                    Quickshell.clipboardText = textToCopy;
                     root.copiedFeedback = true;
                     copyFeedbackTimer.restart();
                 }
             }
         }
 
-        // Expression line
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 20
-            clip: true
-
-            StyledText {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.expression.length > 0 ? root.expression : "0"
-                font.pixelSize: Appearance.font.pixelSize.normal
-                color: Appearance.colors.colOnLayer1
-                opacity: 0.75
-            }
-        }
-
-        // Result / Error line
+        // Bottom Row: Primary Result / Input / Error Display
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -105,10 +103,16 @@ Rectangle {
             StyledText {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.isError ? root.errorMessage : (root.result.length > 0 ? root.result : "0")
+                text: {
+                    if (root.isError) return root.errorMessage;
+                    if (root.result.length > 0) return root.result;
+                    if (root.expression.length > 0) return root.expression;
+                    return "0";
+                }
                 font.bold: true
                 font.pixelSize: root.isError ? Appearance.font.pixelSize.normal : 24
                 color: root.isError ? Appearance.colors.colError : Appearance.colors.colOnSurface
+                elide: Text.ElideLeft
             }
         }
     }

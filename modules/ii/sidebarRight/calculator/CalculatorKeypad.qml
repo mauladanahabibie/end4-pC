@@ -54,6 +54,7 @@ Item {
                 required property var modelData
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.preferredHeight: 1
                 spacing: 5
 
                 Repeater {
@@ -63,6 +64,7 @@ Item {
                         required property var modelData
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        Layout.preferredWidth: 1
                         buttonRadius: Appearance.rounding.small
 
                         colBackground: {
