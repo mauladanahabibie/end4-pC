@@ -15,7 +15,9 @@ Item {
     property alias isMaximized: root.maximized
 
     property bool maximized: false
+    property string nextScreenName: ""
     signal closeRequested()
+    signal switchScreenRequested()
 
     property var doc: null
     readonly property var docItem: root.doc ?? internalDoc
@@ -256,6 +258,11 @@ Item {
             event.accepted = true;
             return;
         }
+        if ((isCtrl && isShift && event.key === Qt.Key_M) || (event.modifiers & Qt.AltModifier && event.key === Qt.Key_M)) {
+            root.switchScreenRequested();
+            event.accepted = true;
+            return;
+        }
         // Tool shortcut keys (when not editing text)
         if (!canvasItem.isEditingText && !isCtrl) {
             if (event.key === Qt.Key_V) { canvasItem.activeTool = "select"; event.accepted = true; }
@@ -281,6 +288,7 @@ Item {
             Layout.preferredHeight: 44
             color: Appearance.colors.colUiBackground
             radius: Appearance.rounding.windowRounding
+            z: 10
 
             // Fill lower corners so header merges flush into canvas
             Rectangle {
@@ -349,6 +357,26 @@ Item {
                         color: Appearance.colors.colOnSurfaceVariant
                     }
                     onClicked: root.exportImage()
+                }
+
+                RippleButton {
+                    visible: Quickshell.screens.length > 1
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    buttonRadius: 16
+                    colBackground: "transparent"
+                    StyledToolTip {
+                        text: root.nextScreenName.length > 0
+                            ? Translation.tr("Move to %1").arg(root.nextScreenName)
+                            : Translation.tr("Move to next monitor")
+                    }
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "desktop_windows"
+                        iconSize: 18
+                        color: Appearance.colors.colOnSurfaceVariant
+                    }
+                    onClicked: root.switchScreenRequested()
                 }
 
                 RippleButton {

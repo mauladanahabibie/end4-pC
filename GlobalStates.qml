@@ -41,6 +41,25 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool whiteboardOpen: false
+    property var whiteboardScreen: null
+
+    function openWhiteboard(targetScreen) {
+        root.whiteboardScreen = targetScreen ?? null;
+        root.whiteboardOpen = true;
+    }
+
+    function toggleWhiteboard(targetScreen) {
+        if (!root.whiteboardOpen) {
+            root.whiteboardScreen = targetScreen ?? null;
+            root.whiteboardOpen = true;
+        } else {
+            if (targetScreen && root.whiteboardScreen && targetScreen.name !== root.whiteboardScreen.name) {
+                root.whiteboardScreen = targetScreen;
+            } else {
+                root.whiteboardOpen = false;
+            }
+        }
+    }
     property bool workspaceShowNumbers: false
     property var settingsTarget: null
 

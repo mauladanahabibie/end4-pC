@@ -420,7 +420,7 @@ Scope {
                             }
                             onClicked: {
                                 GlobalStates.desktopMenuOpen = false
-                                GlobalStates.whiteboardOpen = true
+                                GlobalStates.openWhiteboard(GlobalStates.desktopMenuScreen)
                             }
                         }
 

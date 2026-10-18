@@ -54,8 +54,17 @@
   - Additive marquee selection when holding `Shift` (unions existing selected IDs with new matches)
   - Group drag movement with single atomic undo/redo command
   - Group deletion (`Delete` key) with single atomic undo/redo restoration
-  - Hit testing for hollow unfilled shapes inside selected bounding box
-  - Phase D Runtime Verification (PASS)
+### Phase E: Multi-Monitor Cross-Display Drag & Dynamic Migration
+- [x] Multi-monitor drag-to-transfer between extended displays:
+  - Drag titlebar past monitor boundaries with automatic crossover detection (`checkWindowMonitorDrop`)
+  - Calculates global display coordinates and translates relative positioning onto target monitor
+  - Auto-clamps within visible bounds to prevent window loss
+  - Supports bidirectional dragging between Laptop display (`eDP-1`) and External monitor (`HDMI-A-5`)
+- [x] Dedicated "Move to next monitor" button (`desktop_windows`) in titlebar header with target screen tooltip
+- [x] Keyboard shortcuts (`Ctrl+Shift+M` and `Alt+M`) to instantly cycle whiteboard between monitors
+- [x] Bring-to-focused-monitor behavior when opening/toggling from DesktopMenu or IPC while already open
+- [x] 100% in-memory state, document strokes, viewport, and undo/redo history preservation during monitor transitions
+- [x] Clean Wayland layer surface remapping via Loader deactivation/reactivation to avoid `zwlr_layer_surface_v1` crash
 
 ---
 
@@ -81,3 +90,6 @@
 | 16 | Multi-monitor & workspace switching | **PASS** | Closing on `eDP-1` and opening on `HDMI-A-5` preserves exact board and viewport (`hdmi_workspace7_reopened.png`). |
 | 17 | Persistence across Quickshell reload | **PASS** | State saved in `active.json`; auto-saved and restored seamlessly. |
 | 18 | Toolbar input isolation & click mask | **PASS** | Layer-shell surface mask passes clicks outside window; toolbar clicks do not bleed into drawing. |
+| 19 | Cross-monitor titlebar drag & drop | **PASS** | Bidirectional dragging: `eDP-1` -> `HDMI-A-5` (`drag_laptop_to_external.png`) and `HDMI-A-5` -> `eDP-1` (`drag_external_to_laptop.png`). |
+| 20 | Move-to-monitor header button | **PASS** | Titlebar `desktop_windows` button switches window to the other display instantly. |
+| 21 | IPC & DesktopMenu monitor targeting | **PASS** | Opening via DesktopMenu or `whiteboard open` brings window to current focused monitor. |
