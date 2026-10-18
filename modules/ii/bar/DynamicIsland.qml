@@ -52,11 +52,21 @@ Item {
             if (r >= 9999 || r >= islandRoot.pillHeight / 2) return islandRoot.pillHeight / 2;
             return Math.max(Appearance.rounding.unsharpenmore, r);
         }
-        // 2. Dynamic Island shape setting from Settings -> Bar -> Dynamic Island
+        // 2. Specific Dynamic Island radius setting (e.g. from slider)
+        if (Config.options.bar?.dynamicIsland?.radius !== undefined && Config.options.bar.dynamicIsland.radius > 0) {
+            const r = Config.options.bar.dynamicIsland.radius;
+            if (r >= 9999 || r >= islandRoot.pillHeight / 2) return islandRoot.pillHeight / 2;
+            return Math.max(Appearance.rounding.unsharpenmore, r);
+        }
+        // 3. Dynamic Island shape preset setting from Settings -> Bar -> Dynamic Island
         const shape = Config.options.bar?.dynamicIsland?.shape ?? "pill";
         if (shape === "subtle") return Appearance.rounding.unsharpenmore; // 6px
         if (shape === "rounded") return Appearance.rounding.small; // 12px
-        // 3. Default is "pill" (original rounded capsule)
+        // 4. Bar-wide group radius fallback if set
+        if (Config.options.bar?.groupRadius !== undefined && Config.options.bar.groupRadius < 9999) {
+            return Math.max(Appearance.rounding.unsharpenmore, Math.min(islandRoot.pillHeight / 2, Config.options.bar.groupRadius));
+        }
+        // 5. Default is "pill" (original rounded capsule)
         return islandRoot.pillHeight / 2;
     }
 

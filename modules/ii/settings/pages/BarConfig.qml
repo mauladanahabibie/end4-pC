@@ -275,6 +275,44 @@ ContentPage {
                         { displayName: Translation.tr("Segmented"), icon: "tablet",           value: "segmented" },
                     ]
                 }
+                ConfigSelectionArray {
+                    text: Translation.tr("Pill rounding")
+                    icon: "rounded_corner"
+                    enabled: Config.options.bar.borderless === "pills" || Config.options.bar.borderless === "separated"
+                    currentValue: {
+                        const r = Config.options.bar.groupRadius ?? 9999;
+                        if (r >= 9999 || r >= 16) return "pill";
+                        if (r >= 12) return "rounded";
+                        return "subtle";
+                    }
+                    onSelected: newValue => {
+                        if (newValue === "pill") Config.options.bar.groupRadius = 9999;
+                        else if (newValue === "rounded") Config.options.bar.groupRadius = 14;
+                        else if (newValue === "subtle") Config.options.bar.groupRadius = 8;
+                    }
+                    options: [
+                        { displayName: Translation.tr("Pill"),    icon: "pill",           value: "pill" },
+                        { displayName: Translation.tr("Rounded"), icon: "rounded_corner", value: "rounded" },
+                        { displayName: Translation.tr("Subtle"),  icon: "crop_square",    value: "subtle" }
+                    ]
+                }
+                ConfigSlider {
+                    buttonIcon: "rounded_corner"
+                    text: Translation.tr("Pill radius")
+                    usePercentTooltip: false
+                    enabled: Config.options.bar.borderless === "pills" || Config.options.bar.borderless === "separated"
+                    from: 4
+                    to: 20
+                    stepSize: 1
+                    value: {
+                        const r = Config.options.bar.groupRadius ?? 9999;
+                        return r >= 9999 ? 20 : Math.min(20, Math.max(4, r));
+                    }
+                    onMoved: {
+                        const v = Math.round(value);
+                        Config.options.bar.groupRadius = v >= 20 ? 9999 : v;
+                    }
+                }
                 ColorSelectionArray {
                     icon: "brush"
                     text: Translation.tr("Group Color")
@@ -422,13 +460,50 @@ ContentPage {
                 ConfigSelectionArray {
                     text: Translation.tr("Island shape")
                     icon: "rounded_corner"
-                    currentValue: Config.options.bar.dynamicIsland.shape ?? "pill"
-                    onSelected: newValue => { Config.options.bar.dynamicIsland.shape = newValue; }
+                    currentValue: {
+                        const s = Config.options.bar.dynamicIsland.shape ?? "pill";
+                        const r = Config.options.bar.dynamicIsland.radius;
+                        if (r !== undefined && r > 0) {
+                            if (r >= 16) return "pill";
+                            if (r >= 11) return "rounded";
+                            return "subtle";
+                        }
+                        return s;
+                    }
+                    onSelected: newValue => {
+                        Config.options.bar.dynamicIsland.shape = newValue;
+                        if (newValue === "pill") Config.options.bar.dynamicIsland.radius = 16;
+                        else if (newValue === "rounded") Config.options.bar.dynamicIsland.radius = 12;
+                        else if (newValue === "subtle") Config.options.bar.dynamicIsland.radius = 6;
+                    }
                     options: [
                         { displayName: Translation.tr("Pill"),    icon: "pill",           value: "pill" },
                         { displayName: Translation.tr("Rounded"), icon: "rounded_corner", value: "rounded" },
                         { displayName: Translation.tr("Subtle"),  icon: "crop_square",    value: "subtle" }
                     ]
+                }
+                ConfigSlider {
+                    buttonIcon: "rounded_corner"
+                    text: Translation.tr("Island radius")
+                    usePercentTooltip: false
+                    from: 4
+                    to: 16
+                    stepSize: 1
+                    value: {
+                        const r = Config.options.bar.dynamicIsland.radius;
+                        if (r !== undefined && r > 0) return Math.min(16, Math.max(4, r));
+                        const s = Config.options.bar.dynamicIsland.shape ?? "pill";
+                        if (s === "subtle") return 6;
+                        if (s === "rounded") return 12;
+                        return 16;
+                    }
+                    onMoved: {
+                        const v = Math.round(value);
+                        Config.options.bar.dynamicIsland.radius = v;
+                        if (v >= 16) Config.options.bar.dynamicIsland.shape = "pill";
+                        else if (v >= 11) Config.options.bar.dynamicIsland.shape = "rounded";
+                        else Config.options.bar.dynamicIsland.shape = "subtle";
+                    }
                 }
             }
 

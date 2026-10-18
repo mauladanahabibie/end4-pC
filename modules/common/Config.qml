@@ -545,6 +545,7 @@ Singleton {
                 property string groupColor: "layer1"
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property string borderless: "pills"
+                property int groupRadius: 9999
                 property list<var> widgetStyles: []
                 property string topLeftIcon: "spark" // Options: "distro" or any icon name in ~/.config/quickshell/ii/assets/icons
                 property bool showBackground: true
@@ -571,6 +572,7 @@ Singleton {
 
                 property JsonObject dynamicIsland: JsonObject {
                     property string shape: "pill" // "pill", "rounded", "subtle"
+                    property int radius: 16
                     property string visualizerStyle: "dots" // "dots", "wave", "none"
                     property bool showMediaControls: false
                     property string leftWidget: "none"

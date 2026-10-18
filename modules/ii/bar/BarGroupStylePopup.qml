@@ -207,11 +207,17 @@ PopupWindow {
                     text: Translation.tr("Radius")
                     textWidth: 90
                     usePercentTooltip: false
-                    from: 0
-                    to: 30
+                    from: 4
+                    to: 20
                     stepSize: 1
-                    value: root.group.currentRadius
-                    onMoved: root.group.previewStyle("radius", Math.round(value))
+                    value: {
+                        const r = root.group.style.radius ?? (root.group.currentRadius >= 9999 ? 20 : root.group.currentRadius);
+                        return Math.min(20, Math.max(4, r >= 9999 ? 20 : r));
+                    }
+                    onMoved: {
+                        const v = Math.round(value);
+                        root.group.previewStyle("radius", v >= 20 ? 9999 : v);
+                    }
                     onPressedChanged: if (!pressed) root.group.commitPreview()
                 }
                 ConfigSlider {

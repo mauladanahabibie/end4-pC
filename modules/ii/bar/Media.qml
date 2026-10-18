@@ -39,6 +39,9 @@ Item {
             if (r >= 9999) return Appearance.rounding.full;
             return r;
         }
+        if (Config.options.bar?.groupRadius !== undefined && Config.options.bar.groupRadius < 9999) {
+            return Config.options.bar.groupRadius;
+        }
         return Appearance.rounding.full;
     }
 
