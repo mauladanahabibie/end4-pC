@@ -468,7 +468,6 @@ AbstractBackgroundWidget {
 
                 onPressed: (mouse) => {
                     root.resizing = true
-                    root.draggable = false
                     startSize = root.widgetSize
                     var globalPos = mapToItem(null, mouse.x, mouse.y)
                     startX = globalPos.x
@@ -481,8 +480,7 @@ AbstractBackgroundWidget {
                     root.widgetSize = Math.max(80, startSize + delta)
                 }
                 onReleased: {
-                    root.resizing =false
-                    root.draggable = root.placementStrategy === "free" && !Config.options.background.widgetsLocked
+                    root.resizing = false
                     root.setVideoSize(root.widgetSize)
                 }
             }

@@ -21,11 +21,12 @@ MouseArea {
     property bool groupDragActive: false
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
-    drag.target: draggable ? dragProxy : undefined
-    cursorShape: (draggable && containsPress) ? Qt.ClosedHandCursor : draggable ? Qt.OpenHandCursor : Qt.ArrowCursor
+    drag.target: (draggable && !Config.options.background.widgetsLocked) ? dragProxy : undefined
+    cursorShape: (draggable && !Config.options.background.widgetsLocked && containsPress) ? Qt.ClosedHandCursor : (draggable && !Config.options.background.widgetsLocked) ? Qt.OpenHandCursor : Qt.ArrowCursor
 
     onPressed: (mouse) => {
         if (mouse.button !== Qt.LeftButton) return
+        if (Config.options.background.widgetsLocked) return
         var canvas = findCanvas(root.parent)
         if (canvas) {
             canvas.bringToFront(root)
@@ -37,6 +38,8 @@ MouseArea {
     onClicked: (mouse) => {
         if (mouse.button === Qt.RightButton) {
             Config.options.background.widgetsLocked = !Config.options.background.widgetsLocked
+        } else if (Config.options.background.widgetsLocked) {
+            return
         } else if (mouse.modifiers & Qt.ControlModifier) {
             root.selected = !root.selected
         } else {
@@ -99,24 +102,24 @@ MouseArea {
         target: root
         property: "x"
         value: root.snapEnabled ? root.snap(dragProxy.x) : dragProxy.x
-        when: root.dragging
+        when: root.dragging && !Config.options.background.widgetsLocked
         restoreMode: Binding.RestoreNone
     }
     Binding {
         target: root
         property: "y"
         value: root.snapEnabled ? root.snap(dragProxy.y) : dragProxy.y
-        when: root.dragging
+        when: root.dragging && !Config.options.background.widgetsLocked
         restoreMode: Binding.RestoreNone
     }
 
     onXChanged: {
-        if (!root.dragging) return
+        if (!root.dragging || Config.options.background.widgetsLocked) return
         var canvas = findCanvas(root.parent)
         if (canvas) canvas.updateGroupDrag(root)
     }
     onYChanged: {
-        if (!root.dragging) return
+        if (!root.dragging || Config.options.background.widgetsLocked) return
         var canvas = findCanvas(root.parent)
         if (canvas) canvas.updateGroupDrag(root)
     }

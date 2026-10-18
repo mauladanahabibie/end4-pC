@@ -37,7 +37,8 @@ AbstractWidget {
         animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
     }
 
-    draggable: placementStrategy === "free" && !Config.options.background.widgetsLocked
+    property bool resizing: false
+    draggable: !resizing && placementStrategy === "free" && !Config.options.background.widgetsLocked
 
     function requestDelete() {
         Config.options.background.widgets[root.configEntryName].enable = false

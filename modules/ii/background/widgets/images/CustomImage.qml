@@ -234,7 +234,6 @@ AbstractBackgroundWidget {
 
                 onPressed: (mouse) => {
                     root.resizing = true
-                    root.draggable = false
                     startSize = root.widgetSize
                     var globalPos = mapToItem(null, mouse.x, mouse.y)
                     startX = globalPos.x
@@ -248,7 +247,6 @@ AbstractBackgroundWidget {
                 }
                 onReleased: {
                     root.resizing = false
-                    root.draggable = root.placementStrategy === "free" && !Config.options.background.widgetsLocked
                     root.setImageSize(root.widgetSize)
                 }
             }

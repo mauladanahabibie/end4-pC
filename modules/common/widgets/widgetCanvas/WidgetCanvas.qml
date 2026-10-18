@@ -87,6 +87,7 @@ MouseArea {
     }
 
     function beginGroupDrag(initiator) {
+        if (Config.options.background.widgetsLocked) return
         if (!initiator.selected) {
             root.groupDragMemberStarts = []
             return
@@ -100,6 +101,7 @@ MouseArea {
     }
 
     function updateGroupDrag(initiator) {
+        if (Config.options.background.widgetsLocked) return
         if (root.groupDragMemberStarts.length === 0) return
         const dx = initiator.x - root.groupDragStartX
         const dy = initiator.y - root.groupDragStartY
@@ -115,6 +117,16 @@ MouseArea {
             entry.widget.commitPosition()
         }
         root.groupDragMemberStarts = []
+    }
+
+    Connections {
+        target: Config.options.background
+        function onWidgetsLockedChanged() {
+            if (Config.options.background.widgetsLocked) {
+                root.clearSelection()
+                root.setDragging(false)
+            }
+        }
     }
 
     onPressed: (mouse) => {

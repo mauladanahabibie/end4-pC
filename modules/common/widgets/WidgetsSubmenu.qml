@@ -25,11 +25,20 @@ Item {
         spacing: 2
 
         ConfigSwitch {
+            id: lockSwitch
             Layout.fillWidth: true
-            buttonIcon: "lock"
+            buttonIcon: Config.options.background.widgetsLocked ? "lock" : "lock_open"
             text: Translation.tr("Lock widget positions")
             checked: Config.options.background.widgetsLocked
-            onCheckedChanged: Config.options.background.widgetsLocked = checked
+            onCheckedChanged: {
+                if (Config.options.background.widgetsLocked !== checked)
+                    Config.options.background.widgetsLocked = checked
+            }
+            Binding {
+                target: lockSwitch
+                property: "checked"
+                value: Config.options.background.widgetsLocked
+            }
         }
         ConfigSwitch {
             Layout.fillWidth: true
