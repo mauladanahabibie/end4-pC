@@ -14,8 +14,20 @@ Item {
     Layout.topMargin: 25
 
     Rectangle {
-        property real itemHeight: tabBarColumn.children[0]?.baseSize ?? 56
-        property real baseHighlightHeight: tabBarColumn.children[0]?.baseHighlightHeight ?? 56
+        property real itemHeight: {
+            for (let i = 0; i < tabBarColumn.children.length; i++) {
+                const c = tabBarColumn.children[i];
+                if (c && c.baseSize !== undefined) return c.baseSize;
+            }
+            return 56;
+        }
+        property real baseHighlightHeight: {
+            for (let i = 0; i < tabBarColumn.children.length; i++) {
+                const c = tabBarColumn.children[i];
+                if (c && c.baseHighlightHeight !== undefined) return c.baseHighlightHeight;
+            }
+            return 56;
+        }
         anchors {
             top: tabBarColumn.top
             left: tabBarColumn.left
@@ -24,7 +36,13 @@ Item {
         radius: Config.options.settings.style === "minimal" ? Appearance.rounding.small : Appearance.rounding.full
         color: root.colToggled
         implicitHeight: root.expanded ? itemHeight : baseHighlightHeight
-        implicitWidth: tabBarColumn?.children[root.currentIndex]?.visualWidth ?? 100
+        implicitWidth: {
+            for (let i = 0; i < tabBarColumn.children.length; i++) {
+                const c = tabBarColumn.children[i];
+                if (c && c.visualWidth !== undefined) return c.visualWidth;
+            }
+            return 100;
+        }
 
         Behavior on anchors.topMargin {
             NumberAnimation {

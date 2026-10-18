@@ -81,7 +81,7 @@ Item {
             }
 
             // Pick the one with non-empty trackArtUrl, or fallback to the first
-            let chosenIdx = group.find(idx => players[idx]?.trackArtUrl && players[idx].trackArtUrl.length > 0);
+            let chosenIdx = group.find(idx => players[idx] && players[idx].trackArtUrl && players[idx].trackArtUrl.length > 0);
             if (chosenIdx === undefined)
                 chosenIdx = group[0];
 
@@ -171,7 +171,7 @@ Item {
             order: root.sectionOrder
             editMode: root.editMode && root.editTab === "layout"
             fillKey: "notifications"
-            fillMinHeight: 120
+            fillMinHeight: 60
             onReordered: newOrder => Config.options.sidebar.sectionOrder = newOrder
             componentForKey: key => root.sectionComponents[key] ?? null
             isKeyActive: key => root.sectionActive(key)

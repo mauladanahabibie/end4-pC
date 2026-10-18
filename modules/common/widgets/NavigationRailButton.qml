@@ -19,6 +19,8 @@ TabButton {
     property real baseSize: Config.options.settings.style === "minimal" ? 46 : 56
     property real baseHighlightHeight: 32
     property real highlightCollapsedTopMargin: 8
+    property real iconSize: 24
+    property real fontSize: 14
     padding: 0
 
     // The navigation item’s target area always spans the full width of the
@@ -102,7 +104,7 @@ TabButton {
                 id: navRailButtonIcon
                 rotation: root.buttonIconRotation
                 anchors.centerIn: parent
-                iconSize: 24
+                iconSize: root.iconSize
                 fill: toggled ? 1 : 0
                 font.weight: (toggled || root.hovered) ? Font.DemiBold : Font.Normal
                 text: buttonIcon
@@ -119,7 +121,7 @@ TabButton {
             visible: Config.options.settings.style !== "minimal"
             anchors {
                 top: itemIconBackground.bottom
-                topMargin: 2
+                topMargin: root.baseSize < 52 ? 0 : 2
                 horizontalCenter: itemIconBackground.horizontalCenter
             }
             states: State {
@@ -143,7 +145,7 @@ TabButton {
                 }
             }
             text: buttonText
-            font.pixelSize: 14
+            font.pixelSize: root.fontSize
             color: Appearance.colors.colOnLayer1
         }
     }

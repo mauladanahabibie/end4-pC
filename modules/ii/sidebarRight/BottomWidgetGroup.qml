@@ -1,10 +1,12 @@
-pragma ComponentBehavior: Bound
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
 import qs.modules.ii.sidebarRight.calendar
 import qs.modules.ii.sidebarRight.todo
 import qs.modules.ii.sidebarRight.pomodoro
+import qs.modules.ii.sidebarRight.notepad
+import qs.modules.ii.sidebarRight.calculator
+import qs.modules.ii.sidebarRight.converter
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,8 +15,8 @@ Rectangle {
     radius: Appearance.rounding.normal
     color: Appearance.colors.colLayer1
     clip: true
-    implicitHeight: collapsed ? collapsedBottomWidgetGroupRow.implicitHeight : 350
-    property int selectedTab: Persistent.states.sidebar.bottomGroup.tab
+    implicitHeight: collapsed ? collapsedBottomWidgetGroupRow.implicitHeight : 330
+    property int selectedTab: Math.max(0, Math.min(Persistent.states.sidebar.bottomGroup.tab, tabs.length - 1))
     property int previousIndex: -1
     property bool collapsed: Persistent.states.sidebar.bottomGroup.collapsed
     property var tabs: [
@@ -35,6 +37,24 @@ Rectangle {
             "name": Translation.tr("Timer"),
             "icon": "schedule",
             "widget": "pomodoro/PomodoroWidget.qml"
+        },
+        {
+            "type": "notepad",
+            "name": Translation.tr("Notes"),
+            "icon": "edit_note",
+            "widget": "notepad/NotepadWidget.qml"
+        },
+        {
+            "type": "calculator",
+            "name": Translation.tr("Calculator"),
+            "icon": "calculate",
+            "widget": "calculator/CalculatorWidget.qml"
+        },
+        {
+            "type": "converter",
+            "name": Translation.tr("Converter"),
+            "icon": "sync_alt",
+            "widget": "converter/ConverterWidget.qml"
         },
     ]
 
@@ -145,34 +165,11 @@ Rectangle {
             Layout.fillHeight: true
             Layout.fillWidth: false
             Layout.leftMargin: 10
-            Layout.topMargin: 10
+            Layout.topMargin: root.tabs.length > 4 ? 4 : 10
             implicitWidth: tabBar.implicitWidth
-            // Navigation rail buttons
-            NavigationRailTabArray {
-                id: tabBar
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.leftMargin: 5
-                currentIndex: root.selectedTab
-                expanded: false
-                Repeater {
-                    model: root.tabs
-                    NavigationRailButton {
-                        required property int index
-                        required property var modelData
-                        showToggledHighlight: false
-                        toggled: root.selectedTab == index
-                        buttonText: modelData.name
-                        buttonIcon: modelData.icon
-                        onPressed: {
-                            root.selectedTab = index;
-                            Persistent.states.sidebar.bottomGroup.tab = index;
-                        }
-                    }
-                }
-            }
             // Collapse button
             CalendarHeaderButton {
+                id: collapseButton
                 anchors.left: parent.left
                 anchors.top: parent.top
                 forceCircle: true
@@ -184,6 +181,37 @@ Rectangle {
                     iconSize: Appearance.font.pixelSize.larger
                     horizontalAlignment: Text.AlignHCenter
                     color: Appearance.colors.colOnLayer1
+                }
+            }
+
+            // Navigation rail buttons
+            NavigationRailTabArray {
+                id: tabBar
+                height: implicitHeight
+                anchors.top: collapseButton.bottom
+                anchors.topMargin: root.tabs.length > 4 ? 2 : 10
+                anchors.left: parent.left
+                anchors.leftMargin: 5
+                currentIndex: root.selectedTab
+                expanded: false
+                Repeater {
+                    model: root.tabs
+                    NavigationRailButton {
+                        required property int index
+                        required property var modelData
+                        baseSize: root.tabs.length > 4 ? 44 : (Config.options.settings.style === "minimal" ? 46 : 56)
+                        baseHighlightHeight: root.tabs.length > 4 ? 24 : 32
+                        iconSize: root.tabs.length > 4 ? 18 : 24
+                        fontSize: root.tabs.length > 4 ? 10 : 14
+                        showToggledHighlight: false
+                        toggled: root.selectedTab == index
+                        buttonText: modelData.name
+                        buttonIcon: modelData.icon
+                        onPressed: {
+                            root.selectedTab = index;
+                            Persistent.states.sidebar.bottomGroup.tab = index;
+                        }
+                    }
                 }
             }
         }
@@ -199,18 +227,26 @@ Rectangle {
                 anchors.fill: parent
                 anchors.bottomMargin: -anchors.topMargin
 
+                onStatusChanged: {
+                    if (tabStack.status === Loader.Error) {
+                        console.error("[BottomWidgetGroup] Error loading tab:", tabStack.source);
+                    } else if (tabStack.status === Loader.Ready) {
+                        console.log("[BottomWidgetGroup] Successfully loaded tab:", tabStack.source);
+                    }
+                }
+
                 Component.onCompleted: {
-                    tabStack.source = root.tabs[root.selectedTab].widget;
+                    tabStack.source = (root.tabs[root.selectedTab] && root.tabs[root.selectedTab].widget) ? root.tabs[root.selectedTab].widget : root.tabs[0].widget;
                 }
 
                 Connections {
                     target: root
                     function onSelectedTabChanged() {
-                        if (root.currentTab > root.previousIndex)
+                        if (root.selectedTab > root.previousIndex)
                             tabSwitchBehavior.animation.down = true;
-                        else if (root.currentTab < root.previousIndex)
+                        else if (root.selectedTab < root.previousIndex)
                             tabSwitchBehavior.animation.down = false;
-                        tabStack.source = root.tabs[root.selectedTab].widget;
+                        tabStack.source = (root.tabs[root.selectedTab] && root.tabs[root.selectedTab].widget) ? root.tabs[root.selectedTab].widget : root.tabs[0].widget;
                     }
                 }
 
@@ -249,7 +285,7 @@ Rectangle {
         PropertyAction {
             target: tabStack
             property: "source"
-            value: root.tabs[root.selectedTab].widget
+            value: (root.tabs[root.selectedTab] && root.tabs[root.selectedTab].widget) ? root.tabs[root.selectedTab].widget : root.tabs[0].widget
         } // The source change happens here
         ParallelAnimation {
             PropertyAnimation {
