@@ -13,7 +13,8 @@ Item {
 
     required property var fileModelData
     property bool isDirectory: fileModelData ? Boolean(fileModelData.fileIsDir) : false
-    property bool useThumbnail: fileModelData ? Images.isValidImageByName(fileModelData.fileName) : false
+    readonly property bool isVideo: fileModelData ? Images.isValidVideoByName(fileModelData.fileName) : false
+    property bool useThumbnail: fileModelData ? Images.isValidMediaByName(fileModelData.fileName) : false
     property alias colBackground: background.color
     property alias colText: wallpaperItemName.color
     property alias radius: background.radius
@@ -77,7 +78,7 @@ Item {
                     ThumbnailImage {
                         id: thumbnailImage
                         anchors.fill: parent
-                        generateThumbnail: false
+                        generateThumbnail: true
                         sourcePath: (fileModelData && fileModelData.filePath) ? fileModelData.filePath : ""
                         cache: false
                         fillMode: Image.PreserveAspectCrop
@@ -126,6 +127,30 @@ Item {
                         sourceSize.height: root.imageHeight
                     }
 
+                }
+
+                // Video indicator badge
+                Rectangle {
+                    visible: root.isVideo
+                    anchors {
+                        top: parent.top
+                        right: parent.right
+                        margins: 6
+                    }
+                    width: 24
+                    height: 24
+                    radius: 12
+                    color: Appearance.colors.colLayer1
+                    opacity: 0.9
+                    z: 5
+
+                    MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "play_arrow"
+                        iconSize: 15
+                        color: Appearance.colors.colPrimary
+                        fill: 1
+                    }
                 }
 
             }

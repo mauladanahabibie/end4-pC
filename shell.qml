@@ -51,6 +51,7 @@ ShellRoot {
         Football.load()
         Updates.load()
         LyricsService.restartLyrics()
+        LiveWallpaper.load()
     }
     
     PanelFamilyLoader {

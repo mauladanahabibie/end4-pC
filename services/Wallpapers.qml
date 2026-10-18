@@ -1,3 +1,4 @@
+import qs
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
@@ -32,8 +33,9 @@ Singleton {
     property var orderMap: ({})
     property bool orderLoaded: false
     property string searchQuery: ""
-    readonly property list<string> extensions: [ // TODO: add videos
-        "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg"
+    readonly property list<string> extensions: [
+        "jpg", "jpeg", "png", "webp", "avif", "bmp", "svg",
+        "mp4", "webm", "mkv", "avi", "mov"
     ]
     property list<string> wallpapers: [] // List of absolute file paths (without file://)
     readonly property bool thumbnailGenerationRunning: thumbgenProc.running
@@ -49,7 +51,7 @@ Singleton {
 
     function startPreview(path) {
         if (!path || path.length === 0) return;
-        root.previewPath = path;
+        root.previewPath = FileUtils.trimFileProtocol(path);
     }
 
     function stopPreview() {
@@ -71,9 +73,44 @@ Singleton {
 
     function apply(path, darkMode = Appearance.m3colors.darkmode) {
         if (!path || path.length === 0) return;
-        root.confirmedPath = path;
-        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", darkMode ? "dark" : "light", "--image", path]);
-        root.changed()
+        const cleanPath = FileUtils.trimFileProtocol(path);
+        root.confirmedPath = cleanPath;
+        if (Config.options?.background) {
+            Config.options.background.wallpaperPath = cleanPath;
+        }
+        Config.setNestedValue("background.wallpaperPath", cleanPath);
+        Quickshell.execDetached([Directories.wallpaperSwitchScriptPath, "--mode", darkMode ? "dark" : "light", "--image", cleanPath]);
+        root.changed();
+    }
+
+    function refresh() {
+        folderModel.refresh();
+        debounceRebuildTimer.restart();
+        ensureThumbnails();
+    }
+
+    function ensureThumbnails(size = "x-large") {
+        if (!thumbgenProc.running) {
+            root.generateThumbnail(size);
+        }
+    }
+
+    Connections {
+        target: GlobalStates
+        function onWallpaperSelectorOpenChanged() {
+            if (GlobalStates.wallpaperSelectorOpen) {
+                root.refresh();
+            }
+        }
+    }
+
+    Connections {
+        target: Config.options?.background ?? null
+        function onWallpaperPathChanged() {
+            if (Config.options?.background?.wallpaperPath === root.confirmedPath) {
+                root.confirmedPath = "";
+            }
+        }
     }
 
     Process {
@@ -101,7 +138,23 @@ Singleton {
     }
 
     function select(filePath, darkMode = Appearance.m3colors.darkmode, onFileSelected = null) {
-        selectProc.select(filePath, darkMode, onFileSelected);
+        if (!filePath) return;
+        const cleanPath = FileUtils.trimFileProtocol(filePath);
+        for (let i = 0; i < wallpaperModel.count; i++) {
+            const it = wallpaperModel.get(i);
+            if (it && (it.filePath === cleanPath || it.fileName === cleanPath)) {
+                if (it.fileIsDir) {
+                    setDirectory(cleanPath);
+                    return;
+                }
+                break;
+            }
+        }
+        if (onFileSelected) {
+            onFileSelected(cleanPath);
+        } else {
+            root.apply(cleanPath, darkMode);
+        }
     }
 
     function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode) {
@@ -538,6 +591,10 @@ Singleton {
 
         function moveWallpaper(fromIndex: int, toIndex: int): void {
             root.moveWallpaper(fromIndex, toIndex);
+        }
+
+        function refresh(): void {
+            root.refresh();
         }
     }
 }

@@ -1035,6 +1035,31 @@ ContentPage {
                     }
                 }
             }
+
+            ContentSubsection {
+                title: Translation.tr("Live wallpaper")
+                GroupedList {
+                    ConfigSwitch {
+                        buttonIcon: "video_library"
+                        text: Translation.tr("Enable on lock screen")
+                        checked: Config.options.lock.liveWallpaper?.enable ?? true
+                        onCheckedChanged: {
+                            if (!Config.options.lock.liveWallpaper) Config.options.lock.liveWallpaper = {};
+                            Config.options.lock.liveWallpaper.enable = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        buttonIcon: "play_arrow"
+                        enabled: Config.options.lock.liveWallpaper?.enable ?? true
+                        text: Translation.tr("Play video on lock screen")
+                        checked: Config.options.lock.liveWallpaper?.playVideo ?? true
+                        onCheckedChanged: {
+                            if (!Config.options.lock.liveWallpaper) Config.options.lock.liveWallpaper = {};
+                            Config.options.lock.liveWallpaper.playVideo = checked;
+                        }
+                    }
+                }
+            }
         }
 
         ContentSection {

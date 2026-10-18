@@ -522,7 +522,11 @@ AbstractBackgroundWidget {
 
                         Image {
                             anchors.fill: parent
-                            source: Config.options.sidebar.bannerImage || Config.options.background.wallpaperPath
+                            source: {
+                                if (Config.options.sidebar.bannerImage) return Config.options.sidebar.bannerImage;
+                                const wp = Config.options.background.wallpaperPath;
+                                return Images.isValidVideoByName(wp) ? (Config.options.background.thumbnailPath || "") : wp;
+                            }
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             cache: false

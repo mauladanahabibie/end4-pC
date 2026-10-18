@@ -209,8 +209,11 @@ Variants {
         Connections {
             target: GlobalStates
             function onScreenLockedChanged() {
-                if (!GlobalStates.screenLocked) {
-                    bgRoot.videoRevealed = bgRoot.wallpaperIsVideo
+                if (GlobalStates.screenLocked) {
+                    const lockLive = Config.options.lock?.liveWallpaper?.enable ?? true;
+                    bgRoot.videoRevealed = bgRoot.wallpaperIsVideo && lockLive;
+                } else {
+                    bgRoot.videoRevealed = bgRoot.wallpaperIsVideo;
                 }
             }
         }
@@ -299,6 +302,7 @@ Variants {
                 active: Config.options.lock.blur.enable && !centeredWallpaper.centeredWallpaperEnabled
                     && (GlobalStates.screenLocked || scaleAnim.running)
                     && !(bgRoot.userBlurActive || bgRoot.overviewBlurActive)
+                    && !(bgRoot.wallpaperIsVideo && (Config.options.lock?.liveWallpaper?.enable ?? true))
                 anchors.fill: parent
                 scale: GlobalStates.screenLocked ? Config.options.lock.blur.extraZoom : 1
                 Behavior on scale {

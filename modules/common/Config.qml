@@ -501,6 +501,7 @@ Singleton {
                 }
                 property JsonObject liveWallpaper: JsonObject {
                     property bool pauseOnBattery: false // Pause as soon as the charger is out
+                    property bool resumeWhenCharging: true // Resume when plugged back into power
                     property real pauseBelowPercent: 0 // Or only under this charge, 0 to ignore
                 }
                 property list<string> screenList: [] 
@@ -773,6 +774,10 @@ Singleton {
                     property bool requirePasswordToPower: false
                 }
                 property bool materialShapeChars: true
+                property JsonObject liveWallpaper: JsonObject {
+                    property bool enable: true
+                    property bool playVideo: true
+                }
             }
 
             property JsonObject media: JsonObject {

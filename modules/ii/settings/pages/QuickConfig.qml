@@ -27,7 +27,8 @@ ContentPage {
         Layout.fillHeight: true
         Layout.preferredWidth: 46
         toggled: Appearance.m3colors.darkmode === dark
-        colBackground: toggled ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colLayer2, 0.45)
+        colBackground: toggled ? Appearance.colors.colPrimary : ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.08 : 0.06)
+        colBackgroundHover: toggled ? Appearance.colors.colPrimaryHover : ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.16 : 0.12)
         onClicked: {
             Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${dark ? "dark" : "light"} --noswitch`]);
         }
@@ -53,15 +54,18 @@ ContentPage {
         property real cardRadius: Appearance.rounding.large
         default property alias content: contentHolder.data
 
+        Rectangle {
+            id: glassCardMask
+            anchors.fill: parent
+            radius: glass.cardRadius
+            visible: false
+        }
+
         Item {
             anchors.fill: parent
             layer.enabled: true
             layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: glass.width
-                    height: glass.height
-                    radius: glass.cardRadius
-                }
+                maskSource: glassCardMask
             }
 
             ShaderEffectSource {
@@ -78,7 +82,7 @@ ContentPage {
             }
             Rectangle {
                 anchors.fill: parent
-                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.4)
+                color: ColorUtils.applyAlpha(Appearance.colors.colLayer1Base, Appearance.m3colors.darkmode ? 0.78 : 0.88)
             }
         }
 
@@ -86,6 +90,8 @@ ContentPage {
             anchors.fill: parent
             radius: glass.cardRadius
             color: "transparent"
+            border.width: 1
+            border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.12 : 0.18)
         }
 
         Item {
@@ -103,12 +109,14 @@ ContentPage {
         function syncBackdropRect() {
             if (!backdrop)
                 return
-            const p = glassPopup.mapToItem(backdrop, 0, 0)
-            const x = Math.max(0, Math.min(p.x, backdrop.width - glassPopup.width))
-            const y = Math.max(0, Math.min(p.y, backdrop.height - glassPopup.height))
-            const w = Math.min(glassPopup.width, backdrop.width)
-            const h = Math.min(glassPopup.height, backdrop.height)
-            popupBlurSource.sourceRect = Qt.rect(x, y, w, h)
+            try {
+                const p = glassPopup.mapToItem(backdrop, 0, 0)
+                const x = Math.max(0, Math.min(p.x, backdrop.width - glassPopup.width))
+                const y = Math.max(0, Math.min(p.y, backdrop.height - glassPopup.height))
+                const w = Math.min(glassPopup.width, backdrop.width)
+                const h = Math.min(glassPopup.height, backdrop.height)
+                popupBlurSource.sourceRect = Qt.rect(x, y, w, h)
+            } catch (e) {}
         }
         onWidthChanged: syncBackdropRect()
         onHeightChanged: syncBackdropRect()
@@ -125,15 +133,18 @@ ContentPage {
             function onYChanged() { glassPopup.syncBackdropRect() }
         }
 
+        Rectangle {
+            id: glassPopupMask
+            anchors.fill: parent
+            radius: glassPopup.cardRadius
+            visible: false
+        }
+
         Item {
             anchors.fill: parent
             layer.enabled: true
             layer.effect: OpacityMask {
-                maskSource: Rectangle {
-                    width: glassPopup.width
-                    height: glassPopup.height
-                    radius: glassPopup.cardRadius
-                }
+                maskSource: glassPopupMask
             }
 
             ShaderEffectSource {
@@ -149,8 +160,16 @@ ContentPage {
             }
             Rectangle {
                 anchors.fill: parent
-                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.25)
+                color: ColorUtils.applyAlpha(Appearance.colors.colLayer1Base, Appearance.m3colors.darkmode ? 0.85 : 0.94)
             }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: glassPopup.cardRadius
+            color: "transparent"
+            border.width: 1
+            border.color: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.15 : 0.20)
         }
 
         Item {
@@ -193,7 +212,11 @@ ContentPage {
         Layout.fillHeight: true
         Layout.preferredWidth: 48
 
-        colBackground: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
+        toggled: popupVisible
+        colBackground: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.08 : 0.06)
+        colBackgroundHover: ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.16 : 0.12)
+        colBackgroundToggled: ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.22)
+        colBackgroundToggledHover: ColorUtils.applyAlpha(Appearance.colors.colPrimary, 0.30)
 
         contentItem: Item {
             anchors.fill: parent
@@ -202,7 +225,7 @@ ContentPage {
                 anchors.centerIn: parent
                 text: barScreenPopupButton.iconText
                 iconSize: 22
-                color: Appearance.colors.colOnLayer1
+                color: barScreenPopupButton.popupVisible ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer2
             }
         }
 
@@ -272,7 +295,8 @@ ContentPage {
                         Layout.bottomMargin: 2
                         text: barScreenPopupButton.popupTitle
                         font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.45)
+                        font.weight: Font.DemiBold
+                        color: Appearance.colors.colSubtext
                     }
 
                     Flickable {
@@ -305,7 +329,7 @@ ContentPage {
                                 readonly property bool rowHovered: optionMouseArea.containsMouse
 
                                 color: isSelected ? Appearance.colors.colPrimary
-                                    : rowHovered ? ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
+                                    : rowHovered ? ColorUtils.applyAlpha(Appearance.colors.colOnLayer1, Appearance.m3colors.darkmode ? 0.12 : 0.08)
                                     : "transparent"
 
                                 MouseArea {
@@ -329,7 +353,7 @@ ContentPage {
                                     MaterialSymbol {
                                         text: popupOptionRow.modelData.icon
                                         iconSize: Appearance.font.pixelSize.larger
-                                        color: popupOptionRow.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                                        color: popupOptionRow.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
                                     }
 
                                     StyledText {
@@ -338,7 +362,7 @@ ContentPage {
                                         font.pixelSize: Appearance.font.pixelSize.small
                                         font.weight: Font.Medium
                                         elide: Text.ElideRight
-                                        color: popupOptionRow.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                                        color: popupOptionRow.isSelected ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer2
                                     }
 
                                     MaterialSymbol {
@@ -378,6 +402,13 @@ ContentPage {
                 color: Appearance.colors.colLayer2
                 clip: true
 
+                Rectangle {
+                    id: wallpaperMask
+                    anchors.fill: parent
+                    radius: mBox.radius
+                    visible: false
+                }
+
                 StyledImage {
                     id: wallpaperImg
                     anchors.fill: parent
@@ -389,11 +420,7 @@ ContentPage {
                     cache: false
                     layer.enabled: true
                     layer.effect: OpacityMask {
-                        maskSource: Rectangle {
-                            width: mBox.width
-                            height: mBox.height
-                            radius: mBox.radius
-                        }
+                        maskSource: wallpaperMask
                     }
                 }
 
@@ -530,7 +557,7 @@ ContentPage {
                                     anchors.centerIn: parent
                                     text: "colorize"
                                     iconSize: 22
-                                    color: Appearance.colors.colOnLayer1
+                                    color: Appearance.colors.colOnTertiaryContainer
                                 }
                             }
                             StyledToolTip {

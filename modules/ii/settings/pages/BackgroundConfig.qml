@@ -423,8 +423,17 @@ ContentPage {
                         buttonIcon: "battery_saver"
                         text: Translation.tr("Pause on battery")
                         checked: Config.options.background.liveWallpaper.pauseOnBattery
-                        onClicked: {
-                            Config.options.background.liveWallpaper.pauseOnBattery = !Config.options.background.liveWallpaper.pauseOnBattery;
+                        onCheckedChanged: {
+                            Config.options.background.liveWallpaper.pauseOnBattery = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        buttonIcon: "battery_charging_full"
+                        text: Translation.tr("Resume when charging")
+                        checked: Config.options.background.liveWallpaper.resumeWhenCharging ?? true
+                        onCheckedChanged: {
+                            Config.options.background.liveWallpaper.resumeWhenCharging = checked;
                         }
                     }
                     ConfigSpinBox {
@@ -437,6 +446,27 @@ ContentPage {
                         stepSize: 5
                         onValueChanged: {
                             Config.options.background.liveWallpaper.pauseBelowPercent = value;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        buttonIcon: "lock"
+                        text: Translation.tr("Enable on lock screen")
+                        checked: Config.options.lock?.liveWallpaper?.enable ?? true
+                        onCheckedChanged: {
+                            if (!Config.options.lock.liveWallpaper) Config.options.lock.liveWallpaper = {};
+                            Config.options.lock.liveWallpaper.enable = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        Layout.fillWidth: true
+                        buttonIcon: "play_arrow"
+                        enabled: Config.options.lock?.liveWallpaper?.enable ?? true
+                        text: Translation.tr("Play video on lock screen")
+                        checked: Config.options.lock?.liveWallpaper?.playVideo ?? true
+                        onCheckedChanged: {
+                            if (!Config.options.lock.liveWallpaper) Config.options.lock.liveWallpaper = {};
+                            Config.options.lock.liveWallpaper.playVideo = checked;
                         }
                     }
                 }

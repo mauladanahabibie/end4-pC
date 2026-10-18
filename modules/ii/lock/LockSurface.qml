@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
+import QtMultimedia
 import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
 import qs
@@ -111,10 +112,24 @@ MouseArea {
     //     }
     // }
 
+    readonly property string effectiveLockWall: {
+        const customLock = Config.options.background.lockWall ?? ""
+        if (customLock !== "") return customLock
+        return Config.options.background.wallpaperPath ?? ""
+    }
+    readonly property bool lockWallIsVideo: Images.isValidVideoByName(root.effectiveLockWall)
+    readonly property bool isCustomLockWall: (Config.options.background.lockWall ?? "") !== ""
+    readonly property bool lockLiveEnabled: Config.options.lock?.liveWallpaper?.enable ?? true
+    readonly property bool lockLivePlay: Config.options.lock?.liveWallpaper?.playVideo ?? true
+
+    readonly property bool needsOwnBackground: (WM.compositor === "niri")
+        || root.isCustomLockWall
+        || (root.lockWallIsVideo && !root.lockLiveEnabled)
+
     Loader {
         anchors.fill: parent
         z: -1
-        active: WM.compositor === "niri"
+        active: root.needsOwnBackground
 
         sourceComponent: Item {
             anchors.fill: parent
@@ -122,16 +137,80 @@ MouseArea {
             Image {
                 id: lockBgSource
                 anchors.fill: parent
-                source: Config.options.background.wallpaperPath
+                source: {
+                    if (root.lockWallIsVideo) {
+                        return Config.options.background.thumbnailPath || ""
+                    }
+                    return root.effectiveLockWall
+                }
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 cache: true
-                visible: false
+                visible: !lockVideoLoader.active || !root.lockLiveEnabled
             }
+
+            Loader {
+                id: lockVideoLoader
+                anchors.fill: parent
+                active: root.lockWallIsVideo && root.lockLiveEnabled && (root.isCustomLockWall || WM.compositor === "niri")
+                sourceComponent: Item {
+                    anchors.fill: parent
+
+                    MediaPlayer {
+                        id: lockPlayer
+                        source: root.effectiveLockWall !== "" ? "file://" + root.effectiveLockWall : ""
+                        videoOutput: lockVideoOutput
+                        audioOutput: AudioOutput { muted: true; volume: 0 }
+                        loops: MediaPlayer.Infinite
+
+                        readonly property bool powerAllowsPlay: !(Config.options.background.liveWallpaper.pauseOnBattery && Battery.available && !Battery.isPluggedIn)
+
+                        onMediaStatusChanged: {
+                            if (mediaStatus >= MediaPlayer.LoadedMedia) {
+                                if (root.lockLivePlay && powerAllowsPlay) {
+                                    lockPlayer.play()
+                                } else {
+                                    lockPlayer.pause()
+                                }
+                            }
+                        }
+                    }
+
+                    VideoOutput {
+                        id: lockVideoOutput
+                        anchors.fill: parent
+                        fillMode: VideoOutput.PreserveAspectCrop
+                    }
+
+                    Connections {
+                        target: root
+                        function onLockLivePlayChanged() {
+                            if (root.lockLivePlay && lockPlayer.powerAllowsPlay) {
+                                lockPlayer.play()
+                            } else {
+                                lockPlayer.pause()
+                            }
+                        }
+                    }
+
+                    Connections {
+                        target: Battery
+                        function onIsPluggedInChanged() {
+                            if (root.lockLivePlay && lockPlayer.powerAllowsPlay) {
+                                lockPlayer.play()
+                            } else if (!lockPlayer.powerAllowsPlay) {
+                                lockPlayer.pause()
+                            }
+                        }
+                    }
+                }
+            }
+
             FastBlur {
                 anchors.fill: parent
                 source: lockBgSource
-                radius: 0 // fixme
+                radius: (Config.options.lock.blur.enable && !root.lockWallIsVideo) ? Config.options.lock.blur.radius : 0
+                visible: radius > 0
             }
         }
     }

@@ -6,10 +6,20 @@ Singleton {
     // Formats
     readonly property list<string> validImageTypes: ["jpeg", "png", "webp", "tiff", "svg"]
     readonly property list<string> validImageExtensions: ["jpg", "jpeg", "png", "webp", "avif", "bmp", "tif", "tiff", "svg"]
+    readonly property list<string> validVideoExtensions: ["mp4", "webm", "mkv", "avi", "mov"]
 
     function isValidImageByName(name: string): bool {
         const lower = (name || "").toLowerCase();
         return validImageExtensions.some(t => lower.endsWith(`.${t}`));
+    }
+
+    function isValidVideoByName(name: string): bool {
+        const lower = (name || "").toLowerCase();
+        return validVideoExtensions.some(t => lower.endsWith(`.${t}`));
+    }
+
+    function isValidMediaByName(name: string): bool {
+        return isValidImageByName(name) || isValidVideoByName(name);
     }
 
     // Thumbnails

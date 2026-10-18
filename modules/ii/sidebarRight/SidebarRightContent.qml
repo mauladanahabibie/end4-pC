@@ -271,9 +271,14 @@ Item {
                                 width: wallpaperRect.coverWidth
                                 height: wallpaperRect.coverHeight
                                 fillMode: Image.PreserveAspectCrop
-                                source: Config.options.sidebar.bannerImage !== "" 
-                                    ? Config.options.sidebar.bannerImage 
-                                    : Config.options.background.wallpaperPath
+                                source: {
+                                    if (Config.options.sidebar.bannerImage !== "") return Config.options.sidebar.bannerImage;
+                                    const wp = Config.options.background.wallpaperPath;
+                                    if (Images.isValidVideoByName(wp)) {
+                                        return Config.options.background.thumbnailPath || "";
+                                    }
+                                    return wp;
+                                }
                                 cache: false
                                 antialiasing: true
                                 sourceSize.width: wallpaperRect.width * 2

@@ -535,12 +535,10 @@ Item {
                         root.endDrag();
                     } else if (!dragInitiated) {
                         grid.currentIndex = delegateCell.index;
-                        if (GlobalStates.wallpaperSelectorTarget === "lockWall" || !Config.options.background.enableWallpaperPreview) {
-                            root.wallpaperSelected(delegateCell.modelData.filePath);
+                        if (delegateCell.modelData.fileIsDir) {
+                            Wallpapers.setDirectory(delegateCell.modelData.filePath);
                         } else {
-                            if (!delegateCell.modelData.fileIsDir && Config.options.background.enableWallpaperPreview) {
-                                Wallpapers.startPreview(delegateCell.modelData.filePath);
-                            }
+                            root.wallpaperSelected(delegateCell.modelData.filePath);
                         }
                     }
                 }
@@ -549,7 +547,11 @@ Item {
 
                 onDoubleClicked: (mouse) => {
                     if (mouse.button === Qt.LeftButton) {
-                        root.wallpaperSelected(delegateCell.modelData.filePath);
+                        if (delegateCell.modelData.fileIsDir) {
+                            Wallpapers.setDirectory(delegateCell.modelData.filePath);
+                        } else {
+                            root.wallpaperSelected(delegateCell.modelData.filePath);
+                        }
                     }
                 }
             }

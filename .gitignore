@@ -8,3 +8,7 @@
 scripts/pick-video.py
 
 translations/es_MX.json
+
+# Python caches
+__pycache__/
+*.pyc

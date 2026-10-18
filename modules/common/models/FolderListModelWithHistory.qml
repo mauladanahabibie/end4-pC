@@ -38,7 +38,21 @@ FolderListModel {
         root.folder = folderHistory[currentFolderHistoryIndex];
     }
 
+    property bool refreshing: false
+
+    function refresh() {
+        if (root.refreshing) return;
+        root.refreshing = true;
+        const cur = root.folder;
+        root.folder = "";
+        Qt.callLater(() => {
+            root.folder = cur;
+            root.refreshing = false;
+        });
+    }
+
     onFolderChanged: {
+        if (refreshing) return;
         if (historyNavigationLock) {
             historyNavigationLock = false;
             return;

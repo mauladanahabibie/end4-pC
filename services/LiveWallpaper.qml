@@ -1,8 +1,11 @@
 pragma Singleton
 
+import qs
+import qs.services
 import qs.modules.common
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
 import QtQuick
 
 /*
@@ -19,6 +22,8 @@ import QtQuick
 Singleton {
     id: root
 
+    function load() {} // For forcing singleton initialization on shell startup
+
     readonly property string socketPrefix:
         `${Quickshell.env("XDG_RUNTIME_DIR") || "/run/user/1000"}/mpvpaper-`
 
@@ -28,14 +33,28 @@ Singleton {
     property bool paused: false
 
     readonly property bool pauseOnBattery: Config.options?.background.liveWallpaper.pauseOnBattery ?? false
+    readonly property bool resumeWhenCharging: Config.options?.background.liveWallpaper.resumeWhenCharging ?? true
     readonly property real pauseBelowPercent: Config.options?.background.liveWallpaper.pauseBelowPercent ?? 0
+
+    readonly property bool lockLiveEnabled: Config.options?.lock?.liveWallpaper?.enable ?? true
+    readonly property bool lockPlayVideo: Config.options?.lock?.liveWallpaper?.playVideo ?? true
+
+    property bool autoPausedByBattery: false
+    property bool autoPausedByLock: false
+
+    readonly property bool isExternalPowerConnected: {
+        if (!Battery.available) return true;
+        if (typeof UPower !== "undefined" && UPower.onBattery !== undefined) {
+            return !UPower.onBattery;
+        }
+        return Battery.isPluggedIn;
+    }
 
     function sendCommand(json) {
         if (!root.available) return;
-        commandProc.command = ["bash", "-c",
+        Quickshell.execDetached(["bash", "-c",
             `for s in ${root.socketPrefix}*.sock; do [ -S "$s" ] || continue; `
-            + `printf '%s\\n' '${json}' | socat - UNIX-CONNECT:"$s" >/dev/null 2>&1; done`];
-        commandProc.running = true;
+            + `printf '%s\\n' '${json}' | socat - UNIX-CONNECT:"$s" >/dev/null 2>&1; done`]);
     }
 
     function setPaused(value) {
@@ -46,8 +65,6 @@ Singleton {
     function toggle() { root.setPaused(!root.paused) }
     function pause()  { root.setPaused(true) }
     function resume() { root.setPaused(false) }
-
-    Process { id: commandProc }
 
     // Reads back the real state, so a wallpaper change or a restart does not
     // leave the button lying about what is playing.
@@ -67,7 +84,10 @@ Singleton {
                 try {
                     const reply = JSON.parse(line);
                     root.available = reply.error === "success";
-                    if (root.available) root.paused = reply.data === true;
+                    if (root.available) {
+                        root.paused = reply.data === true;
+                        root.evaluatePolicy();
+                    }
                 } catch (e) {
                     root.available = false;
                 }
@@ -78,18 +98,84 @@ Singleton {
     Timer {
         running: true
         repeat: true
-        interval: 4000
+        interval: 3000
         onTriggered: pollProc.running = true
     }
 
     // Policies: a laptop on battery has better things to do than loop a video
     readonly property bool shouldPauseForPower: root.available
-        && Battery.available && !Battery.isPluggedIn
+        && Battery.available && !root.isExternalPowerConnected
         && (root.pauseOnBattery
             || (root.pauseBelowPercent > 0 && Battery.percentage * 100 <= root.pauseBelowPercent))
 
-    onShouldPauseForPowerChanged: {
-        if (root.shouldPauseForPower) root.pause();
-        else if (root.paused) root.resume();
+    readonly property bool shouldPauseForLock: root.available
+        && GlobalStates.screenLocked
+        && (!root.lockLiveEnabled || !root.lockPlayVideo)
+
+    function evaluatePolicy() {
+        if (!root.available) return;
+
+        // 1. Power condition triggers pause
+        if (root.shouldPauseForPower) {
+            if (!root.paused) {
+                root.autoPausedByBattery = true;
+                root.pause();
+            }
+            return;
+        }
+
+        // 2. Lock condition triggers pause
+        if (root.shouldPauseForLock) {
+            if (!root.paused) {
+                root.autoPausedByLock = true;
+                root.pause();
+            }
+            return;
+        }
+
+        // 3. Power condition cleared (plugged in / above threshold)
+        if (root.autoPausedByBattery) {
+            root.autoPausedByBattery = false;
+            if (root.resumeWhenCharging && root.paused && !root.shouldPauseForLock) {
+                root.resume();
+            }
+        }
+
+        // 4. Lock condition cleared (unlocked)
+        if (root.autoPausedByLock) {
+            root.autoPausedByLock = false;
+            if (root.paused && !root.shouldPauseForPower) {
+                root.resume();
+            }
+        }
+    }
+
+    onShouldPauseForPowerChanged: evaluatePolicy()
+    onShouldPauseForLockChanged: evaluatePolicy()
+    onAvailableChanged: if (root.available) evaluatePolicy()
+    onIsExternalPowerConnectedChanged: evaluatePolicy()
+
+    Connections {
+        target: GlobalStates
+        function onScreenLockedChanged() {
+            root.evaluatePolicy();
+        }
+    }
+
+    Connections {
+        target: Battery
+        function onIsPluggedInChanged() {
+            root.evaluatePolicy();
+        }
+        function onPercentageChanged() {
+            root.evaluatePolicy();
+        }
+    }
+
+    Connections {
+        target: UPower
+        function onOnBatteryChanged() {
+            root.evaluatePolicy();
+        }
     }
 }
