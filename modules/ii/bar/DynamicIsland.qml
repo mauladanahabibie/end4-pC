@@ -46,18 +46,17 @@ Item {
     }
 
     readonly property real configuredRadius: {
+        // 1. Explicit per-widget style override (from right-click style editor)
         if (islandRoot.barGroup?.style?.radius !== undefined) {
-            return islandRoot.barGroup.style.radius;
+            const r = islandRoot.barGroup.style.radius;
+            if (r >= 9999 || r >= islandRoot.pillHeight / 2) return islandRoot.pillHeight / 2;
+            return Math.max(Appearance.rounding.unsharpenmore, r);
         }
-        if (islandRoot.barGroup?.currentRadius !== undefined) {
-            return islandRoot.barGroup.currentRadius;
-        }
-        if (Config.options.bar.cornerStyle === 5) {
-            return Appearance.rounding.unsharpenmore + 4;
-        }
-        if (Config.options.bar.cornerStyle === 2) {
-            return Appearance.rounding.unsharpenmore + 2;
-        }
+        // 2. Dynamic Island shape setting from Settings -> Bar -> Dynamic Island
+        const shape = Config.options.bar?.dynamicIsland?.shape ?? "pill";
+        if (shape === "subtle") return Appearance.rounding.unsharpenmore; // 6px
+        if (shape === "rounded") return Appearance.rounding.small; // 12px
+        // 3. Default is "pill" (original rounded capsule)
         return islandRoot.pillHeight / 2;
     }
 

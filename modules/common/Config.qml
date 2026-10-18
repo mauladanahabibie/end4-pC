@@ -570,6 +570,7 @@ Singleton {
                 }
 
                 property JsonObject dynamicIsland: JsonObject {
+                    property string shape: "pill" // "pill", "rounded", "subtle"
                     property string visualizerStyle: "dots" // "dots", "wave", "none"
                     property bool showMediaControls: false
                     property string leftWidget: "none"

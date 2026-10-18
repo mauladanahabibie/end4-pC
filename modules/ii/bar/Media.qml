@@ -34,10 +34,11 @@ Item {
     }
 
     readonly property real customOrGroupRadius: {
-        if (root.barGroup?.style?.radius !== undefined) return root.barGroup.style.radius;
-        if (root.barGroup?.currentRadius !== undefined) return root.barGroup.currentRadius;
-        if (Config.options.bar.cornerStyle === 5) return Appearance.rounding.unsharpenmore + 4;
-        if (Config.options.bar.cornerStyle === 2) return Appearance.rounding.unsharpenmore + 2;
+        if (root.barGroup?.style?.radius !== undefined) {
+            const r = root.barGroup.style.radius;
+            if (r >= 9999) return Appearance.rounding.full;
+            return r;
+        }
         return Appearance.rounding.full;
     }
 

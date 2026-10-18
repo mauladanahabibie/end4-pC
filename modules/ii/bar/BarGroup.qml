@@ -142,6 +142,12 @@ Item {
 
     default property alias items: gridLayout.children
 
+    readonly property var effectiveCustomRadius: {
+        if (root.style.radius === undefined) return undefined;
+        if (root.style.radius >= 9999) return root.fullRadius;
+        return root.style.radius;
+    }
+
     Rectangle {
         id: background
         anchors {
@@ -170,10 +176,10 @@ Item {
         border.width: root.morphEdge !== "" ? 0 : root.style.borderWidth ?? (root.paintBackground && root.isSegmented && !root.isMaterial ? 1 : 0)
         border.color: root.resolveColorName(root.style.borderColor) ?? Appearance.colors.colLayer0Border
 
-        topLeftRadius: root.flatTL ? 0 : root.style.radius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.startRadius))
-        bottomLeftRadius: root.flatBL ? 0 : root.style.radius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.endRadius : root.startRadius))
-        topRightRadius: root.flatTR ? 0 : root.style.radius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.startRadius : root.endRadius))
-        bottomRightRadius: root.flatBR ? 0 : root.style.radius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.endRadius))
+        topLeftRadius: root.flatTL ? 0 : root.effectiveCustomRadius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.startRadius))
+        bottomLeftRadius: root.flatBL ? 0 : root.effectiveCustomRadius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.endRadius : root.startRadius))
+        topRightRadius: root.flatTR ? 0 : root.effectiveCustomRadius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.vertical ? root.startRadius : root.endRadius))
+        bottomRightRadius: root.flatBR ? 0 : root.effectiveCustomRadius ?? ((root.isMaterial && root.paintMaterialPill) ? root.fullRadius : (Config.options?.bar.borderless === "separated" ? root.fullRadius : root.endRadius))
 
         Behavior on color {
             enabled: root.morphEdge === ""

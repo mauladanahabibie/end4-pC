@@ -269,7 +269,7 @@ ContentPage {
                     currentValue: Config.options.bar.borderless
                     onSelected: newValue => { Config.options.bar.borderless = newValue; }
                     options: [
-                        { displayName: Translation.tr(""),          icon: "block",          value: "transparent" },
+                        { displayName: Translation.tr("None"),      icon: "block",          value: "transparent" },
                         { displayName: Translation.tr("Pills"),     icon: "pill",           value: "pills" },
                         { displayName: Translation.tr("Separated"), icon: "view_column_2",  value: "separated" },
                         { displayName: Translation.tr("Segmented"), icon: "tablet",           value: "segmented" },
@@ -417,6 +417,17 @@ ContentPage {
                         { displayName: Translation.tr("System icons"), icon: "settings",     value: "systemIcons" },
                         { displayName: Translation.tr("Tray"),  icon: "apps",         value: "sysTray" },
                         { displayName: Translation.tr("Util buttons"), icon: "widgets",   value: "utilButtons" }
+                    ]
+                }
+                ConfigSelectionArray {
+                    text: Translation.tr("Island shape")
+                    icon: "rounded_corner"
+                    currentValue: Config.options.bar.dynamicIsland.shape ?? "pill"
+                    onSelected: newValue => { Config.options.bar.dynamicIsland.shape = newValue; }
+                    options: [
+                        { displayName: Translation.tr("Pill"),    icon: "pill",           value: "pill" },
+                        { displayName: Translation.tr("Rounded"), icon: "rounded_corner", value: "rounded" },
+                        { displayName: Translation.tr("Subtle"),  icon: "crop_square",    value: "subtle" }
                     ]
                 }
             }

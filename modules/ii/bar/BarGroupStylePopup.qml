@@ -174,6 +174,32 @@ PopupWindow {
                     onSelected: newValue => root.group.setStyle("borderColor", newValue)
                 }
 
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    DialogButton {
+                        Layout.fillWidth: true
+                        buttonText: Translation.tr("Pill")
+                        onClicked: {
+                            root.group.setStyle("radius", 9999);
+                        }
+                    }
+                    DialogButton {
+                        Layout.fillWidth: true
+                        buttonText: Translation.tr("Rounded")
+                        onClicked: {
+                            root.group.setStyle("radius", 14);
+                        }
+                    }
+                    DialogButton {
+                        Layout.fillWidth: true
+                        buttonText: Translation.tr("Subtle")
+                        onClicked: {
+                            root.group.setStyle("radius", 6);
+                        }
+                    }
+                }
+
                 ConfigSlider {
                     Layout.leftMargin: 0
                     Layout.rightMargin: 0
