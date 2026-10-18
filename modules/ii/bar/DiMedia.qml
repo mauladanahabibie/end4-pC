@@ -39,8 +39,15 @@ Item {
         }
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            GlobalStates.mediaControlsPosition = "center"
-            GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
+            const targetPos = "center"
+            const targetScr = root.QsWindow?.window?.screen
+            if (GlobalStates.mediaControlsOpen && GlobalStates.mediaControlsPosition === targetPos && GlobalStates.mediaControlsScreen === targetScr) {
+                GlobalStates.mediaControlsOpen = false
+            } else {
+                GlobalStates.mediaControlsScreen = targetScr
+                GlobalStates.mediaControlsPosition = targetPos
+                GlobalStates.mediaControlsOpen = true
+            }
         }
     }
 

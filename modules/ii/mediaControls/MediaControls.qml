@@ -32,6 +32,11 @@ Scope {
     readonly property real widgetHeight: Appearance.sizes.mediaControlsHeight
     property real popupRounding: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
 
+    readonly property var targetScreen: {
+        if (GlobalStates.mediaControlsScreen) return GlobalStates.mediaControlsScreen;
+        return Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0];
+    }
+
     readonly property string mediaPosition: {
         if (GlobalStates.mediaControlsPosition !== "") return GlobalStates.mediaControlsPosition
         if (Config.options.bar.layouts.leftLayout.includes("media")) return "left"
@@ -118,11 +123,15 @@ Scope {
             if (!mediaControlsLoader.active && root.realPlayers.length === 0) {
                 GlobalStates.mediaControlsOpen = false;
             }
+            if (!mediaControlsLoader.active) {
+                GlobalStates.mediaControlsScreen = null;
+            }
         }
 
         sourceComponent: PanelWindow {
             id: panelWindow
             visible: true
+            screen: root.targetScreen
 
             exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
@@ -138,15 +147,15 @@ Scope {
             readonly property real cardMargin: Appearance.sizes.elevationMargin
             readonly property real inset: Config.options.hyprland.general.gapsOut
             readonly property var reserved: {
-                const monitor = HyprlandData.monitors.find(m => m.name === panelWindow.screen.name)
+                const monitor = HyprlandData.monitors.find(m => m.name === panelWindow.screen?.name)
                 if (monitor?.reserved) return monitor.reserved
                 const bar = root.barThickness
                 return [root.barEdge === "left" ? bar : 0, root.barEdge === "top" ? bar : 0, root.barEdge === "right" ? bar : 0, root.barEdge === "bottom" ? bar : 0]
             }
             readonly property real minX: reserved[0] + inset - cardMargin
-            readonly property real maxX: panelWindow.screen.width - reserved[2] - inset - root.widgetWidth + cardMargin
+            readonly property real maxX: (panelWindow.screen?.width ?? 1920) - reserved[2] - inset - root.widgetWidth + cardMargin
             readonly property real minY: reserved[1] + inset - cardMargin
-            readonly property real maxY: panelWindow.screen.height - reserved[3] - inset - playerColumnLayout.implicitHeight + cardMargin
+            readonly property real maxY: (panelWindow.screen?.height ?? 1080) - reserved[3] - inset - playerColumnLayout.implicitHeight + cardMargin
 
             margins {
                 top: {

@@ -96,17 +96,27 @@ Item {
         anchors.fill: parent
         acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
         hoverEnabled: !Config.options.bar.tooltips.clickToShow
-        onPressed: (event) => {
-            if (event.button === Qt.MiddleButton)      activePlayer?.togglePlaying()
-            else if (event.button === Qt.BackButton)   activePlayer?.previous()
-            else if (event.button === Qt.ForwardButton) activePlayer?.next()
-            else if (event.button === Qt.LeftButton) {
-                GlobalStates.mediaControlsPosition = ""
-                GlobalStates.mediaControlsOpen = !GlobalStates.mediaControlsOpen
-            }
-        }
+        cursorShape: Qt.PointingHandCursor
         onClicked: (event) => {
-            if (event.button === Qt.RightButton) activePlayer?.next()
+            if (event.button === Qt.LeftButton) {
+                const targetPos = Config.options.bar.layouts.leftLayout.includes("media") ? "left" : (Config.options.bar.layouts.rightLayout.includes("media") ? "right" : "center")
+                const targetScr = root.QsWindow?.window?.screen
+                if (GlobalStates.mediaControlsOpen && GlobalStates.mediaControlsPosition === targetPos && GlobalStates.mediaControlsScreen === targetScr) {
+                    GlobalStates.mediaControlsOpen = false
+                } else {
+                    GlobalStates.mediaControlsScreen = targetScr
+                    GlobalStates.mediaControlsPosition = targetPos
+                    GlobalStates.mediaControlsOpen = true
+                }
+            } else if (event.button === Qt.MiddleButton) {
+                activePlayer?.togglePlaying()
+            } else if (event.button === Qt.BackButton) {
+                activePlayer?.previous()
+            } else if (event.button === Qt.ForwardButton) {
+                activePlayer?.next()
+            } else if (event.button === Qt.RightButton) {
+                activePlayer?.next()
+            }
         }
         onPressAndHold: (event) => {
             if (event.button === Qt.RightButton) root.styleEditorRequested()

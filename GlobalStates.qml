@@ -23,6 +23,7 @@ Singleton {
     property bool sidebarRightOpen: false
     property bool mediaControlsOpen: false
     property string mediaControlsPosition: ""
+    property var mediaControlsScreen: null
     property bool osdBrightnessOpen: false
     property bool settingsOpen: false
     property bool osdVolumeOpen: false
