@@ -107,12 +107,13 @@ Item {
 
     Repeater {
         model: Config.options.background.widgets.customImage.enable
-            && (Config.options.background.widgets.customImage.images && Config.options.background.widgets.customImage.images.length > 0)
             && root.onThisScreen
-            ? Config.options.background.widgets.customImage.images
+            && (Config.options.background.widgets.customImage.images && Config.options.background.widgets.customImage.images.length > 0)
+            ? Config.options.background.widgets.customImage.images.length
             : 0
 
         CustomImage {
+            required property int index
             imageIndex: index
             screenWidth: root.screen.width
             screenHeight: root.screen.height

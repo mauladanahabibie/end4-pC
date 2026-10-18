@@ -61,6 +61,48 @@ AbstractBackgroundWidget {
     implicitWidth: contentItem.implicitWidth
     implicitHeight: contentItem.implicitHeight
 
+    visible: opacity > 0 && (root.imageIndex >= 0 || !Config.options.background.widgets.customImage.images || Config.options.background.widgets.customImage.images.length === 0)
+
+    Process {
+        id: imagePickerProc
+        command: ["python3", `${Directories.scriptPath}/images/pick-image.py`]
+        stdout: SplitParser {
+            onRead: data => {
+                var path = data.trim()
+                if (path.length > 0) {
+                    root.setImagePath(path)
+                }
+            }
+        }
+    }
+
+    CustomImageContextMenu {
+        id: contextMenu
+        targetWidget: root
+    }
+
+    function openPicker() {
+        imagePickerProc.command = ["python3", `${Directories.scriptPath}/images/pick-image.py`]
+        imagePickerProc.running = true
+    }
+
+    // Click handler. Left-click opens picker (empty) or selects widget (loaded).
+    // Right-click opens the context menu (Select/Change Image, Delete Image, Delete Widget, Lock).
+    onClicked: (mouse) => {
+        if (mouse.button === Qt.RightButton) {
+            contextMenu.popup()
+            return
+        }
+        if (mouse.button !== Qt.LeftButton) return
+        if (root.imagePath === "") {
+            root.openPicker()
+        } else {
+            var canvas = findCanvas(root.parent)
+            if (canvas) canvas.clearSelection()
+            root.selected = true
+        }
+    }
+
     Item {
         id: contentItem
         implicitWidth: root.widgetSize
@@ -108,7 +150,13 @@ AbstractBackgroundWidget {
 
             StyledImage {
                 anchors.fill: parent
-                source: root.imagePath !== "" ? root.imagePath : ""
+                source: {
+                    if (root.imagePath === "") return ""
+                    if (root.imagePath.startsWith("file://") || root.imagePath.startsWith("http://") || root.imagePath.startsWith("https://")) {
+                        return root.imagePath
+                    }
+                    return "file://" + root.imagePath
+                }
                 fillMode: Image.PreserveAspectCrop
                 cache: false
                 antialiasing: true
@@ -206,7 +254,7 @@ AbstractBackgroundWidget {
             }
         }
 
-        // Delete button (top-right corner) — only for array images
+        // Delete button (top-right corner)
         Rectangle {
             id: deleteHandle
             width: 22
@@ -219,7 +267,7 @@ AbstractBackgroundWidget {
                 margins: 6
             }
             opacity: (root.containsMouse || deleteArea.containsMouse) ? 0.9 : 0
-            visible: opacity > 0 && !Config.options.background.widgetsLocked && root.imageIndex >= 0
+            visible: opacity > 0 && !Config.options.background.widgetsLocked && (root.imageIndex >= 0 || root.imagePath !== "")
             z: 2
 
             Behavior on opacity {
@@ -233,7 +281,7 @@ AbstractBackgroundWidget {
                 cursorShape: Qt.PointingHandCursor
 
                 onClicked: {
-                    root.deleteThisImage()
+                    root.requestDelete()
                 }
             }
 
@@ -263,6 +311,18 @@ AbstractBackgroundWidget {
         }
     }
 
+    function deleteImageMedia() {
+        root.setImagePath("")
+    }
+
+    function requestDelete() {
+        if (root.imageIndex >= 0) {
+            root.deleteThisImage()
+        } else {
+            Config.options.background.widgets.customImage.enable = false
+        }
+    }
+
     function deleteThisImage() {
         if (root.imageIndex < 0) return
         let list = []
@@ -279,6 +339,9 @@ AbstractBackgroundWidget {
             })
         }
         Config.options.background.widgets.customImage.images = list
+        if (list.length === 0) {
+            Config.options.background.widgets.customImage.enable = false
+        }
     }
 
     function updateArrayImage(idx, key, value) {
@@ -300,10 +363,35 @@ AbstractBackgroundWidget {
         Config.options.background.widgets.customImage.images = list
     }
 
+    function updateArrayImagePosition(idx, newX, newY) {
+        let list = []
+        const imgs = Config.options.background.widgets.customImage.images
+        for (let i = 0; i < imgs.length; i++) {
+            let o = imgs[i]
+            list.push({
+                path: o.path ?? "",
+                shape: o.shape ?? "Cookie4Sided",
+                size: o.size ?? 200,
+                x: i === idx ? newX : (o.x ?? 400),
+                y: i === idx ? newY : (o.y ?? 100),
+            })
+        }
+        Config.options.background.widgets.customImage.images = list
+    }
+
+    function commitPosition() {
+        if (root.imageIndex >= 0) {
+            root.updateArrayImagePosition(root.imageIndex, root.x, root.y)
+        } else {
+            configEntry.x = root.x
+            configEntry.y = root.y
+            root.targetX = Qt.binding(() => Math.max(0, Math.min(configEntry.x, scaledScreenWidth - width)))
+            root.targetY = Qt.binding(() => Math.max(0, Math.min(configEntry.y, scaledScreenHeight - height)))
+            root.restoreXYBinding()
+        }
+    }
+
     onReleased: {
-        // Hide grid FIRST, before any config writes that might
-        // recreate this widget via Repeater (which would destroy
-        // this instance before onDraggingChanged can fire).
         var p = root.parent
         while (p) {
             if (p.isWidgetCanvas === true) {
@@ -312,15 +400,6 @@ AbstractBackgroundWidget {
             }
             p = p.parent
         }
-
-        // Now save position — this may recreate widgets via Repeater
-        if (root.imageIndex >= 0) {
-            root.updateArrayImage(root.imageIndex, "x", root.x)
-            root.updateArrayImage(root.imageIndex, "y", root.y)
-        } else {
-            configEntry.x = root.x
-            configEntry.y = root.y
-        }
-        root.restoreXYBinding()
+        root.commitPosition()
     }
 }
