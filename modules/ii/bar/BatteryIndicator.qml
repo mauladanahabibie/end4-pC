@@ -19,6 +19,9 @@ MouseArea {
     implicitWidth: vertical ? Appearance.sizes.verticalBarWidth : glyph.implicitWidth + 8
     implicitHeight: vertical ? glyph.implicitHeight + 8 : Appearance.sizes.barHeight
 
+    width: implicitWidth
+    height: implicitHeight
+
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
     BatteryGlyph {

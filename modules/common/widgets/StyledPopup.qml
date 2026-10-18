@@ -44,6 +44,7 @@ LazyLoader {
 
     component: PanelWindow {
         id: popupWindow
+        screen: root.hoverTarget?.QsWindow?.window?.screen ?? null
 
         // Bring contentItem reference into this scope
         property Item innerContent: root.contentItem
@@ -57,19 +58,10 @@ LazyLoader {
         implicitWidth: popupBackground.implicitWidth + Appearance.sizes.elevationMargin * 2 + root.popupBackgroundMargin + (root.barVertical ? root.bounceRoom : 0)
         implicitHeight: popupBackground.implicitHeight + Appearance.sizes.elevationMargin * 2 + root.popupBackgroundMargin + (root.barVertical ? 0 : root.bounceRoom)
 
-        readonly property real centerOffsetX: {
-            const base = root.QsWindow?.mapFromItem(
-                root.hoverTarget,
-                (root.hoverTarget.width - popupBackground.implicitWidth) / 2, 0
-            ).x ?? 0
-            const margin = Appearance.sizes.elevationMargin
-            const maxLeft = popupWindow.screen.width - popupBackground.implicitWidth - margin - 10
-            return Math.max(margin, Math.min(base, maxLeft))
-        }
         readonly property Item groupBox: root.group ? root.group.box : root.hoverTarget
         readonly property var barWin: root.hoverTarget?.QsWindow?.window ?? null
         readonly property var barLayer: {
-            const levels = HyprlandData.layers[popupWindow.screen.name]?.levels
+            const levels = HyprlandData.layers[popupWindow.screen?.name]?.levels
             if (!levels) return null
             const namespace = root.barVertical ? "quickshell:verticalBar" : "quickshell:bar"
             for (const level in levels) {
@@ -78,8 +70,11 @@ LazyLoader {
             }
             return null
         }
-        readonly property real originX: barLayer ? barLayer.x : (!barWin ? 0 : (barWin.anchors.left ? barWin.margins.left : popupWindow.screen.width - barWin.width - barWin.margins.right))
-        readonly property real originY: barLayer ? barLayer.y : (!barWin ? 0 : (barWin.anchors.top ? barWin.margins.top : popupWindow.screen.height - barWin.height - barWin.margins.bottom))
+        readonly property var monitorData: HyprlandData.monitors.find(m => m.name === popupWindow.screen?.name)
+        readonly property real monX: monitorData?.x ?? 0
+        readonly property real monY: monitorData?.y ?? 0
+        readonly property real originX: barLayer ? (barLayer.x - monX) : (!barWin ? 0 : (barWin.anchors.left ? barWin.margins.left : (popupWindow.screen ? popupWindow.screen.width - barWin.width - barWin.margins.right : 0)))
+        readonly property real originY: barLayer ? (barLayer.y - monY) : (!barWin ? 0 : (barWin.anchors.top ? barWin.margins.top : (popupWindow.screen ? popupWindow.screen.height - barWin.height - barWin.margins.bottom : 0)))
         readonly property point boxPos: groupBox ? groupBox.mapToItem(null, 0, 0) : Qt.point(0, 0)
         readonly property real boxX: originX + boxPos.x
         readonly property real boxY: originY + boxPos.y
@@ -95,10 +90,10 @@ LazyLoader {
         }
         readonly property real cardLeft: root.barVertical
             ? (root.barEdge === "left" ? boxX + boxW : boxX - cardWidth)
-            : clampAlong(boxX + boxW / 2, cardWidth, boxX, boxW, popupWindow.screen.width)
+            : clampAlong(boxX + boxW / 2, cardWidth, boxX, boxW, popupWindow.screen ? popupWindow.screen.width : 1920)
         readonly property real cardTop: !root.barVertical
             ? (root.barEdge === "top" ? boxY + boxH : boxY - cardHeight)
-            : clampAlong(boxY + boxH / 2, cardHeight, boxY, boxH, popupWindow.screen.height)
+            : clampAlong(boxY + boxH / 2, cardHeight, boxY, boxH, popupWindow.screen ? popupWindow.screen.height : 1080)
         readonly property real boxStart: root.barVertical ? boxY - cardTop : boxX - cardLeft
         readonly property real boxEnd: boxStart + (root.barVertical ? boxH : boxW)
         readonly property real cardExtent: root.barVertical ? cardHeight : cardWidth
@@ -143,16 +138,6 @@ LazyLoader {
         readonly property var startFillet: filletSpec(true)
         readonly property var endFillet: filletSpec(false)
 
-        readonly property real centerOffsetY: {
-            const base = root.QsWindow?.mapFromItem(
-                root.hoverTarget,
-                0, (root.hoverTarget.height - popupBackground.implicitHeight) / 2
-            ).y ?? 0
-            const margin = Appearance.sizes.elevationMargin
-            const maxTop = popupWindow.screen.height - popupBackground.implicitHeight - margin - 15
-            return Math.max(margin, Math.min(base, maxTop))
-        }
-
         Component.onCompleted: HyprlandData.updateLayers()
 
         Binding {
@@ -182,26 +167,22 @@ LazyLoader {
 
         margins {
             left: {
-                if (root.morph && root.barEdge !== "right") return popupWindow.cardLeft - Appearance.sizes.elevationMargin
                 if (root.barEdge === "right") return 0
-                if (root.barEdge === "left") return root.barThickness
-                return centerOffsetX 
+                return popupWindow.cardLeft - Appearance.sizes.elevationMargin
             }
             top: {
-                if (root.morph && root.barEdge !== "bottom") return popupWindow.cardTop - Appearance.sizes.elevationMargin
                 if (root.barEdge === "bottom") return 0
-                if (root.barEdge === "top") return root.barThickness
-                return centerOffsetY
+                return popupWindow.cardTop - Appearance.sizes.elevationMargin
             }
             right: {
                 if (root.barEdge !== "right") return 0
-                if (root.morph) return popupWindow.screen.width - popupWindow.cardLeft - popupWindow.cardWidth - Appearance.sizes.elevationMargin
-                return root.barThickness
+                if (!popupWindow.screen) return root.barThickness
+                return popupWindow.screen.width - popupWindow.cardLeft - popupWindow.cardWidth - Appearance.sizes.elevationMargin
             }
             bottom: {
                 if (root.barEdge !== "bottom") return 0
-                if (root.morph) return popupWindow.screen.height - popupWindow.cardTop - popupWindow.cardHeight - Appearance.sizes.elevationMargin
-                return root.barThickness
+                if (!popupWindow.screen) return root.barThickness
+                return popupWindow.screen.height - popupWindow.cardTop - popupWindow.cardHeight - Appearance.sizes.elevationMargin
             }
         }
         WlrLayershell.namespace: root.morph ? "quickshell:popupMorph" : "quickshell:popup"
@@ -317,6 +298,14 @@ LazyLoader {
                     if (popupWindow.innerContent) {
                         popupWindow.innerContent.parent = contentHolder
                         popupWindow.innerContent.anchors.centerIn = contentHolder
+                        popupWindow.innerContent.visible = true
+                    }
+                }
+                Component.onDestruction: {
+                    if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
+                        popupWindow.innerContent.anchors.centerIn = undefined
+                        popupWindow.innerContent.visible = false
+                        popupWindow.innerContent.parent = null
                     }
                 }
             }
@@ -376,7 +365,14 @@ LazyLoader {
 
         ParallelAnimation {
             id: closeAnim
-            onFinished: root.closing = false
+            onFinished: {
+                if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
+                    popupWindow.innerContent.anchors.centerIn = undefined
+                    popupWindow.innerContent.visible = false
+                    popupWindow.innerContent.parent = null
+                }
+                root.closing = false
+            }
             NumberAnimation {
                 target: bodyScale
                 property: root.barVertical ? "xScale" : "yScale"

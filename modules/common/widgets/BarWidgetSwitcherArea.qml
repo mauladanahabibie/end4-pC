@@ -20,6 +20,9 @@ MouseArea {
         ? (colLoader.item?.implicitHeight ?? 0)
         : Appearance.sizes.barHeight
 
+    width: implicitWidth
+    height: implicitHeight
+
     Loader {
         id: colLoader
         active: root.vertical

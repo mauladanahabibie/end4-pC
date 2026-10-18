@@ -21,6 +21,9 @@ MouseArea {
     implicitWidth: vertical ? 36 : speedColumn.implicitWidth + 8
     implicitHeight: vertical ? speedColumn.implicitHeight + 6 : 32
 
+    width: implicitWidth
+    height: implicitHeight
+
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
     function formatRate(rate, compact) {
