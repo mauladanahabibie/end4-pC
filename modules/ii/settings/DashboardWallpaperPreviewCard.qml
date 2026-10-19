@@ -64,10 +64,11 @@ DashboardCard {
             anchors.left: parent.left
             anchors.bottom: parent.bottom
             anchors.margins: 10
-            width: chip.implicitWidth + 24
+            width: Math.min(parent.width - 20, chip.implicitWidth + 24)
             height: 34
             radius: 17
             color: tile.accent
+            clip: true
 
             Behavior on color {
                 ColorAnimation { duration: 200 }
@@ -77,18 +78,23 @@ DashboardCard {
                 id: chip
                 anchors.centerIn: parent
                 spacing: 6
+                width: parent.width - 16
 
                 MaterialSymbol {
                     text: tile.icon
                     iconSize: 18
                     fill: 1
                     color: tile.onAccent
+                    Layout.alignment: Qt.AlignVCenter
                 }
                 StyledText {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
                     text: tile.label
                     font.pixelSize: Appearance.font.pixelSize.small
                     font.weight: Font.Medium
                     color: tile.onAccent
+                    elide: Text.ElideRight
                 }
             }
         }

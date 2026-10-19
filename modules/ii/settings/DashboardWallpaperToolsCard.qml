@@ -66,6 +66,11 @@ DashboardCard {
                     Layout.preferredWidth: 1
                     implicitHeight: 40
                     buttonRadius: 20
+                    clip: true
+                    leftPadding: 8
+                    rightPadding: 8
+                    topPadding: 4
+                    bottomPadding: 4
                     colBackground: modelData.primary ? Appearance.colors.colPrimary : Qt.rgba(1, 1, 1, 0.14)
                     colBackgroundHover: modelData.primary ? Appearance.colors.colPrimaryHover : Qt.rgba(1, 1, 1, 0.26)
                     colRipple: Qt.rgba(1, 1, 1, 0.3)
@@ -80,19 +85,26 @@ DashboardCard {
                     contentItem: RowLayout {
                         spacing: 6
 
-                        Item { Layout.fillWidth: true }
                         MaterialSymbol {
                             text: tool.modelData.icon
                             iconSize: 18
                             color: tool.modelData.primary ? Appearance.colors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
+                            Layout.alignment: Qt.AlignVCenter
                         }
                         StyledText {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
                             text: tool.modelData.label
                             font.pixelSize: Appearance.font.pixelSize.small
                             font.weight: Font.Medium
                             color: tool.modelData.primary ? Appearance.colors.colOnPrimary : Appearance.colors.colOnPrimaryContainer
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
+                            lineHeight: 0.92
                         }
-                        Item { Layout.fillWidth: true }
                     }
                 }
             }
