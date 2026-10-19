@@ -44,7 +44,7 @@ LazyLoader {
 
     component: PanelWindow {
         id: popupWindow
-        screen: root.hoverTarget?.QsWindow?.window?.screen ?? null
+        screen: root.hoverTarget?.QsWindow?.window?.screen ?? Quickshell.screens[0] ?? null
 
         // Bring contentItem reference into this scope
         property Item innerContent: root.contentItem
@@ -305,7 +305,7 @@ LazyLoader {
                     if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
                         popupWindow.innerContent.anchors.centerIn = undefined
                         popupWindow.innerContent.visible = false
-                        popupWindow.innerContent.parent = null
+                        popupWindow.innerContent.parent = root
                     }
                 }
             }
@@ -369,7 +369,7 @@ LazyLoader {
                 if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
                     popupWindow.innerContent.anchors.centerIn = undefined
                     popupWindow.innerContent.visible = false
-                    popupWindow.innerContent.parent = null
+                    popupWindow.innerContent.parent = root
                 }
                 root.closing = false
             }
