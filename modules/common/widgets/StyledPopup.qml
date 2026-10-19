@@ -14,6 +14,8 @@ LazyLoader {
     property Item hoverTarget
     default property Item contentItem
     property real popupBackgroundMargin: 0
+    property real paddingHorizontal: 12
+    property real paddingVertical: 14
     readonly property bool shouldShow: !!(root.hoverTarget && root.hoverTarget.containsMouse && Config.options?.bar?.tooltips?.enable && !GlobalStates.barStyleEditorOpen
         && (!Config.options?.bar?.tooltips?.clickToShow || ((root.hoverTarget.pressedButtons ?? Qt.LeftButton) & Qt.LeftButton)))
     property bool closing: false
@@ -263,13 +265,14 @@ LazyLoader {
 
             Rectangle {
                 id: popupBackground
-                readonly property real margin: 8
+                readonly property real padH: root.paddingHorizontal
+                readonly property real padV: root.paddingVertical
 
                 anchors.fill: parent
 
                 // Use local reference instead of crossing LazyLoader scope boundary
-                implicitWidth: (popupWindow.innerContent?.implicitWidth ?? 0) + margin * 2
-                implicitHeight: (popupWindow.innerContent?.implicitHeight ?? 0) + margin * 2
+                implicitWidth: (popupWindow.innerContent?.implicitWidth ?? 0) + padH * 2
+                implicitHeight: (popupWindow.innerContent?.implicitHeight ?? 0) + padV * 2
 
                 color: Appearance.colors.colUiPopupBackground
                 radius: Appearance.rounding.large + 5

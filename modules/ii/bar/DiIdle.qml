@@ -95,7 +95,7 @@ Item {
         }
     }
 
-    readonly property real clockVerticalOffset: 1.5 + (Config.options.bar?.dynamicIsland?.clockVerticalOffset ?? 0)
+    readonly property real clockVerticalOffset: (Config.options.bar?.dynamicIsland?.clockVerticalOffset ?? 0)
 
     readonly property string formattedDate: {
         if (!Config.options.bar?.dynamicIsland?.showDate) return ""

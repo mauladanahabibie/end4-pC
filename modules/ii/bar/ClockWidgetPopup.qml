@@ -7,6 +7,8 @@ import QtQuick.Layouts
 StyledPopup {
     id: root
     property var today: new Date()
+    paddingHorizontal: 14
+    paddingVertical: 16
 
     function usageColor(value) {
         if (value > 0.9) return Appearance.colors.colError
@@ -15,21 +17,25 @@ StyledPopup {
     }
 
     ColumnLayout {
-        spacing: 8
+        spacing: 12
         width: 340
 
-        Row {
-            width: parent.width
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            Layout.leftMargin: 4
+            Layout.rightMargin: 4
+            spacing: 6
 
             StyledText {
-                text: Qt.locale().toString(root.today, " MMMM")
+                text: Qt.locale().toString(root.today, "MMMM")
                 font.pixelSize: Appearance.font.pixelSize.huge
                 font.weight: Font.Bold
                 color: Appearance.colors.colOnLayer1
             }
 
             StyledText {
-                text: " " + Qt.locale().toString(root.today, "yyyy")
+                text: Qt.locale().toString(root.today, "yyyy")
                 font.pixelSize: Appearance.font.pixelSize.huge
                 color: Appearance.colors.colOnSurfaceVariant
             }
@@ -180,12 +186,13 @@ StyledPopup {
             }
         }
 
-        Rectangle {
-            width: parent.width
-            height: 10
-            color: "transparent"
+        Item {
+            Layout.fillWidth: true
+            implicitHeight: uptimeRow.implicitHeight + 8
+            Layout.bottomMargin: 4
 
             RowLayout {
+                id: uptimeRow
                 anchors.centerIn: parent
                 spacing: 6
 
