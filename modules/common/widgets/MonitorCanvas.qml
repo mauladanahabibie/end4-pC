@@ -48,9 +48,11 @@ Item {
 
     property real scaleFactor: {
         if (bounds.width === 0 || bounds.height === 0) return 0.1
-        const scaleX = (canvas.width  - padding * 2) / bounds.width
-        const scaleY = (canvas.height - padding * 2) / bounds.height
-        return Math.min(scaleX, scaleY)
+        const availW = Math.max(40, canvas.width  - padding * 2)
+        const availH = Math.max(40, canvas.height - padding * 2)
+        const scaleX = availW / bounds.width
+        const scaleY = availH / bounds.height
+        return Math.max(0.02, Math.min(scaleX, scaleY))
     }
 
     property point offset: Qt.point(
@@ -282,10 +284,12 @@ Item {
         color: Appearance.colors.colLayer1
         border.width: 1
         border.color: Appearance.colors.colLayer0Border
+        clip: true
 
         Item {
             id: canvas
             anchors.fill: parent
+            clip: true
 
             Repeater {
                 model: root.monitorConfig.monitors.length
