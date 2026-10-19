@@ -10,6 +10,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 Item {
     id: islandRoot
@@ -19,7 +20,8 @@ Item {
     readonly property real idleCollapsedWidth: 144
     readonly property real sessionWidth: 164
     property real idleTextContentWidth: 0
-    readonly property real idleWidth: Math.max(islandRoot.idleCollapsedWidth, islandRoot.idleTextContentWidth)
+    readonly property real idleExtraHoverWidth: idleHoverHandler.hovered ? 16 : 0
+    readonly property real idleWidth: Math.max(islandRoot.idleCollapsedWidth, islandRoot.idleTextContentWidth) + islandRoot.idleExtraHoverWidth
     
     readonly property real mediaNormalWidth: 260
     readonly property real mediaHoveredWidth: 290
@@ -437,6 +439,18 @@ Item {
                 easing.type: Easing.BezierSpline
                 easing.bezierCurve: Appearance.animationCurves.expressiveDefaultSpatial
             }
+        }
+
+        border.width: idleHoverHandler.hovered ? 1 : 0
+        border.color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.45)
+
+        Behavior on border.color {
+            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        }
+
+        HoverHandler {
+            id: idleHoverHandler
+            enabled: islandRoot.activeContentId === "idle"
         }
 
         HoverHandler {

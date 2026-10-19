@@ -75,8 +75,19 @@ Item {
             visible: !avatarImage.visible
         }
 
+        scale: avatarMouseArea.pressed ? 0.92 : (avatarMouseArea.containsMouse ? 1.1 : 1.0)
+        Behavior on scale {
+            NumberAnimation {
+                duration: 250
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.8
+            }
+        }
+
         MouseArea {
+            id: avatarMouseArea
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: {
                 GlobalStates.settingsOpen = !GlobalStates.settingsOpen
@@ -214,9 +225,12 @@ Item {
                             text: diIdleRoot.formattedDate
                             font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.small : Appearance.font.pixelSize.smaller
                             font.features: { "tnum": 1 }
-                            color: Appearance.colors.colOnLayer0
-                            opacity: 0.8
+                            color: clockMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
+                            opacity: clockMouseArea.containsMouse ? 1.0 : 0.8
                             Layout.alignment: Qt.AlignVCenter
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
 
                         StyledText {
@@ -224,8 +238,8 @@ Item {
                             visible: dateText.visible
                             text: "•"
                             font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colOnLayer0
-                            opacity: 0.5
+                            color: clockMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
+                            opacity: clockMouseArea.containsMouse ? 0.8 : 0.5
                             Layout.alignment: Qt.AlignVCenter
                         }
 
@@ -234,15 +248,25 @@ Item {
                             text: diIdleRoot.formattedTime
                             font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
                             font.features: { "tnum": 1 }
-                            color: Appearance.colors.colOnLayer0
+                            color: clockMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                             Layout.alignment: Qt.AlignVCenter
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
                     }
 
                     MouseArea {
+                        id: clockMouseArea
                         anchors.fill: parent
+                        hoverEnabled: !Config.options.bar.tooltips.clickToShow
                         cursorShape: Qt.PointingHandCursor
                         onClicked: GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
+
+                        ClockWidgetPopup {
+                            hoverTarget: clockMouseArea
+                            today: new Date()
+                        }
                     }
                 }
             }
@@ -264,22 +288,34 @@ Item {
                             fill: 0
                             text: Icons.getWeatherIcon(Weather.data.wCode) ?? "cloud"
                             iconSize: Appearance.font.pixelSize.normal
-                            color: Appearance.colors.colOnLayer0
+                            color: weatherMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                             Layout.alignment: Qt.AlignVCenter
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
 
                         StyledText {
                             font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
                             font.features: { "tnum": 1 }
-                            color: Appearance.colors.colOnLayer0
+                            color: weatherMouseArea.containsMouse ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer0
                             text: Weather.data?.temp ?? "--°"
                             Layout.alignment: Qt.AlignVCenter
+                            Behavior on color {
+                                animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+                            }
                         }
                     }
                     MouseArea {
+                        id: weatherMouseArea
                         anchors.fill: parent
+                        hoverEnabled: !Config.options.bar.tooltips.clickToShow
                         cursorShape: Qt.PointingHandCursor
                         onClicked: GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen
+
+                        WeatherPopup {
+                            hoverTarget: weatherMouseArea
+                        }
                     }
                 }
             }
