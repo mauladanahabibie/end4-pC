@@ -49,6 +49,22 @@ LazyLoader {
         // Bring contentItem reference into this scope
         property Item innerContent: root.contentItem
 
+        function attachContent() {
+            if (popupWindow.innerContent) {
+                popupWindow.innerContent.parent = contentHolder
+                popupWindow.innerContent.anchors.centerIn = contentHolder
+                popupWindow.innerContent.visible = true
+            }
+        }
+
+        function detachContent() {
+            if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
+                popupWindow.innerContent.anchors.centerIn = undefined
+                popupWindow.innerContent.parent = root
+                popupWindow.innerContent.visible = true
+            }
+        }
+
         color: "transparent"
         anchors.left: root.barEdge !== "right"
         anchors.right: root.barEdge === "right"
@@ -192,6 +208,7 @@ LazyLoader {
             target: root
             function onShouldShowChanged() {
                 if (root.shouldShow) {
+                    popupWindow.attachContent();
                     closeAnim.stop();
                     openAnim.restart();
                 } else {
@@ -294,20 +311,8 @@ LazyLoader {
                 }
 
                 // Reparent content here once the window is ready
-                Component.onCompleted: {
-                    if (popupWindow.innerContent) {
-                        popupWindow.innerContent.parent = contentHolder
-                        popupWindow.innerContent.anchors.centerIn = contentHolder
-                        popupWindow.innerContent.visible = true
-                    }
-                }
-                Component.onDestruction: {
-                    if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
-                        popupWindow.innerContent.anchors.centerIn = undefined
-                        popupWindow.innerContent.visible = false
-                        popupWindow.innerContent.parent = root
-                    }
-                }
+                Component.onCompleted: popupWindow.attachContent()
+                Component.onDestruction: popupWindow.detachContent()
             }
         }
 
@@ -340,7 +345,7 @@ LazyLoader {
             }
             SequentialAnimation {
                 PauseAnimation {
-                    duration: 90
+                    duration: 50
                 }
                 ParallelAnimation {
                     NumberAnimation {
@@ -366,11 +371,7 @@ LazyLoader {
         ParallelAnimation {
             id: closeAnim
             onFinished: {
-                if (popupWindow.innerContent && popupWindow.innerContent.parent === contentHolder) {
-                    popupWindow.innerContent.anchors.centerIn = undefined
-                    popupWindow.innerContent.visible = false
-                    popupWindow.innerContent.parent = root
-                }
+                popupWindow.detachContent()
                 root.closing = false
             }
             NumberAnimation {
