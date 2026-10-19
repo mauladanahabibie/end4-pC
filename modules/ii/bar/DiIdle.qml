@@ -84,6 +84,38 @@ Item {
         }
     }
 
+    readonly property real clockVerticalOffset: 1.5 + (Config.options.bar?.dynamicIsland?.clockVerticalOffset ?? 0)
+
+    readonly property string formattedDate: {
+        if (!Config.options.bar?.dynamicIsland?.showDate) return ""
+        const fmt = Config.options.bar?.dynamicIsland?.dateFormat ?? "short"
+        const d = DateTime.clock.date
+        if (fmt === "dayShort") {
+            return Qt.locale().toString(d, "ddd, dd/MM")
+        } else if (fmt === "dayMonth") {
+            return Qt.locale().toString(d, "ddd, d MMM")
+        } else if (fmt === "monthDay") {
+            return Qt.locale().toString(d, "d MMM")
+        } else if (fmt === "long") {
+            return Qt.locale().toString(d, "dddd, d MMMM")
+        } else {
+            return Qt.locale().toString(d, Config.options?.time?.shortDateFormat ?? "dd/MM")
+        }
+    }
+
+    readonly property string formattedTime: {
+        const showSec = Config.options.bar?.dynamicIsland?.showSeconds ?? false
+        if (showSec) {
+            const baseFmt = Config.options?.time?.format ?? "hh:mm"
+            const apIdx = baseFmt.toLowerCase().indexOf("ap")
+            const secFmt = apIdx !== -1
+                ? (baseFmt.slice(0, apIdx).trim() + ":ss " + baseFmt.slice(apIdx).trim())
+                : (baseFmt + ":ss")
+            return Qt.locale().toString(DateTime.clock.date, secFmt)
+        }
+        return DateTime.time
+    }
+
     RowLayout {
         id: rightSideRow
         anchors {
@@ -165,16 +197,48 @@ Item {
             Component {
                 id: clockComponent
                 Item {
-                    implicitWidth: clockText.implicitWidth
-                    implicitHeight: clockText.implicitHeight
-                    StyledText {
-                        id: clockText
-                        anchors.centerIn: parent
-                        text: DateTime.time
-                        font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
-                        font.features: { "tnum": 1 }
-                        color: Appearance.colors.colOnLayer0
+                    implicitWidth: clockRow.implicitWidth
+                    implicitHeight: clockRow.implicitHeight
+
+                    RowLayout {
+                        id: clockRow
+                        anchors {
+                            centerIn: parent
+                            verticalCenterOffset: diIdleRoot.clockVerticalOffset
+                        }
+                        spacing: 5
+
+                        StyledText {
+                            id: dateText
+                            visible: (Config.options.bar?.dynamicIsland?.showDate ?? false) && text.length > 0
+                            text: diIdleRoot.formattedDate
+                            font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.small : Appearance.font.pixelSize.smaller
+                            font.features: { "tnum": 1 }
+                            color: Appearance.colors.colOnLayer0
+                            opacity: 0.8
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        StyledText {
+                            id: dateSeparator
+                            visible: dateText.visible
+                            text: "•"
+                            font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.smaller : Appearance.font.pixelSize.smallest
+                            color: Appearance.colors.colOnLayer0
+                            opacity: 0.5
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        StyledText {
+                            id: timeText
+                            text: diIdleRoot.formattedTime
+                            font.pixelSize: di?.isMaterial ? Appearance.font.pixelSize.normal : Appearance.font.pixelSize.small
+                            font.features: { "tnum": 1 }
+                            color: Appearance.colors.colOnLayer0
+                            Layout.alignment: Qt.AlignVCenter
+                        }
                     }
+
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
@@ -190,7 +254,10 @@ Item {
                     implicitHeight: weatherLayout.implicitHeight
                     RowLayout {
                         id: weatherLayout
-                        anchors.centerIn: parent
+                        anchors {
+                            centerIn: parent
+                            verticalCenterOffset: 0.5
+                        }
                         spacing: 4
 
                         MaterialSymbol {

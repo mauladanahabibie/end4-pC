@@ -53,15 +53,18 @@ Variants {
         property string currentShader: "pixelate"
         property string wallpaperAnimation: Config.options.background.wallpaperAnimation ?? "random"
 
-        property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == monitor.name)
+        property HyprlandMonitor monitor: {
+            const _ = Hyprland.monitors.values;
+            return Hyprland.monitorFor(modelData);
+        }
+
+        property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && bgRoot.monitor && workspace.monitor.name == bgRoot.monitor.name)
         property var activeWorkspaceWithFullscreen: workspacesForMonitor.filter(workspace => ((workspace.toplevels.values.filter(window => window.wayland?.fullscreen)[0] != undefined) && workspace.active))[0]
         visible: true
 
         readonly property bool hiddenForFullscreen: !GlobalStates.screenLocked
             && (activeWorkspaceWithFullscreen != undefined)
             && Config?.options.background.hideWhenFullscreen
-
-        property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)
 
         property string effectiveWallpaperPath: {
             if (GlobalStates.screenLocked && Config.options.background.lockWall !== "")
@@ -120,18 +123,32 @@ Variants {
             animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
         }
 
-        Component.onCompleted: {
-            previousWallpaper.source = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
-            wallpaper.source = bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
-            bgRoot.currentWallpaperSource = bgRoot.wallpaperPath
+        function loadWallpaperImmediate() {
+            if (bgRoot.wallpaperSafetyTriggered) {
+                previousWallpaper.source = ""
+                wallpaper.source = ""
+                bgRoot.currentWallpaperSource = ""
+                bgRoot.previousWallpaperSource = ""
+                bgRoot.transitionProgress = 1.0
+                return
+            }
+            const path = bgRoot.wallpaperPath
+            if (!path || path.length === 0) return
+            previousWallpaper.source = path
+            wallpaper.source = path
+            bgRoot.currentWallpaperSource = path
             bgRoot.previousWallpaperSource = ""
             bgRoot.transitionProgress = 1.0
+            bgRoot.videoRevealed = bgRoot.wallpaperIsVideo
+        }
+
+        Component.onCompleted: {
+            bgRoot.loadWallpaperImmediate()
             if (bgRoot.wallpaperAnimation !== "") {
                 bgRoot.currentShader = bgRoot.wallpaperAnimation === "random"
                     ? bgRoot.shaderList[Math.floor(Math.random() * bgRoot.shaderList.length)]
                     : bgRoot.wallpaperAnimation
             }
-            bgRoot.videoRevealed = bgRoot.wallpaperIsVideo
         }
 
         onWallpaperPathChanged: {
@@ -201,8 +218,39 @@ Variants {
             target: Config
             function onReadyChanged() {
                 if (!Config.ready) return
-                bgRoot.setCenteredProgress(GlobalStates.screenLocked ? 0 : (bgRoot.centeredOnlyWhenLocked ? 1 : 0))
-                bgRoot.centeredAnimationReady = true
+                if (centeredWallpaper && typeof centeredWallpaper.setCenteredProgress === "function") {
+                    centeredWallpaper.setCenteredProgress(GlobalStates.screenLocked ? 0 : (centeredWallpaper.centeredOnlyWhenLocked ? 1 : 0))
+                    centeredWallpaper.centeredAnimationReady = true
+                }
+            }
+        }
+
+        Connections {
+            target: bgRoot.modelData
+            function onWidthChanged() {
+                if (wallpaper.status !== Image.Ready && !bgRoot.wallpaperSafetyTriggered) {
+                    bgRoot.loadWallpaperImmediate()
+                }
+            }
+            function onHeightChanged() {
+                if (wallpaper.status !== Image.Ready && !bgRoot.wallpaperSafetyTriggered) {
+                    bgRoot.loadWallpaperImmediate()
+                }
+            }
+        }
+
+        Connections {
+            target: Hyprland
+            function onRawEvent(event) {
+                if (["monitoradded", "monitoraddedv2", "monitorremoved", "monitorlayout"].includes(event.name)) {
+                    bgRoot.monitor = Hyprland.monitorFor(bgRoot.modelData)
+                    if (wallpaper.status !== Image.Ready && !bgRoot.wallpaperSafetyTriggered) {
+                        bgRoot.loadWallpaperImmediate()
+                    }
+                    if (bgRoot.wallpaperIsVideo && LiveWallpaper.available) {
+                        Quickshell.execDetached(["bash", "-c", `[ -x "${Directories.config}/illogical-impulse/mpvpaper_restore.sh" ] && "${Directories.config}/illogical-impulse/mpvpaper_restore.sh"`]);
+                    }
+                }
             }
         }
 

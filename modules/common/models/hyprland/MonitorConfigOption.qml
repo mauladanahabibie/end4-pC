@@ -124,6 +124,10 @@ NestableObject {
     }
 
     function save(index) {
+        if (index === undefined) {
+            root.applyAllMonitors(root.monitors)
+            return
+        }
         const m = root.monitors[index]
         if (!m || !m.name) return
 
@@ -148,27 +152,61 @@ NestableObject {
 
     function applyMonitor(m) {
         if (!m.name) return
-        const base = `${m.name},${m.currentMode},${m.x}x${m.y},${m.scale}`
-        // Mirror mode: append mirror,<target>
-        if (m.mirrorOf && m.mirrorOf.length > 0) {
-            applyProc.command = ["hyprctl", "keyword", "monitor", `${base},mirror,${m.mirrorOf}`]
-        } else if (m.disabled) {
-            applyProc.command = ["hyprctl", "keyword", "monitor", `${m.name},disable`]
-        } else if (m.transform && m.transform !== 0) {
-            applyProc.command = ["hyprctl", "keyword", "monitor", `${base},transform,${m.transform}`]
+        if (m.disabled) {
+            applyProc.command = ["hyprctl", "eval", `hl.monitor({ output = "${m.name}", disabled = true })`]
         } else {
-            applyProc.command = ["hyprctl", "keyword", "monitor", base]
+            let props = `output = "${m.name}", mode = "${m.currentMode}", position = "${m.x}x${m.y}", scale = ${m.scale}`
+            if (m.mirrorOf && m.mirrorOf.length > 0) props += `, mirror = "${m.mirrorOf}"`
+            if (m.transform && m.transform !== 0) props += `, transform = ${m.transform}`
+            applyProc.command = ["hyprctl", "eval", `hl.monitor({ ${props} })`]
         }
         applyProc.running = true
     }
 
-    // Apply ALL monitors at once via a single bash command.
-    // This avoids the race condition where applyProc overwrites itself.
-    function applyAllMonitors(monitors) {
-        // With illogical-impulse's lua parser, hyprctl keyword doesn't work.
-        // Instead, write to monitors.lua (save()) and reload Hyprland.
-        // This function is a no-op — save() already handles everything via saveProc → reloadProc.
-        // Kept for API compatibility but does nothing.
+    // Apply and persist ALL monitors at once atomically via hyprctl eval and monitors.lua
+    function applyAllMonitors(monitorsList) {
+        const list = monitorsList ?? root.monitors
+        if (!list || list.length === 0) return
+
+        // 1. Live apply via hyprctl eval
+        let evalCommands = []
+        for (let i = 0; i < list.length; i++) {
+            const m = list[i]
+            if (!m.name) continue
+            if (m.disabled) {
+                evalCommands.push(`hl.monitor({ output = "${m.name}", disabled = true })`)
+            } else {
+                let props = `output = "${m.name}", mode = "${m.currentMode}", position = "${m.x}x${m.y}", scale = ${m.scale}`
+                if (m.mirrorOf && m.mirrorOf.length > 0) props += `, mirror = "${m.mirrorOf}"`
+                if (m.transform && m.transform !== 0) props += `, transform = ${m.transform}`
+                evalCommands.push(`hl.monitor({ ${props} })`)
+            }
+        }
+        if (evalCommands.length > 0) {
+            applyAllProc.command = ["hyprctl", "eval", evalCommands.join("; ")]
+            applyAllProc.running = true
+        }
+
+        // 2. Persist to monitors.lua via monitor_configurator.py --batch-json
+        let batchOps = {}
+        for (let i = 0; i < list.length; i++) {
+            const m = list[i]
+            if (!m.name) continue
+            batchOps[m.name] = {
+                "set": {
+                    "position": `${m.x}x${m.y}`,
+                    "mode": root._modeToLua(m),
+                    "scale": m.scale
+                }
+            }
+            if (m.disabled) batchOps[m.name].set["disabled"] = "1"
+            if (m.transform) batchOps[m.name].set["transform"] = m.transform
+            if (m.mirrorOf && m.mirrorOf.length > 0) batchOps[m.name].set["mirror"] = m.mirrorOf
+        }
+        saveProc.command = ["python3", root.configuratorScriptPath, "--file", root.monitorsLuaPath, "--batch-json", JSON.stringify(batchOps)]
+        saveProc.running = true
+
+        root._pendingChanges = {}
     }
 
     function applyAndSave(index) {

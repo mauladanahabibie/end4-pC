@@ -579,6 +579,10 @@ Singleton {
                     property string leftWidget: "none"
                     property string rightWidget: "none"
                     property bool enableClipboardAlert: true
+                    property bool showDate: false
+                    property string dateFormat: "short" // "short", "dayShort", "dayMonth", "monthDay", "long"
+                    property bool showSeconds: false
+                    property real clockVerticalOffset: 0
                 }
                 property JsonObject divider: JsonObject {
                     property string style: "rect" // rect - dot - space

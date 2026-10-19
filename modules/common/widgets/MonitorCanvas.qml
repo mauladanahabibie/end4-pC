@@ -123,10 +123,7 @@ Item {
         const normalized = computeNormalized(monitorConfig.monitors, idx, newX, newY)
         monitorConfig.monitors = normalized
         root.previewPositions = {}
-        for (let i = 0; i < normalized.length; i++) {
-            monitorConfig.applyMonitor(normalized[i])
-        }
-        monitorConfig.save()
+        monitorConfig.applyAllMonitors(normalized)
         root._layoutRevision++
     }
 
@@ -170,8 +167,7 @@ Item {
         }
         monitorConfig.monitors = m
         root.previewPositions = {}
-        for (let i = 0; i < m.length; i++) monitorConfig.applyMonitor(m[i])
-        monitorConfig.save()
+        monitorConfig.applyAllMonitors(m)
         root._layoutRevision++
     }
 
@@ -248,7 +244,7 @@ Item {
         const ax = a.x, ay = a.y
         const newPositions = monitorConfig.monitors.map((mon, i) => {
             if (i === pair.sel) return { name: mon.name, x: b.x, y: b.y }
-            if (i === pair.ref) return { name: mon.name, x: ax, ay }
+            if (i === pair.ref) return { name: mon.name, x: ax, y: ay }
             return { name: mon.name, x: mon.x, y: mon.y }
         })
         _applyAll(newPositions)

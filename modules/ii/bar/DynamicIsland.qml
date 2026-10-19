@@ -413,6 +413,7 @@ Item {
     Rectangle {
         id: pill
         anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
         width: islandRoot.displayedProvider?.width ?? islandRoot.idleWidth
         height: islandRoot.pillHeight
         color: islandRoot.isMaterial || (GlobalStates.barCenterOnly && Config.options.bar.cornerStyle === 0) ? "transparent" : Config.options.bar.followFrameColor

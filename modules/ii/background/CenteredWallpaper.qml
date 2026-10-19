@@ -41,6 +41,13 @@ Item {
         root.syncProgress()
     }
 
+    Component.onCompleted: {
+        root.centeredWallpaperEnabled = root.centeredWallpaperConfigEnabled
+        root.syncProgress()
+        root.centeredProgress = root.targetProgress()
+        root.centeredAnimationReady = true
+    }
+
     // Size the shape (with the wallpaper inside) must reach so its masked
     // area fully covers the screen; the shape then leaves the screen.
     // The shape item is rendered at this fixed size and only transformed
@@ -149,13 +156,6 @@ Item {
         if (!root.centeredWallpaperEnabled) return 0
         if (root.wallpaperIsVideo || root.collageMode) return 0
         return Math.max(0, Math.min(1, (1 - root.centeredProgress) / root.centeredFade))
-    }
-
-    Component.onCompleted: {
-        root.centeredWallpaperEnabled = root.centeredWallpaperConfigEnabled
-        root.syncProgress()
-        if (Config.ready)
-            root.centeredAnimationReady = true
     }
 
     Connections {

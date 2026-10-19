@@ -26,7 +26,17 @@ Scope {
 
             visible: true
             onVisibleChanged: {
-                if (!visible) GlobalStates.settingsOpen = false;
+                if (!visible) closeSyncTimer.restart();
+                else closeSyncTimer.stop();
+            }
+
+            Timer {
+                id: closeSyncTimer
+                interval: 250
+                repeat: false
+                onTriggered: {
+                    if (!window.visible) GlobalStates.settingsOpen = false;
+                }
             }
             onWidthChanged: settleTimer.restart()
             onHeightChanged: settleTimer.restart()

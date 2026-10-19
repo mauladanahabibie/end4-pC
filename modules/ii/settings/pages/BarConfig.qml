@@ -536,6 +536,49 @@ ContentPage {
                     }
                 }
             }
+
+            ContentSubsection {
+                Layout.topMargin: 10
+                title: Translation.tr("Clock & Date")
+                GroupedList {
+                    ConfigSwitch {
+                        buttonIcon: "calendar_today"
+                        text: Translation.tr("Show date")
+                        checked: Config.options.bar.dynamicIsland.showDate ?? false
+                        onCheckedChanged: { Config.options.bar.dynamicIsland.showDate = checked; }
+                    }
+                    ConfigSelectionArray {
+                        text: Translation.tr("Date format")
+                        icon: "event"
+                        visible: Config.options.bar.dynamicIsland.showDate ?? false
+                        currentValue: Config.options.bar.dynamicIsland.dateFormat ?? "short"
+                        onSelected: newValue => { Config.options.bar.dynamicIsland.dateFormat = newValue; }
+                        options: [
+                            { displayName: Translation.tr("Short (dd/MM)"),              icon: "calendar_today", value: "short" },
+                            { displayName: Translation.tr("Day + Date (ddd, dd/MM)"),     icon: "today",          value: "dayShort" },
+                            { displayName: Translation.tr("Day + Month (ddd, d MMM)"),   icon: "date_range",     value: "dayMonth" },
+                            { displayName: Translation.tr("Month + Day (d MMM)"),        icon: "event",          value: "monthDay" },
+                            { displayName: Translation.tr("Full (dddd, d MMMM)"),        icon: "event_note",     value: "long" }
+                        ]
+                    }
+                    ConfigSwitch {
+                        buttonIcon: "timelapse"
+                        text: Translation.tr("Show seconds")
+                        checked: Config.options.bar.dynamicIsland.showSeconds ?? false
+                        onCheckedChanged: { Config.options.bar.dynamicIsland.showSeconds = checked; }
+                    }
+                    ConfigSlider {
+                        buttonIcon: "vertical_align_center"
+                        text: Translation.tr("Vertical alignment offset")
+                        usePercentTooltip: false
+                        from: -5
+                        to: 5
+                        stepSize: 0.5
+                        value: Config.options.bar.dynamicIsland.clockVerticalOffset ?? 0
+                        onMoved: { Config.options.bar.dynamicIsland.clockVerticalOffset = value; }
+                    }
+                }
+            }
         }
 
         ContentSection {

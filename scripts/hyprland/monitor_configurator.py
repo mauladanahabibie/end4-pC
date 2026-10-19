@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import tempfile
 
 STRING_KEYS = {"output", "mode", "position", "cm", "mirror"}
@@ -222,6 +223,48 @@ def edit_lua(file_path, output, set_pairs, reset_keys):
     write_atomic(file_path, "".join(out_lines))
 
 
+def edit_lua_batch(file_path, batch_dict):
+    try:
+        with open(file_path) as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        lines = []
+
+    segments = split_blocks(lines)
+    for output, ops in batch_dict.items():
+        set_dict = ops.get("set", {})
+        reset_set = set(ops.get("reset", []))
+
+        target_idx = None
+        for i, seg in enumerate(segments):
+            if seg[0] == 'block' and seg[1] == output:
+                target_idx = i
+                break
+
+        if target_idx is not None:
+            _, _, block_lines = segments[target_idx]
+            new_block_lines = edit_block_lines(block_lines, set_dict, reset_set)
+            segments[target_idx] = ('block', output, new_block_lines)
+        elif reset_set and not set_dict:
+            print(f"No existing block for output '{output}', nothing to reset.")
+        else:
+            full_set = dict(set_dict)
+            full_set.setdefault("output", output)
+            new_block_lines = build_new_block(output, full_set)
+            if segments and not (segments[-1][0] == 'line' and segments[-1][1].strip() == ""):
+                segments.append(('line', "\n"))
+            segments.append(('block', output, new_block_lines))
+
+    out_lines = []
+    for seg in segments:
+        if seg[0] == 'line':
+            out_lines.append(seg[1])
+        else:
+            out_lines.extend(seg[2])
+
+    write_atomic(file_path, "".join(out_lines))
+
+
 def extract_fields(block_lines):
     result = {}
     for line in block_lines[1:-1]:
@@ -266,6 +309,7 @@ if __name__ == "__main__":
     p.add_argument("--reset", action="append", metavar="KEY")
     p.add_argument("--dump", action="store_true", help="Print this output's current fields as JSON instead of writing")
     p.add_argument("--dump-all", action="store_true", help="Print every output's current fields as JSON, keyed by output name")
+    p.add_argument("--batch-json", help="JSON string with batch updates: {output_name: {'set': {k: v}, 'reset': [k]}}")
     args = p.parse_args()
 
     file_path = os.path.expanduser(args.file)
@@ -276,9 +320,16 @@ if __name__ == "__main__":
         if not args.output:
             p.error("--dump requires --output")
         dump_block(file_path, args.output)
+    elif args.batch_json:
+        try:
+            batch_data = json.loads(args.batch_json)
+            edit_lua_batch(file_path, batch_data)
+        except Exception as e:
+            print(f"Error executing batch edit: {e}", file=sys.stderr)
+            sys.exit(1)
     else:
         if not args.output:
-            p.error("--set/--reset require --output")
+            p.error("--set/--reset require --output (or use --batch-json)")
         raw_sets = args.set or []
         reset_keys = args.reset or []
         set_pairs = []
@@ -291,4 +342,4 @@ if __name__ == "__main__":
         if set_pairs or reset_keys:
             edit_lua(file_path, args.output, set_pairs, reset_keys)
         else:
-            print("Error: specify --set, --reset, --dump, or --dump-all")
+            print("Error: specify --set, --reset, --dump, --dump-all, or --batch-json")
